@@ -1,0 +1,25 @@
+{
+    "name": "decimal",
+    "authors": [
+        "rumbu13"
+    ],
+    "description": "IEEE-754-2008 compliant decimal data type.",
+    "copyright": "Copyright © 2017 rumbu13",
+    "license": "proprietary",
+    "sourcePaths": [ "src/" ],
+    "configurations": [
+        {
+            "name": "library",
+            "excludedSourceFiles": [ "src/benchmark.d", "src/test.d" ]
+        },
+        {
+            "name": "unittest",
+            "excludedSourceFiles": [ "src/benchmark.d", "src/test.d" ]
+        },
+        {
+            "name": "benchmark",
+            "targetType": "executable",
+            "excludedSourceFiles": [ "src/test.d" ]
+        }
+    ]
+}
