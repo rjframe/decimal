@@ -25,5 +25,5 @@ D implementation of floating point decimal data type according to IEEE-754-2008
 - comprehensive documentation;
 
 
-Documentation: http://rumbu13.github.io/doc/decimal.html
+Documentation: http://rumbu13.github.io/decimal/doc/decimal.html
 
