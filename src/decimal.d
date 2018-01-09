@@ -4111,6 +4111,7 @@ $(BOOKTABLE,
 )
 */
 D ldexp(D)(auto const ref D x, const int n)
+if (isDecimal!D)
 {
 
     Unqual!D result = x;
@@ -10764,7 +10765,7 @@ ExceptionFlags decimalScale(D)(ref D x, const int n, const int precision, const 
 if (isDecimal!D)
 {
     
-    if (isSignalingNaN(x))
+    if (isSignaling(x))
     {
         x = D.nan;
         return ExceptionFlags.invalidOperation;
@@ -10784,7 +10785,10 @@ if (isDecimal!D)
     if (n < 0)
         coefficientShrink(coefficient, exponent);
     else
-        coefficientExpand(coefficient, exponent);
+    {
+        int target = 100;
+        coefficientExpand(coefficient, exponent, target);
+    }
 
     cappedAdd(exponent, n);
     
