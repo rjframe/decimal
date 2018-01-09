@@ -117,6 +117,8 @@ void randomize(T)(T[] a)
         a[i] = rnd!T;
 }
 
+
+
 int main(string[] argv)
 {
     foreach(T; TypeTuple!(float, double, real, decimal32, decimal64, decimal128))

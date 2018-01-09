@@ -436,6 +436,10 @@
    <File path="macros\macros.ddoc" />
    <File path="macros\std.ddoc" />
   </Folder>
-  <File path="decimal.d" />
+  <File path="floats.d" />
+  <File path="integrals.d" />
+  <File path="package.d" />
+  <File path="ranges.d" />
+  <File path="sinks.d" />
  </Folder>
 </DProject>

@@ -429,6 +429,10 @@
   <filesToClean>*.obj;*.cmd;*.build;*.json;*.dep;*.tlog</filesToClean>
  </Config>
  <Folder name="decimal">
-  <File path="decimal.d" />
+  <File path="floats.d" />
+  <File path="package.d" />
+  <File path="integrals.d" />
+  <File path="ranges.d" />
+  <File path="sinks.d" />
  </Folder>
 </DProject>
