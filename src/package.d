@@ -9250,21 +9250,12 @@ if (isDecimal!D)
         return ExceptionFlags.invalidOperation;
     }
 
-    Unqual!D n = x;
-    auto flags = decimalDiv(n, 2U, 0, mode);
-    Unqual!D l = D.zero;
+    DataType!D cx;
+    int ex;
+    x.unpack(cx, ex);
 
-    while (abs(n - l) > D.epsilon)
-    {
-        l = n;
-        Unqual!D y = x;
-        flags |= decimalDiv(y, n, 0, mode);
-        flags |= decimalAdd(n, y, 0, mode);
-        flags |= decimalDiv(n, 2U, 0, mode);
-    }
-
-    x = n;
-    return flags | decimalAdjust(x, precision, mode);
+    auto flags = coefficientSqrt(cx, ex);
+    return x.adjustedPack(cx, ex, false, precision, mode, flags);
 }
 
 ExceptionFlags decimalRsqrt(D)(ref D x, const int precision, const RoundingMode mode)
@@ -9330,28 +9321,11 @@ if (isDecimal!D)
     if (isZero(x))
         return ExceptionFlags.none;
 
-    Unqual!D n = x;
-    auto flags = decimalDiv(n, 3U, 0, mode);
-    Unqual!D l = D.zero;
-
-
-    //x = (2x + N/x2)/3
-
-    while (abs(n - l) > D.epsilon)
-    {
-        l = n;
-        Unqual!D y = x;
-        Unqual!D n2 = n;
-        
-        flags |= decimalSqr(n2, 0, mode);
-        flags |= decimalDiv(y, n2, 0, mode);
-        flags |= decimalMul(n, 2U, 0, mode);
-        flags |= decimalAdd(n, y, 0, mode);
-        flags |= decimalDiv(n, 3U, 0, mode);
-    }
-
-    x = n;
-    return flags | decimalAdjust(x, precision, mode);
+    DataType!D cx;
+    int ex;
+    bool sx = x.unpack(cx, ex);
+    auto flags = coefficientCbrt(cx, ex, sx);
+    return x.adjustedPack(cx, ex, sx, precision, mode, flags);
 }
 
 ExceptionFlags decimalHypot(D1, D2, D)(auto const ref D1 x, auto const ref D2 y, out D z,
@@ -9394,15 +9368,12 @@ if (isDecimal!(D1, D2) && is(D: CommonDecimal!(D1, D2)))
         return ExceptionFlags.none;
     }
 
-    Unqual!D yy = y;
-    z = x;
-
-    auto flags = decimalSqr(z, 0, mode);
-    flags |= decimalSqr(yy, 0, mode);
-    flags |= decimalAdd(z, yy, 0, mode);
-    return decimalSqrt(z, precision, mode);
-
-
+    DataType!D cx, cy;
+    int ex, ey;
+    x.unpack(cx, ex);
+    y.unpack(cy, ey);
+    auto flags = coefficientHypot(cx, ex, cy, ey);
+    return z.adjustedPack(cx, ex, false, precision, mode, flags);
 }
 
 ExceptionFlags decimalFMA(D1, D2, D3, D4)(auto const ref D1 x, auto const ref D2 y, auto const ref D3 z, 
@@ -9663,7 +9634,7 @@ if (isDecimal!D)
         return ExceptionFlags.none;
     }
  
-    int n;
+    long n;
     auto flags = decimalToSigned(x, n, mode);
     if (flags == ExceptionFlags.none)
     {
@@ -9699,9 +9670,12 @@ if (isDecimal!D)
         x = D.infinity;
         return ExceptionFlags.overflow | ExceptionFlags.inexact;
     }
+    
+    DataType!D cx;
+    int ex;
 
     bool sx = x.unpack(cx, ex);
-    auto flags = coefficientExp(cx, ex, sx);
+    flags = coefficientExp(cx, ex, sx);
     return x.adjustedPack(cx, ex, sx, precision, mode, flags);
 }
 
@@ -13056,76 +13030,209 @@ bool coefficientEqu(T)(const T cx, const int ex, const bool sx, const T cy, cons
     }
 }
 
+@safe pure nothrow @nogc
+bool coefficientApproxEqu(T)(const T cx, const int ex, const bool sx, const T cy, const int ey, const bool sy)
+{
+    //same as coefficientEqu, but we ignore the last digit if coefficient > 10^max
+    //this is useful in convergence loops to not become infinite
+    if (!cx)
+        return cy == 0U;
+
+    if (sx != sy)
+        return false;
+    else
+    {
+        int px = prec(cx);
+        int py = prec(cy);
+
+        if (px > py)
+        {     
+            int eyy = ey - (px - py);
+            if (ex != eyy)
+                return false;
+            Unqual!T cyy = cy;
+            mulpow10(cyy, px - py);
+            if (cx > pow10!T[$ - 1])
+                return cx >= cy ? cx - cy < 10U : cy - cx < 10U;
+            return cx == cy;
+        }
+
+        if (px < py)
+        {
+            int exx = ex - (py - px);
+            if (exx != ey)
+                return false;
+            Unqual!T cxx = cx;
+            mulpow10(cxx, py - px);  
+            if (cxx > pow10!T[$ - 1])
+                return cxx >= cy ? cxx - cy < 10U : cy - cxx < 10U;
+            return cx == cy;
+        }
+
+        if (cx > pow10!T[$ - 1])
+            return cx >= cy ? cx - cy < 10U : cy - cx < 10U;
+
+        return cx == cy;
+    }
+}
+
 ExceptionFlags coefficientSqrt(T)(ref T cx, ref int ex)
 {
+    // Newton-Raphson: x = (x + n/x) / 2;
 
     if (!cx)
     {
-        cx = 0;
+        cx = 0U;
         ex = 0;
         return ExceptionFlags.none;
     }
 
-    Unqual!T cn = cx;
-    int en = ex;
-    bool sn = false;
+    immutable Unqual!T cn = cx;
+    immutable int en = ex;
+    bool sx;
 
-    auto flags = coefficientDiv(cn, en, sn, Unqual!T(2), 0, false, RoundingMode.implicit);
-    //underflow possible
+    enum two = T(2U);
 
-    if ((flags & ExceptionFlags.underflow) || cn == 0)
+    //shadow x
+    Unqual!T cy;
+    int ey;
+    bool sy;
+
+    coefficientDiv(cx, ex, sx, two, 0, false, RoundingMode.implicit);
+
+    do
     {
-        cx = 0;
-        ex = 0;
-        return flags | ExceptionFlags.inexact;
+        cy = cx;
+        ey = ex;
+
+        Unqual!T cf = cn;
+        int ef = en;
+        bool sf;
+
+        coefficientDiv(cf, ef, sf, cx, ex, false, RoundingMode.implicit);
+        coefficientAdd(cx, ex, sx, cf, ef, false, RoundingMode.implicit);
+        coefficientDiv(cx, ex, sx, two, 0, false, RoundingMode.implicit);
     }
-    
-    Unqual!T cl = 0U;
-    int el = 0;
+    while (!coefficientApproxEqu(cx, ex, false, cy, ey, false) && cx);
 
-    while (!coefficientEqu(cn, en, false, cl, el, false))
-    {
-        cl = cn;
-        el = en;
+    if (!cx)
+        return ExceptionFlags.underflow;
 
-        Unqual!T cy = cx;
-        int ey = ex;
-        //x = (x + N/x)/2
-        flags |= coefficientDiv(cy, ey, sn, cn, en, false, RoundingMode.implicit);
-        if (flags & (ExceptionFlags.overflow | ExceptionFlags.underflow | ExceptionFlags.divisionByZero))
-            break;
-        flags |= coefficientAdd(cn, en, sn, cy, ey, false, RoundingMode.implicit);
-        if (flags & (ExceptionFlags.overflow | ExceptionFlags.underflow))
-            break;
-        flags |= coefficientDiv(cn, en, sn, Unqual!T(2), 0, false, RoundingMode.implicit);
-        if (flags & (ExceptionFlags.overflow | ExceptionFlags.underflow | ExceptionFlags.divisionByZero))
-            break;
-    }
+    coefficientMul(cy, ey, sy, cx, ex, false, RoundingMode.implicit);
 
-    cx = cn;
-    ex = en;
-
-    return flags;
+    return coefficientEqu(cy, ey, false, cn, en, false) ?
+        ExceptionFlags.none : ExceptionFlags.inexact;
 }
 
+@safe pure nothrow @nogc
+ExceptionFlags coefficientCbrt(T)(ref T cx, ref int ex, ref bool sx)
+{
+    // Newton-Raphson: x = (2x + N/x2)/3
 
-ExceptionFlags coefficientSqr(T)(ref T cx, ref int ex)
+    if (!cx)
+    {
+        cx = 0U;
+        ex = 0;
+        return ExceptionFlags.none;
+    }
+
+    immutable Unqual!T cn = cx;
+    immutable int en = ex;
+    immutable bool sn = sx;
+
+    enum two = T(2U);
+    enum three = T(3U);
+
+    //shadow x
+    Unqual!T cy;
+    int ey;
+    bool sy;
+
+    coefficientDiv(cx, ex, sx, three, 0, false, RoundingMode.implicit);
+
+    do
+    {
+        cy = cx;
+        ey = ex;
+        
+        Unqual!T cxx = cx;
+        int exx = ex;
+        bool sxx;
+        coefficientSqr(cxx, exx, RoundingMode.implicit);
+
+        Unqual!T cf = cn;
+        int ef = en;
+        bool sf;
+
+        coefficientDiv(cf, ef, sf, cxx, exx, false, RoundingMode.implicit);
+        coefficientMul(cx, ex, sx, two, 0, false, RoundingMode.implicit);
+        coefficientAdd(cx, ex, sx, cf, ef, false, RoundingMode.implicit);
+        coefficientDiv(cx, ex, sx, three, 0, false, RoundingMode.implicit);
+        //writefln("%10d %10d %10d %10d", cx, ex, cy, ey);
+    }
+    while (!coefficientApproxEqu(cx, ex, false, cy, ey, false) && cx);
+
+    if (!cx)
+        return ExceptionFlags.underflow;
+
+    sx = sn;
+
+    coefficientMul(cy, ey, sy, cx, ex, false, RoundingMode.implicit);
+    coefficientMul(cy, ey, sy, cx, ex, false, RoundingMode.implicit);
+
+
+    return coefficientEqu(cy, ey, false, cn, en, false) ?
+        ExceptionFlags.none : ExceptionFlags.inexact;
+
+    
+}
+
+@safe pure nothrow @nogc
+ExceptionFlags coefficientSqr(T)(ref T cx, ref int ex, const RoundingMode mode)
 {
     if (!cx)
     {
+        cx = T(0U);
         ex = 0;
         return ExceptionFlags.none;
     }
 
-    Unqual!T cy = cx;
+    auto r = xsqr(cx);
+
     int ey = ex;
-    bool sx;
+    if (cappedAdd(ex, ey) != ey)
+        return ex < 0 ? ExceptionFlags.underflow : ExceptionFlags.overflow;
 
-    auto flags = coefficientMul(cx, ex, sx, cy, ey, false, RoundingMode.implicit);
 
-    return flags;
+    if (r > T.max)
+    {
+        auto px = prec(r);
+        auto pm = prec(T.max) - 1;
+        auto flags = divpow10(r, px - pm, false, mode);
+        if (cappedAdd(ex, px - pm) != px - pm)
+            return ex < 0 ? ExceptionFlags.underflow : ExceptionFlags.overflow;
+        cx = cvt!T(r);
+        return flags;
+    }
+    else
+    {
+        cx = cvt!T(r);
+        return ExceptionFlags.none;
+    }
 }
 
+ExceptionFlags coefficientHypot(T)(ref T cx, ref int ex, auto const ref T cy, const int ey)
+{
+    Unqual!T cyy = cy;
+    int eyy = ey;
+    bool sx;
+    auto flags = coefficientSqr(cx, ex, RoundingMode.implicit);
+    flags |= coefficientSqr(cyy, eyy, RoundingMode.implicit);
+    flags |= coefficientAdd(cx, ex, sx, cyy, eyy, false, RoundingMode.implicit);
+    return flags | coefficientSqrt(cx, ex);
+}
+
+@safe pure nothrow @nogc
 ExceptionFlags coefficientExp(T)(ref T cx, ref int ex, ref bool sx)
 {
     //e^x = 1 + x + x2/2! + x3/3! + x4/4! ...
@@ -13148,7 +13255,9 @@ ExceptionFlags coefficientExp(T)(ref T cx, ref int ex, ref bool sx)
     int ef = ex;
     bool sf = sx;
 
-    coefficientAdd(cx, ex, sx, T(1U), 0, false, RoundingMode.implicit);
+    if (coefficientAdd(cx, ex, sx, T(1U), 0, false, RoundingMode.implicit) & ExceptionFlags.overflow)
+        return ExceptionFlags.overflow;
+    
     
     Unqual!T n = 1U;
 
@@ -13167,7 +13276,7 @@ ExceptionFlags coefficientExp(T)(ref T cx, ref int ex, ref bool sx)
         coefficientAdd(cx, ex, sx, cf, ef, sf, RoundingMode.implicit);
 
     } 
-    while (!coefficientEqu(cx, ex, sx, cy, ey, sy));
+    while (!coefficientApproxEqu(cx, ex, sx, cy, ey, sy));
 
     return ExceptionFlags.inexact;
     
