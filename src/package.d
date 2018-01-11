@@ -978,7 +978,7 @@ public:
     @safe
     auto ref opUnary(string op: "++")()
     {
-        auto flags = decimalAdd(this, 1U, 
+        auto flags = decimalInc(this, 1U, 
                                 __ctfe ? 0 : DecimalControl.precision, 
                                 __ctfe ? RoundingMode.implicit : DecimalControl.rounding);
         DecimalControl.raiseFlags(flags);
@@ -989,7 +989,7 @@ public:
     @safe
     auto ref opUnary(string op: "--")()
     {
-        auto flags = decimalAdd(this, -1, 
+        auto flags = decimalDec(this, -1, 
                                 __ctfe ? 0 : DecimalControl.precision, 
                                 __ctfe ? RoundingMode.implicit : DecimalControl.rounding);
         DecimalControl.raiseFlags(flags);
@@ -6510,6 +6510,10 @@ if (isSomeChar!C)
             else //-e > 0.[0...][coefficient]
             {
                 int zeros = -e - digits;
+                
+                if (requestedDecimals > digits - e && skipTrailingZeros)
+                    requestedDecimals = digits - e - 1;
+
                 if (requestedDecimals <= zeros) //special case, coefficient does not fit
                 {
                     divpow10(c, digits - 1, signed, mode);
@@ -6577,8 +6581,10 @@ if (isSomeChar!C)
     Unqual!C[T.sizeof * 8 / 3 + 1] buffer;
     Unqual!C[10] exponentBuffer;
     Unqual!T c = coefficient;
-    int digits = prec(coefficient);
-    int e = digits == 0 ? 0 : exponent + (digits - 1);    
+    int ex = exponent;
+    coefficientShrink(c, ex);
+    int digits = prec(c);
+    int e = digits == 0 ? 0 : ex + (digits - 1);    
     int requestedDecimals = spec.precision == spec.UNSPECIFIED ? 6 : spec.precision;
 
     int targetPrecision = requestedDecimals + 1;
@@ -6591,7 +6597,6 @@ if (isSomeChar!C)
             c /= 10U;
         --digits;
     }
-
     
 
     bool signedExponent = e < 0;
@@ -6652,7 +6657,7 @@ if (isSomeChar!C)
     {
         FormatSpec!C espec = spec;
         espec.precision = precision - 1;
-        sinkExponential(espec, sink, coefficient, exponent, signed, mode, false);
+        sinkExponential(espec, sink, coefficient, exponent, signed, mode, !espec.flHash);
     }
 
 }
@@ -6834,7 +6839,7 @@ unittest
   	    S("%g","1234.5678e3","1.23457e+06"),
   	    S("%g","1234.5678e-8","1.23457e-05"),
   	    S("%g","-7.0","-7"),
-  	    S("%g","-1e-9","-1.00000e-09"),
+  	    S("%g","-1e-9","-1e-09"),
   	    S("%E","1.0","1.000000E+00"),
   	    S("%E","1234.5678e3","1.234568E+06"),
   	    S("%E","1234.5678e-8","1.234568E-05"),
@@ -6843,7 +6848,7 @@ unittest
   	    S("%G","1234.5678e3","1.23457E+06"),
   	    S("%G","1234.5678e-8","1.23457E-05"),
   	    S("%G","-7.0","-7"),
-  	    S("%G","-1e-9","-1.00000E-09"),
+  	    S("%G","-1e-9","-1E-09"),
   	    S("%20.6e","1.2345e3","        1.234500e+03"),
   	    S("%20.6e","1.2345e-3","        1.234500e-03"),
   	    S("%20e","1.2345e3","        1.234500e+03"),
@@ -7441,130 +7446,223 @@ if (isDecimal!D && isFloatingPoint!T)
 /* DECIMAL ARITHMETIC                                                                                      */
 /* ****************************************************************************************************************** */
 
+DecimalClass decimalDecode(D, T)(auto const ref D x, out T cx, out int ex, out bool sx) 
+if (isDecimal!D && is(T: DataType!D))
+{
+    sx = cast(bool)(x.data & D.MASK_SGN);
+
+    if ((x.data & D.MASK_INF) == D.MASK_INF)
+        if ((x.data & D.MASK_QNAN) == D.MASK_QNAN)
+            if ((x.data & D.MASK_SNAN) == D.MASK_SNAN)
+                return DecimalClass.signalingNaN;
+            else
+                return DecimalClass.quietNaN;
+        else
+            return sx ? DecimalClass.negativeInfinity : DecimalClass.positiveInfinity;
+    else if ((x.data & D.MASK_EXT) == D.MASK_EXT)
+    {
+        cx = (x.data & D.MASK_COE2) | D.MASK_COEX;
+        if (cx > D.COEF_MAX)
+        {
+            return x.data & D.MASK_SGN ? DecimalClass.negativeZero : DecimalClass.positiveZero; 
+        }
+        ex = cast(uint)((x.data & D.MASK_EXP2) >>> D.SHIFT_EXP2) - D.EXP_BIAS;
+    }
+    else
+    {
+        cx = x.data & D.MASK_COE1;
+        if (cx == 0U)
+        {
+            ex = 0;
+            return sx ? DecimalClass.negativeZero : DecimalClass.positiveZero; 
+        }
+        ex = cast(uint)((x.data & D.MASK_EXP1) >>> D.SHIFT_EXP1) - D.EXP_BIAS;
+    }
+
+    if (ex + D.EXP_BIAS < D.PRECISION - 1)
+    {
+        if (prec(cx) < D.PRECISION - ex + D.EXP_BIAS)
+            return sx ? DecimalClass.negativeSubnormal : DecimalClass.positiveSubnormal;
+    }
+    return sx ? DecimalClass.negativeNormal : DecimalClass.positiveNormal;
+}
+
+ExceptionFlags decimalInc(D)(ref D x, const int precision, const RoundingMode mode)
+{
+
+    DataType!D cx; int ex; bool sx;
+    switch(decimalDecode(x, cx, ex, sx))
+    {
+        case DecimalClass.signalingNaN:
+            return ExceptionFlags.invalidOperation;
+        case DecimalClass.quietNaN:
+        case DecimalClass.negativeInfinity:
+        case DecimalClass.positiveInfinity:
+            return ExceptionFlags.none;
+        case DecimalClass.negativeZero:
+        case DecimalClass.positiveZero:
+            x = D.one;
+            return ExceptionFlags.none;
+        default:
+            flags = coefficientAdd(cx, ex, sx, T(1U), 0, false, RoundingMode.implicit);
+            return x.adjustedPack(cx, ex, sx, precision, mode, flags);
+    }
+}
+
+ExceptionFlags decimalDec(D)(ref D x, const int precision, const RoundingMode mode)
+{
+
+    DataType!D cx; int ex; bool sx;
+    switch(decimalDecode(x, cx, ex, sx))
+    {
+        case DecimalClass.signalingNaN:
+            return ExceptionFlags.invalidOperation;
+        case DecimalClass.quietNaN:
+        case DecimalClass.negativeInfinity:
+        case DecimalClass.positiveInfinity:
+            return ExceptionFlags.none;
+        case DecimalClass.negativeZero:
+        case DecimalClass.positiveZero:
+            x = -D.one;
+            return ExceptionFlags.none;
+        default:
+            flags = coefficientAdd(cx, ex, sx, T(1U), 0, true, RoundingMode.implicit);
+            return x.adjustedPack(cx, ex, sx, precision, mode, flags);
+    }
+}
+
+
 ExceptionFlags decimalRound(D)(ref D x, const int precision, const RoundingMode mode)
 if (isDecimal!D)
 {
-    if (isSignaling(x))
-        return ExceptionFlags.invalidOperation;
-    if (isNaN(x) || isInfinity(x) || isZero(x))
-        return ExceptionFlags.none;
-
-    DataType!D coefficient;
-    int exponent;
-    bool isNegative = x.unpack(coefficient, exponent);
-    auto flags = coefficientAdjust(coefficient, exponent, 0, D.EXP_MAX, D.COEF_MAX, isNegative, mode);
-    return x.adjustedPack(coefficient, exponent, isNegative, precision, mode, flags);
+    DataType!D cx; int ex; bool sx;
+    switch(decimalDecode(x, cx, ex, sx))
+    {
+        case DecimalClass.signalingNaN:
+            return ExceptionFlags.invalidOperation; 
+        case DecimalClass.quietNaN:
+        case DecimalClass.negativeInfinity:
+        case DecimalClass.positiveInfinity:
+        case DecimalClass.negativeZero:
+        case DecimalClass.positiveZero:
+            return ExceptionFlags.none;
+        default:
+            auto flags = coefficientAdjust(cx, ex, 0, D.EXP_MAX, D.COEF_MAX, sx, mode);
+            return x.adjustedPack(cx, ex, sx, precision, mode, flags);
+    }
 }
 
 ExceptionFlags decimalAdjust(D)(ref D x, const int precision, const RoundingMode mode)
 {
-    if (isSignaling(x))
-        return ExceptionFlags.invalidOperation;
-    if (isNaN(x) || isInfinity(x) || isZero(x))
-        return ExceptionFlags.none;
-    DataType!D coefficient;
-    int exponent;
-    bool isNegative = x.unpack(coefficient, exponent);
-    return x.adjustedPack(coefficient, exponent, isNegative, precision, mode, ExceptionFlags.none);
+    DataType!D cx; int ex; bool sx;
+    switch(decimalDecode(x, cx, ex, sx))
+    {
+        case DecimalClass.signalingNaN:
+            return ExceptionFlags.invalidOperation; 
+        case DecimalClass.quietNaN:
+        case DecimalClass.negativeInfinity:
+        case DecimalClass.positiveInfinity:
+        case DecimalClass.negativeZero:
+        case DecimalClass.positiveZero:
+            return ExceptionFlags.none;
+        default:
+            return x.adjustedPack(cx, ex, sx, precision, mode, ExceptionFlags.none);
+    }
 }
 
 ExceptionFlags decimalNextUp(D)(ref D x)
 if (isDecimal!D)
 {
-    if (isSignaling(x))
-        return ExceptionFlags.invalidOperation;
-    else if (isNaN(x))
-        return ExceptionFlags.none;
-    else if (isInfinity(x))
+    DataType!D cx; int ex; bool sx;
+    switch(decimalDecode(x, cx, ex, sx))
     {
-        if (signbit(x) != 0)
+        case DecimalClass.signalingNaN:
+            return ExceptionFlags.invalidOperation; 
+        case DecimalClass.quietNaN:
+        case DecimalClass.positiveInfinity:
+            return ExceptionFlags.none;
+        case DecimalClass.negativeInfinity:
             x = -D.max;
-        else
-            x = D.infinity;
-        return ExceptionFlags.none;
-    }
-    else if (isZero(x))
-    {
-        x.pack(DataType!D(1U), D.EXP_MIN, false);
-        return ExceptionFlags.none;
-    }
-    else
-    {
-        DataType!D coefficient;
-        int exponent;
-        bool isNegative = x.unpack(coefficient, exponent);
-        if (isNegative)
-        {
-            if (coefficient == 1U)
+            return ExceptionFlags.none;
+        case DecimalClass.negativeZero:
+        case DecimalClass.positiveZero:
+            x.pack(DataType!D(1U), D.EXP_MIN, false);
+            return ExceptionFlags.none;
+        default:
+            if (sx)
             {
-                coefficient = 10U;
-                --exponent;
+                if (coefficient == 1U)
+                {
+                    coefficient = 10U;
+                    --exponent;
+                }
+                --coefficient;
             }
-            --coefficient;
-        }
-        else
-            ++coefficient;
-        return x.adjustedPack(coefficient, exponent, isNegative, RoundingMode.towardZero, flags);
-    }
-    
+            else
+                ++coefficient;
+            return x.adjustedPack(cx, ex, sx, precision, mode, ExceptionFlags.none);
+    }  
 }
 
 ExceptionFlags decimalNextDown(D)(ref D x)
 if (isDecimal!D)
 {
-    if (isSignaling(x))
-        return ExceptionFlags.invalidOperation;
-    else if (isNaN(x))
-        return ExceptionFlags.none;
-    else if (isInfinity(x))
+    DataType!D cx; int ex; bool sx;
+    switch(decimalDecode(x, cx, ex, sx))
     {
-        if (signbit(x) != 0)
+        case DecimalClass.signalingNaN:
+            return ExceptionFlags.invalidOperation; 
+        case DecimalClass.quietNaN:
+        case DecimalClass.negativeInfinity:
+            return ExceptionFlags.none;
+        case DecimalClass.positiveInfinity:
             x = D.max;
-        return ExceptionFlags.none;
-    }
-    else if (isZero(x))
-    {
-        x.pack(DataType!D(1U), D.EXP_MIN, true);
-        return ExceptionFlags.none;
-    }
-    else
-    {
-        DataType!D coefficient;
-        int exponent;
-        bool isNegative = x.unpack(coefficient, exponent);
-        if (!isNegative)
-        {
-            if (coefficient == 1)
+            return ExceptionFlags.none;
+        case DecimalClass.negativeZero:
+        case DecimalClass.positiveZero:
+            x.pack(DataType!D(1U), D.EXP_MIN, true);
+            return ExceptionFlags.none;
+        default:
+            if (!sx)
             {
-                coefficient = 10U;
-                --exponent;
+                if (coefficient == 1U)
+                {
+                    coefficient = 10U;
+                    --exponent;
+                }
+                --coefficient;
             }
-            --coefficient;
-        }
-        else
-            ++coefficient;
-        return x.adjustedPack(coefficient, exponent, isNegative, RoundingMode.towardZero, flags);
+            else
+                ++coefficient;
+            return x.adjustedPack(cx, ex, sx, precision, mode, ExceptionFlags.none);
     }
 }
 
 ExceptionFlags decimalMin(D1, D2, D)(auto const ref D1 x, auto const ref D2 y, out D z)
 if (isDecimal!(D1, D2, D) && is(D: CommonDecimal!(D1, D2)))
 {
-    if (isSignaling(x) || isSignaling(y))
+
+    if (isSignaling(x))
     {
-        z = D.nan;
+        z = x;
+        return ExceptionFlags.invalidOperation;
+    }
+
+    if (isSignaling(y))
+    {
+        z = y;
         return ExceptionFlags.invalidOperation;
     }
 
     if (isNaN(x))
     {
-        z = canonical(y);
+        z = y;
         return ExceptionFlags.none;
     }
 
     if (isNaN(y))
     {
-        z = canonical(x);
+        z = x;
         return ExceptionFlags.none;
     }
 
@@ -9661,7 +9759,6 @@ if (isDecimal!D)
     }
     else static if (is(D: decimal64))
     {
-        alias invf = if64;
         enum lnmax = decimal64("+886.4952608027075");
         enum lnmin = decimal64("-916.4288670116301");
     }
@@ -9689,12 +9786,6 @@ if (isDecimal!D)
     bool sx = x.unpack(cx, ex);
     flags = coefficientExp(cx, ex, sx);
     return x.adjustedPack(cx, ex, sx, precision, mode, flags);
-}
-
-unittest
-{
-    auto x = decimal32(4);
-    decimalExp(x, 0, RoundingMode.implicit);
 }
 
 ExceptionFlags decimalLog(D)(ref D x, const int precision, const RoundingMode mode)
@@ -11214,26 +11305,28 @@ ExceptionFlags decimalAtanh(D)(ref D x, const int precision, const RoundingMode 
     if (isNaN(x) || isZero(x))
         return ExceptionFlags.none;
 
-    if (isLess(x, -D.one) || isGreater(x, D.one))
+    alias T = DataType!D;
+    T cx;
+    int ex;
+    bool sx = x.unpack(cx, ex);
+
+    auto cmp = coefficientCmp(cx, ex, false, T(1U), 0, false);
+
+    if (cmp > 0)
     {
-        x = D.nan;
-        return ExceptionFlags.invalidOperation;
+        x = signbit(x) ? -D.nan : D.nan;
+        return ExceptionFlags.none;
     }
 
-    if (abs(x) == D.one)
+    if (cmp == 0)
     {
         x = signbit(x) ? -D.infinity : D.infinity;
-        return ExceptionFlags.divisionByZero;
+        return ExceptionFlags.none;
     }
+    
+    auto flags = coefficientAtanh(cx, ex, sx);
+    return x.adjustedPack(cx, ex, sx, precision, mode, flags);
 
-    Unqual!D x1 = x;
-    Unqual!D x2 = -x;
-    auto flags = decimalAdd(x1, 1U, 0, mode);
-    flags |= decimalAdd(x2, 1U, 0, mode);
-    flags |= decimalDiv(x1, x2, 0, mode);
-    x = x1;
-    flags |= decimalLog(x, 0, mode);
-    return flags | decimalDiv(x, 2U, precision, mode);
 }
 
 ExceptionFlags decimalSum(D)(const(D)[] x, out D result, const int precision, const RoundingMode mode)
@@ -13057,6 +13150,41 @@ bool coefficientApproxEqu(T)(const T cx, const int ex, const bool sx, const T cy
     }
 }
 
+//inexact, overflow, underflow
+@safe pure nothrow @nogc
+ExceptionFlags coefficientSqr(T)(ref T cx, ref int ex, const RoundingMode mode)
+{
+    if (!cx)
+    {
+        cx = T(0U);
+        ex = 0;
+        return ExceptionFlags.none;
+    }
+
+    auto r = xsqr(cx);
+
+    int ey = ex;
+    if (cappedAdd(ex, ey) != ey)
+        return ex < 0 ? ExceptionFlags.underflow : ExceptionFlags.overflow;
+
+
+    if (r > T.max)
+    {
+        auto px = prec(r);
+        auto pm = prec(T.max) - 1;
+        auto flags = divpow10(r, px - pm, false, mode);
+        if (cappedAdd(ex, px - pm) != px - pm)
+            return ex < 0 ? ExceptionFlags.underflow : ExceptionFlags.overflow;
+        cx = cvt!T(r);
+        return flags;
+    }
+    else
+    {
+        cx = cvt!T(r);
+        return ExceptionFlags.none;
+    }
+}
+
 @safe pure nothrow @nogc
 ExceptionFlags coefficientSqrt(T)(ref T cx, ref int ex)
 {
@@ -13167,40 +13295,6 @@ ExceptionFlags coefficientCbrt(T)(ref T cx, ref int ex, ref bool sx)
         ExceptionFlags.none : ExceptionFlags.inexact;
 
     
-}
-
-@safe pure nothrow @nogc
-ExceptionFlags coefficientSqr(T)(ref T cx, ref int ex, const RoundingMode mode)
-{
-    if (!cx)
-    {
-        cx = T(0U);
-        ex = 0;
-        return ExceptionFlags.none;
-    }
-
-    auto r = xsqr(cx);
-
-    int ey = ex;
-    if (cappedAdd(ex, ey) != ey)
-        return ex < 0 ? ExceptionFlags.underflow : ExceptionFlags.overflow;
-
-
-    if (r > T.max)
-    {
-        auto px = prec(r);
-        auto pm = prec(T.max) - 1;
-        auto flags = divpow10(r, px - pm, false, mode);
-        if (cappedAdd(ex, px - pm) != px - pm)
-            return ex < 0 ? ExceptionFlags.underflow : ExceptionFlags.overflow;
-        cx = cvt!T(r);
-        return flags;
-    }
-    else
-    {
-        cx = cvt!T(r);
-        return ExceptionFlags.none;
-    }
 }
 
 @safe pure nothrow @nogc
@@ -13387,7 +13481,30 @@ ExceptionFlags coefficientLog(T)(ref T cx, ref int ex, ref bool sx)
     return ExceptionFlags.inexact;
 }
 
+@safe pure nothrow @nogc
+ExceptionFlags coefficientAtanh(T)(ref T cx, ref int ex, ref bool sx)
+{
+    //1/2*ln[(1 + x)/(1 - x)]
 
+    assert (coefficientCmp(cx, ex, sx, T(1U), 0, true) > 0);
+    assert (coefficientCmp(cx, ex, sx, T(1U), 0, false) < 0);
+
+    //1/2*ln[(1 + x)/(1 - x)]
+
+    Unqual!T cm1 = cx;
+    int em1 = ex;
+    bool sm1 = !sx;
+
+    coefficientAdd(cm1, em1, sm1, T(1U), 0, false, RoundingMode.implicit);
+    coefficientAdd(cx, ex, sx, T(1U), 0, false, RoundingMode.implicit);
+    coefficientDiv(cx, ex, sx, cm1, em1, sm1, RoundingMode.implicit);
+    coefficientLog(cx, ex, sx);
+    coefficientMul(cx, ex, sx, T(5U), -1, false, RoundingMode.implicit);
+
+    return ExceptionFlags.inexact;
+
+
+}
 
 
 

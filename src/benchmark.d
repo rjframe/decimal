@@ -117,15 +117,23 @@ void randomize(T)(T[] a)
         a[i] = rnd!T;
 }
 
+import std.stdio;
+import decimal;
 
+void loopme(T) ()
+{
+    "---".writeln;
+    T e = T(1000);
+    while (e > T(1e-6)) {
+        e.writeln;
+        e /= 10;
+    }
+}
 
 int main(string[] argv)
 {
-    foreach(T; TypeTuple!(float, double, real, decimal32, decimal64, decimal128))
-    {
-        randomize(arr1!T);
-        randomize(arr2!T);
-    }
+    loopme!float;
+    loopme!decimal32;
 
     getchar();
     return 0;
