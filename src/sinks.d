@@ -19,7 +19,7 @@ if (isSomeChar!C && isAnyUnsigned!T)
         auto r = divrem(v, 10U);
         buffer[--i] = cast(C)(r + cast(uint)'0');
     } while (v);
-    return buffer.length - i;
+    return cast(int)buffer.length - i;
 }
 
 //dumps value to buffer right aligned, assumes buffer has enough space
@@ -36,7 +36,7 @@ if (isSomeChar!C && isAnyUnsigned!T)
                               (uppercase ? 'A' + (digit - 10) : 'a' + (digit - 10)));
         v >>= 4;
     } while (v);
-    return buffer.length - i;
+    return cast(int)buffer.length - i;
 }
 
 //repeats sinking of value count times using a default buffer size of 8

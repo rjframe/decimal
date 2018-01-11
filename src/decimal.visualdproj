@@ -430,8 +430,8 @@
  </Config>
  <Folder name="decimal">
   <File path="floats.d" />
-  <File path="package.d" />
   <File path="integrals.d" />
+  <File path="package.d" />
   <File path="ranges.d" />
   <File path="sinks.d" />
  </Folder>

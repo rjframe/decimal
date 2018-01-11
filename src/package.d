@@ -141,14 +141,17 @@ auto f - decimal128.infinity;
 
 Error_handling:
 
-Errors occuring in arithmetic operations using decimal values can be handled in two ways. By default, the thread local 
+Errors occuring in arithmetic operations using _decimal values can be handled in two ways. By default, the thread local 
 context will throw exceptions for errors considered severe ($(MYREF InvalidOperationException), 
 $(MYREF DivisionByZeroException) or $(MYREF OverflowException)). 
 Any other error is considered silent and the context will only 
-set corresponding error flags ($(MYREF ExceptionFlags.inexact) or $(MYREF ExceptionFlags.underflow))
+set corresponding error flags ($(MYREF ExceptionFlags.inexact) or $(MYREF ExceptionFlags.underflow))<br/>
+Most of the operations will throw $(MYREF InvalidOperationException) if a signaling NaN is encountered, 
+if not stated otherwise in the documentation. This is to avoid usage of unitialized variables 
+(_decimal values are always initialized to signaling NaN)
 ---
 //these will throw:
-auto a = decimal32() + 12;  //InvalidOperationException
+auto a = decimal32() + 12;    //InvalidOperationException
 auto b = decimal32.min / 0;   //DivisionByZeroException
 auto c = decimal32.max * 2;   //OverflowException
 
@@ -180,7 +183,7 @@ $(UL
   ---
   $(LI Checking for errors)
   ---
-  DecimalControl.lowerFlags();
+  DecimalControl.resetFlags();
   auto a = decimal32.min / 0;
   if (DecimalControl.divisionByZero)
   {
@@ -189,9 +192,9 @@ $(UL
   ---
 )
 
-Useful_constants:
+Properties:
 
-The following constants are defined for each _decimal type:
+The following properties are defined for each _decimal type:
 
 $(BOOKTABLE,
  $(TR $(TH Constant) $(TH Name) $(TH decimal32) $(TH decimal64) $(TH decimal128))
@@ -208,10 +211,18 @@ $(BOOKTABLE,
  $(TR $(TD $(D max)) $(TD largest representable value that's not infinity) $(TD 9.(9) * 10$(SUPERSCRIPT 96)) $(TD 9.(9) * 10$(SUPERSCRIPT 384)) $(TD 9.(9) * 10$(SUPERSCRIPT 6144)))
  $(TR $(TD $(D min_normal)) $(TD smallest normalized value that's not 0) $(TD 10$(SUPERSCRIPT -95)) $(TD 10$(SUPERSCRIPT -383)) $(TD 10$(SUPERSCRIPT -6143)))
 )
-*
-Also, there are common constant defined for each type; values below have 34 digits of precision crresponding
-to decimal128 data type; for decimal64 and decimal32, they are rounded away from 0 according to their respecive precision:
-*
+
+
+Useful_constants:
+
+There are common constants defined for each type. Values below have 34 digits of precision corresponding
+to decimal128 data type; for decimal64 and decimal32, they are rounded away from 0 according to their respecive precision.
+---
+auto a = decimal32.PI;
+auto b = decimal64.LN2;
+auto c = decimal128.E;
+---
+
 $(BOOKTABLE,
  $(TR $(TH Constant) $(TH Formula) $(TH Value))
  $(TR $(TD $(D E)) $(TD e) $(TD 2.7182818284590452353602874713526625))
@@ -233,7 +244,7 @@ $(BOOKTABLE,
 
 
 
-Special remarks:
+Special_remarks:
 
 $(UL
  $(LI Avoid mixing binary floating point values with decimal values, binary foating point values cannot exactly represent 10-based exponents;)
@@ -241,7 +252,8 @@ $(UL
  $(LI The comparison operator will return float.nan for an unordered result; There is no operator overloading for unordered comparisons;)
  $(LI Hexadecimal notation allows to define uncanonical coefficients (> 10 $(SUPERSCRIPT precision) - 1). According to IEEE standard, these values are considered equal to 0;)
 )
-Performance tips:
+
+Performance_tips:
 
 $(UL
  $(LI When performing _decimal calculations, avoid binary floating point; conversion for base-2 from/to base-10 is costly;)
@@ -255,7 +267,7 @@ $(UL
 Copyright: Copyright (c) Răzvan Ștefănescu 2018.
 License:   $(LINK2 http://www.boost.org/LICENSE_1_0.txt, Boost License 1.0)
 Authors:   Răzvan Ștefănescu
-Source:    $(LINK2 https://github.com/rumbu13/decimal/blob/master/decimal.d, _decimal.d)
+Source:    $(LINK2 https://github.com/rumbu13/decimal/blob/master/src/package.d, _decimal.d)
 
 */
 module decimal;
@@ -9715,45 +9727,11 @@ if (isDecimal!D)
         return ExceptionFlags.divisionByZero;
     }
 
-    ExceptionFlags flags;
-
-    Unqual!D p = x;
-    Unqual!D q = x;
-    x = D.zero;
-
-  
-    while (isGreaterOrEqual(p, D.E))
-    {
-        flags |= decimalDiv(p, D.E, 0, mode);
-        flags |= decimalAdd(x, 1U, 0, mode);
-    }
-
-    flags |= decimalDiv(p, D.E, 0, mode);
-    flags |= decimalAdd(x, p, 0, mode);
-
-    p = q;
-
-    Unqual!D a;
-
-    do
-    {
-        a = x;
-        Unqual!D n1 = x;
-        flags |= decimalAdd(n1, -1, 0, mode);
-
-        Unqual!D en = n1;
-        flags |= decimalExp(en, 0, mode);
-        Unqual!D l = p;
-        flags |= decimalDiv(l, en, 0, mode);
-        flags |= decimalMul(n1, D.E, 0, mode);
-        x = n1;
-        flags |= decimalAdd(x, l, 0, mode);
-        flags |= decimalDiv(x, D.E, 0, mode);
-
-    } while (abs(x - a) > D.epsilon);
-    
-    return flags | decimalAdjust(x, precision, mode);
-
+    DataType!D cx;
+    int ex;
+    bool sx = x.unpack(cx, ex);
+    auto flags = coefficientLog(cx, ex, sx);
+    return x.adjustedPack(cx, ex, sx, precision, mode, flags);
 }
 
 
@@ -12513,6 +12491,7 @@ body
 
 //adjusts coefficient to fit precision
 //inexact, overflow, underflow
+@safe pure nothrow @nogc
 ExceptionFlags coefficientAdjust(T)(ref T coefficient, ref int exponent, 
                                     const int precision, const bool isNegative, const RoundingMode mode)
 if (isAnyUnsigned!T)
@@ -12526,6 +12505,7 @@ body
 }
 
 //shrinks coefficient by cutting out terminating zeros and increasing exponent
+@safe pure nothrow @nogc
 void coefficientShrink(T)(ref T coefficient, ref int exponent)
 {
     if (coefficient > 9U && (coefficient & 1U) == 0U && exponent < int.max)
@@ -12546,6 +12526,7 @@ void coefficientShrink(T)(ref T coefficient, ref int exponent)
 }
 
 //expands cx with 10^^target if possible
+@safe pure nothrow @nogc
 void coefficientExpand(T)(ref T cx, ref int ex, ref int target)
 in
 {
@@ -12554,8 +12535,8 @@ in
 }
 body
 {
-    auto px = prec(cx);
-    auto maxPow10 = pow10!T.length - px;
+    int px = prec(cx);
+    int maxPow10 = cast(int)pow10!T.length - px;
     auto maxCoefficient = maxmul10!T[$ - px];
     if (cx > maxCoefficient)
         --maxPow10;
@@ -13052,7 +13033,7 @@ bool coefficientApproxEqu(T)(const T cx, const int ex, const bool sx, const T cy
                 return false;
             Unqual!T cyy = cy;
             mulpow10(cyy, px - py);
-            if (cx > pow10!T[$ - 1])
+            if (cx > pow10!T[$ - 2])
                 return cx >= cy ? cx - cy < 10U : cy - cx < 10U;
             return cx == cy;
         }
@@ -13064,18 +13045,19 @@ bool coefficientApproxEqu(T)(const T cx, const int ex, const bool sx, const T cy
                 return false;
             Unqual!T cxx = cx;
             mulpow10(cxx, py - px);  
-            if (cxx > pow10!T[$ - 1])
+            if (cxx > pow10!T[$ - 2])
                 return cxx >= cy ? cxx - cy < 10U : cy - cxx < 10U;
             return cx == cy;
         }
 
-        if (cx > pow10!T[$ - 1])
+        if (cx > pow10!T[$ - 2])
             return cx >= cy ? cx - cy < 10U : cy - cx < 10U;
 
         return cx == cy;
     }
 }
 
+@safe pure nothrow @nogc
 ExceptionFlags coefficientSqrt(T)(ref T cx, ref int ex)
 {
     // Newton-Raphson: x = (x + n/x) / 2;
@@ -13221,6 +13203,7 @@ ExceptionFlags coefficientSqr(T)(ref T cx, ref int ex, const RoundingMode mode)
     }
 }
 
+@safe pure nothrow @nogc
 ExceptionFlags coefficientHypot(T)(ref T cx, ref int ex, auto const ref T cy, const int ey)
 {
     Unqual!T cyy = cy;
@@ -13281,6 +13264,132 @@ ExceptionFlags coefficientExp(T)(ref T cx, ref int ex, ref bool sx)
     return ExceptionFlags.inexact;
     
 }
+
+@safe pure nothrow @nogc
+ExceptionFlags coefficientLog(T)(ref T cx, ref int ex, ref bool sx)
+{
+    
+    assert(!sx); //only positive
+    assert(cx);
+
+    //ln(coefficient * 10^exponent) = ln(coefficient) + exponent * ln(10);
+
+    static if (is(T:uint))
+    {
+        immutable uint ce = 2718281828U;
+        immutable int ee = -9;
+        immutable uint cl = 2302585093U;
+        immutable int el = -9;
+
+    }
+    else static if (is(T:ulong))
+    {
+        immutable ulong ce = 2718281828459045235UL;
+        immutable int ee = -18;
+        immutable ulong cl = 2302585092994045684UL;
+        immutable int el = -18;
+    }
+    else static if (is(T:uint128))
+    {
+        immutable uint128 ce = uint128("271828182845904523536028747135266249776");
+        immutable int ee = -38;
+        immutable uint128 cl = uint128("230258509299404568401799145468436420760");
+        immutable int el = -38;
+    }
+    else
+        static assert(0);
+
+    //ln(x) = ln(n*e) = ln(n) + ln(e);
+    //we divide x by e to find out how many times (n) we must add ln(e) = 1
+    //ln(x + 1) taylor series works in the interval (-1 .. 1]
+    //so our taylor series is valid for x in (0 .. 2]
+
+    //save exponent for later
+    int exponent = ex;
+    ex = 0;
+    
+    enum one = T(1U);
+    enum two = T(2U);
+
+    Unqual!T n = 0U;
+    bool ss = false;
+
+    immutable aaa = cx;
+
+    while (coefficientCmp(cx, ex, false, two, 0, false) >= 0)
+    {
+        coefficientDiv(cx, ex, sx, ce, ee, false, RoundingMode.implicit);
+        ++n;
+    }
+
+    coefficientDiv(cx, ex, sx, ce, ee, false, RoundingMode.implicit);
+    ++n;
+
+    //ln(x) = (x - 1) - [(x - 1)^2]/2 + [(x - 1)^3]/3 - ....
+
+    //initialize our result to x - 1;
+    coefficientAdd(cx, ex, sx, one, 0, true, RoundingMode.implicit);
+     
+    //store cx in cxm1, this will be used for repeated multiplication
+    //we negate the sign to alternate between +/-
+    Unqual!T cxm1 = cx;
+    int exm1 = ex;
+    bool sxm1 = !sx;
+
+    //shadow
+    Unqual!T cy;
+    int ey;
+    bool sy;
+
+    Unqual!T cd = cxm1;
+    int ed = exm1;
+    bool sd = !sxm1;
+
+    Unqual!T i = 2U;
+
+    do
+    {
+        cy = cx;
+        ey = ex;
+        sy = sx;
+
+        coefficientMul(cd, ed, sd, cxm1, exm1, sxm1, RoundingMode.implicit);
+        
+        Unqual!T cf = cd;
+        int ef = ed;
+        bool sf = sd;
+
+        coefficientDiv(cf, ef, sf, i++, 0, false, RoundingMode.implicit);
+        coefficientAdd(cx, ex, sx, cf, ef, sf, RoundingMode.implicit);
+
+        //writefln("%10d %10d %10d %10d %10d %10d", cx, ex, cy, ey, cx - cy, i);
+    }
+    while (!coefficientApproxEqu(cx, ex, sx, cy, ey, sy));
+   
+
+
+    coefficientAdd(cx, ex, sx, n, 0, false, RoundingMode.implicit);
+    
+    if (exponent != 0)
+    {
+        sy = exponent < 0;
+        cy = sy ? cast(uint)(-exponent) : cast(uint)(exponent);
+        ey = 0;
+        coefficientMul(cy, ey, sy, cl, el, false, RoundingMode.implicit);
+        coefficientAdd(cx, ex, sx, cy, ey, sy, RoundingMode.implicit);
+    }
+
+    //iterations 
+    //decimal32 min:         15, max:         48 avg:      30.03
+    //decimal64 min:         30, max:        234 avg:     149.25    
+
+
+    return ExceptionFlags.inexact;
+}
+
+
+
+
 
 enum
 {

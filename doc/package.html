@@ -225,13 +225,16 @@ decimal32 h = <span class="d_keyword">true</span>;
 
 <br><br>
 <b>Error handling</b><br><br>
-Errors occuring in arithmetic operations using <span class="def-anchor" id="decimal"></span><code class="ddoc_psymbol">decimal</code> values can be handled in two ways. By default, the thread local
+Errors occuring in arithmetic operations using decimal values can be handled in two ways. By default, the thread local
 context will throw exceptions for errors considered severe (<a href="#.InvalidOperationException"><em class="tt">InvalidOperationException</em></a>&nbsp;,
 <a href="#.DivisionByZeroException"><em class="tt">DivisionByZeroException</em></a>&nbsp; or <a href="#.OverflowException"><em class="tt">OverflowException</em></a>&nbsp;).
 Any other error is considered silent and the context will only
-set corresponding error flags (<a href="#.ExceptionFlags.inexact"><em class="tt">ExceptionFlags.inexact</em></a>&nbsp; or <a href="#.ExceptionFlags.underflow"><em class="tt">ExceptionFlags.underflow</em></a>&nbsp;)
+set corresponding error flags (<a href="#.ExceptionFlags.inexact"><em class="tt">ExceptionFlags.inexact</em></a>&nbsp; or <a href="#.ExceptionFlags.underflow"><em class="tt">ExceptionFlags.underflow</em></a>&nbsp;)<br/>
+Most of the operations will throw <a href="#.InvalidOperationException"><em class="tt">InvalidOperationException</em></a>&nbsp; if a signaling NaN is encountered,
+if not stated otherwise in the documentation. This is to avoid usage of unitialized variables
+(decimal values are always initialized to signaling NaN)
 <pre class="d_code"><span class="d_comment">//these will throw:
-</span><span class="d_keyword">auto</span> a = decimal32() + 12;  <span class="d_comment">//InvalidOperationException
+</span><span class="d_keyword">auto</span> a = decimal32() + 12;    <span class="d_comment">//InvalidOperationException
 </span><span class="d_keyword">auto</span> b = decimal32.min / 0;   <span class="d_comment">//DivisionByZeroException
 </span><span class="d_keyword">auto</span> c = decimal32.max * 2;   <span class="d_comment">//OverflowException
 </span>
@@ -261,7 +264,7 @@ DecimalControl.enableExceptions(ExceptionFlags.inexact)
 </span>}
 </pre>
   <li>Checking for errors</li>
-<pre class="d_code">DecimalControl.lowerFlags();
+<pre class="d_code">DecimalControl.resetFlags();
 <span class="d_keyword">auto</span> a = decimal32.min / 0;
 <span class="d_keyword">if</span> (DecimalControl.divisionByZero)
 {
@@ -271,8 +274,8 @@ DecimalControl.enableExceptions(ExceptionFlags.inexact)
 </ul>
 
 <br><br>
-<b>Useful constants</b><br><br>
-The following constants are defined for each decimal type:
+<b>Properties</b><br><br>
+The following properties are defined for each decimal type:
 <div class="blankline"></div>
 
 <table class="book"><caption></caption> <tr><th scope="col">Constant</th> <th scope="col">Name</th> <th scope="col">decimal32</th> <th scope="col">decimal64</th> <th scope="col">decimal128</th></tr>
@@ -291,8 +294,15 @@ The following constants are defined for each decimal type:
 </table>
 <div class="blankline"></div>
 
-Also, there are common constant defined for each type; values below have 34 digits of precision crresponding
-to decimal128 data type; for decimal64 and decimal32, they are rounded away from 0 according to their respecive precision:
+
+<br><br>
+<b>Useful constants</b><br><br>
+There are common constants defined for each type. Values below have 34 digits of precision corresponding
+to decimal128 data type; for decimal64 and decimal32, they are rounded away from 0 according to their respecive precision.
+<pre class="d_code"><span class="d_keyword">auto</span> a = decimal32.PI;
+<span class="d_keyword">auto</span> b = decimal64.LN2;
+<span class="d_keyword">auto</span> c = decimal128.E;
+</pre>
 <div class="blankline"></div>
 
 <table class="book"><caption></caption> <tr><th scope="col">Constant</th> <th scope="col">Formula</th> <th scope="col">Value</th></tr>
@@ -316,19 +326,17 @@ to decimal128 data type; for decimal64 and decimal32, they are rounded away from
 
 <div class="blankline"></div>
 
-<div class="blankline"></div>
 
-Special remarks:
-<div class="blankline"></div>
-
+<br><br>
+<b>Special remarks</b><br><br>
 <ul> <li>Avoid mixing binary floating point values with <span class="def-anchor" id="decimal"></span><code class="ddoc_psymbol">decimal</code> values, binary foating point values cannot exactly represent 10-based exponents;</li>
  <li>There are many representations for the same number (IEEE calls them cohorts). Comparing bit by bit two decimal values is error prone;</li>
  <li>The comparison operator will return float.nan for an unordered result; There is no operator overloading for unordered comparisons;</li>
  <li>Hexadecimal notation allows to define uncanonical coefficients (&gt; 10 <sup>precision</sup> - 1). According to IEEE standard, these values are considered equal to 0;</li>
 </ul>
-Performance tips:
-<div class="blankline"></div>
 
+<br><br>
+<b>Performance tips</b><br><br>
 <ul> <li>When performing decimal calculations, avoid binary floating point; conversion for base-2 from/to base-10 is costly;</li>
  <li>Avoid custom precisions; rounding is expensive since most of the time will involve a division operation;</li>
  <li>Use decimal128 only if you truly need 34 digits of precision. decimal64 and decimal32 arithmetic is much faster;</li>
@@ -344,7 +352,7 @@ Performance tips:
 <br><br><b>Authors:</b><br>
         Răzvan Ștefănescu
 <br><br><b>Source</b><br><br>
-<a href="https://github.com/rumbu13/decimal/blob/master/decimal.d">decimal.d</a><br><br>
+<a href="https://github.com/rumbu13/decimal/blob/master/src/package.d">decimal.d</a><br><br>
 
 <dl><dt><em class="big"><span class="def-anchor" id=".Decimal"></span><div class="quickindex" id="quickindex.Decimal"></div>struct <span class="def-anchor" id="Decimal"></span><code class="ddoc_psymbol">Decimal</code>(int bits) if (bits == 32 || bits == 64 || bits == 128);
 </em></dt>
@@ -3160,7 +3168,7 @@ This operation is silent, doesn't throw any exception.
 </dl>
 
         <div class="smallprint" id="copyright">Copyright &copy; 1999-2018 by the <a href="https://dlang.org/foundation.html">D Language Foundation</a> | Page generated by
-<a href="https://dlang.org/spec/ddoc.html">Ddoc</a> on Tue Jan  9 15:54:35 2018
+<a href="https://dlang.org/spec/ddoc.html">Ddoc</a> on Thu Jan 11 07:52:35 2018
 </div>
     </div>
 </div>
