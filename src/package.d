@@ -1401,7 +1401,60 @@ unittest
 }
 
 
+@("Decimal should support decimal + integral")
+unittest
+{
+    immutable expected = decimal128("3");
 
+    auto sut = decimal128("2");
+    auto result = sut + 1;
+
+    assert(expected == result);
+}
+
+@("Decimal should support decimal - integral")
+unittest
+{
+    immutable expected = decimal128("1");
+
+    auto sut = decimal128("3");
+    auto result = sut - 2;
+
+    assert(expected == result);
+}
+
+@("Decimal should support decimal * integral")
+unittest
+{
+    immutable expected = decimal128("123.4");
+
+    auto sut = decimal128("12.34");
+    auto result = sut * 10;
+
+    assert(expected == result);
+}
+
+@("Decimal should support decimal / integral")
+unittest
+{
+    immutable expected = decimal128("0.5");
+
+    auto sut = decimal128("1");
+    auto result = sut / 2;
+
+    assert(expected == result);
+}
+
+@("Decimal should support decimal % integral")
+unittest
+{
+    immutable expected = decimal128("1");
+
+    auto sut = decimal128("10");
+    auto result = sut % 3u;
+
+    assert(expected == result);
+}
 
 ///Shorthand notations for $(MYREF Decimal) types
 alias decimal32 = Decimal!32;
@@ -9030,7 +9083,7 @@ if (isDecimal!D && isIntegral!T)
     if (isInfinity(x) || y == 0)
     {
         x = sx ? -D.nan : D.nan;
-        flags = ExceptionFlags.invalidOperation;
+        return ExceptionFlags.invalidOperation;
     }
     DataType!D cx;
     int ex, ey;
@@ -9040,12 +9093,14 @@ if (isDecimal!D && isIntegral!T)
     static if (D.sizeof >= T.sizeof)
     {
         alias cxx = cx;
-        DataType!D cyy = sy ? -y : y;
+        DataType!D cyy = Unsigned!T(sy ? -y : y);
+        DataType!D cmax = D.COEF_MAX;
     }
     else
     {
         Unsigned!T cxx = cx;
         Unsigned!T cyy = sy ? -y : y;
+        Unsigned!T cmax = D.COEF_MAX;
     }
 
     auto flags = coefficientMod(cxx, ex, sx, cyy, ey, sy, mode);
