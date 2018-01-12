@@ -1451,6 +1451,17 @@ unittest
     immutable expected = decimal128("1");
 
     auto sut = decimal128("10");
+    auto result = sut % 3;
+
+    assert(expected == result);
+}
+
+@("Decimal should support decimal % unsigned integral")
+unittest
+{
+    immutable expected = decimal128("1");
+
+    auto sut = decimal128("10");
     auto result = sut % 3u;
 
     assert(expected == result);
