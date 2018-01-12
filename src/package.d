@@ -273,7 +273,7 @@ Source:    $(LINK2 https://github.com/rumbu13/decimal/blob/master/src/package.d,
 module decimal;
 
 public import std.traits: isIntegral, isFloatingPoint, isSomeChar, isSomeString;
-public import std.format: FormatSpec, FormatException;
+public import std.format: FormatSpec, FormatException, singleSpec;
 public import std.range.primitives: isInputRange, ElementType;
 
 version(Windows)
@@ -1287,7 +1287,7 @@ public:
     void toString(C)(scope void delegate(const(C)[]) sink) const
     if (isSomeChar!C)
     {
-        sinkDecimal(FormatSpec!C("%g"), sink, this, __ctfe ? RoundingMode.implicit : DecimalControl.rounding);
+        sinkDecimal(singleSpec("%g"), sink, this, __ctfe ? RoundingMode.implicit : DecimalControl.rounding);
     }
 
     ///Converts current value to string in floating point or scientific notation,
@@ -7866,79 +7866,73 @@ if (isDecimal!(D1, D2, D) && is(D: CommonDecimal!(D1, D2)))
     return ExceptionFlags.none;
 }
 
-
-
 ExceptionFlags decimalQuantize(D1, D2)(ref D1 x, auto const ref D2 y, const int precision, const RoundingMode mode)
 if (isDecimal!(D1, D2))
 {
-    if (isSignaling(x) || isSignaling(y))
+    DataType!D1 cx; DataType!D2 cy; int ex, ey; bool sx, sy;
+    immutable fx = fastDecode(x, cx, ex, sx);
+    immutable fy = fastDecode(y, cy, ey, sy);
+
+    if (fx == FastClass.signalingNaN)
+        return ExceptionFlags.invalidOperation;
+
+    if (fy == FastClass.signalingNaN)
     {
-        x = D.nan;
+        x = y;
         return ExceptionFlags.invalidOperation;
     }
-    else if (isNaN(x) || isNaN(y))
+    
+    if (fx == FastClass.quietNaN)
+        return ExceptionFlags.none;
+
+    if (fy == FastClass.quietNaN)
     {
-        x = D.nan;
+        x = y;
         return ExceptionFlags.none;
     }
-    else if (isInfinity(x))
+
+    if (fx == FastClass.infinite)
     {
-        if (!isInfinity(y))
-        {
-            x = D.nan;
-            return ExceptionFlags.invalidOperation;
-        }
-        return ExceptionFlags.none;
-    }
-    else if (isInfinity(y))
-    {
-        x = D.nan;
+        if (fy == FastClass.infinite)
+            return ExceptionFlags.none;
+        x = D1.nan;
         return ExceptionFlags.invalidOperation;
     }
-    else
+
+    if (fy == FastClass.infinite)
     {
-        DataType!D1 cx;
-        DataType!D2 cy;
-        int ex, ey;
-        bool sx = x.unpack(cx, ex);
-        y.unpack(cy, ey);
-        return x.adjustedPack(cx, ey, sx, precision, mode, ExceptionFlags.none);
-    }   
+        x = D1.nan;
+        return ExceptionFlags.invalidOperation;
+    }
+    
+    return x.adjustedPack(cx, ey, sx, precision, mode, ExceptionFlags.none);
+       
 }
 
 ExceptionFlags decimalScale(D)(ref D x, const int n, const int precision, const RoundingMode mode)
 if (isDecimal!D)
 {
-    
-    if (isSignaling(x))
+    DataType!D cx; int ex; bool sx;
+    switch(fastDecode(x, cx, ex, sx))
     {
-        x = D.nan;
-        return ExceptionFlags.invalidOperation;
-    }
-
-    if (isInfinity(x) || isZero(x) || isNaN(x))
-        return ExceptionFlags.none;
-
-    if (n == 0)
-        return ExceptionFlags.none;
-    
-
-    DataType!D coefficient;
-    int exponent;
-    bool isNegative = x.unpack(coefficient, exponent);
-
-    if (n < 0)
-        coefficientShrink(coefficient, exponent);
-    else
-    {
-        int target = 100;
-        coefficientExpand(coefficient, exponent, target);
-    }
-
-    cappedAdd(exponent, n);
-    
-    return x.adjustedPack(coefficient, exponent, isNegative, precision, mode, ExceptionFlags.none);
-    
+        case FastClass.signalingNaN:
+            return ExceptionFlags.invalidOperation;
+        case FastClass.quietNaN:
+        case FastClass.infinite:
+        case FastClass.zero:
+            return ExceptionFlags.none;
+        default:
+            if (!n)
+                return ExceptionFlags.none;
+            if (n < 0)
+                coefficientShrink(cx, ex);
+            else
+                coefficientExpand(cx, ex);
+            ExceptionFlags flags;
+            if (cappedAdd(ex, n) != n)
+                flags = ex < 0 ? ExceptionFlags.underflow : ExceptionFlags.overflow;
+            return x.adjustedPack(cx, ex, sx, precision, mode, flags);
+    }   
 }
 
 ExceptionFlags decimalLog(D)(auto const ref D x, out int y)
@@ -12745,6 +12739,26 @@ body
     {
         cx *= pow10!T[pow];
         target -= pow;
+    }
+}
+
+//expands cx to maximum available digits
+@safe pure nothrow @nogc
+void coefficientExpand(T)(ref T cx, ref int ex)
+{
+    if (cx)
+    {
+        int px = prec(cx);
+        int pow = cast(int)pow10!T.length - px;
+        auto maxCoefficient = maxmul10!T[$ - px];
+        if (cx > maxCoefficient)
+            --pow;
+        pow = cappedSub(ex, pow);
+        if (pow)
+        {
+            cx *= pow10!T[pow];
+            target -= pow;
+        }
     }
 }
 
