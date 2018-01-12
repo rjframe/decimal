@@ -7492,20 +7492,93 @@ if (isDecimal!D && is(T: DataType!D))
     return sx ? DecimalClass.negativeNormal : DecimalClass.positiveNormal;
 }
 
+enum FastClass
+{
+    signalingNaN,
+    quietNaN,
+    infinite,
+    zero,
+    finite,
+}
+
+FastClass fastDecode(D, T)(auto const ref D x, out T cx, out int ex, out bool sx) 
+if ((is(D: decimal32) || is(D: decimal64)) && isAnyUnsigned!T)
+{
+    static assert (T.sizeof >= D.sizeof);
+
+    sx = cast(bool)(x.data & D.MASK_SGN);
+
+    if ((x.data & D.MASK_INF) == D.MASK_INF)
+        if ((x.data & D.MASK_QNAN) == D.MASK_QNAN)
+            if ((x.data & D.MASK_SNAN) == D.MASK_SNAN)
+                return FastClass.signalingNaN;
+            else
+                return FastClass.quietNaN;
+        else
+            return FastClass.infinite;
+    else if ((x.data & D.MASK_EXT) == D.MASK_EXT)
+    {
+        cx = (x.data & D.MASK_COE2) | D.MASK_COEX;
+        if (cx > D.COEF_MAX)
+            return FastClass.zero;
+        ex = cast(uint)((x.data & D.MASK_EXP2) >>> D.SHIFT_EXP2) - D.EXP_BIAS;
+    }
+    else
+    {
+        cx = x.data & D.MASK_COE1;
+        if (cx == 0U)
+            return FastClass.zero;
+        ex = cast(uint)((x.data & D.MASK_EXP1) >>> D.SHIFT_EXP1) - D.EXP_BIAS;
+    }
+
+    return FastClass.finite;
+}
+
+FastClass fastDecode(D, T)(auto const ref D x, out T cx, out int ex, out bool sx) 
+if (is(D: decimal128) && isAnyUnsigned!T)
+{
+    static assert (T.sizeof >= D.sizeof);
+
+    sx = cast(bool)(x.data.hi & D.MASK_SGN.hi);
+
+    if ((x.data.hi & D.MASK_INF.hi) == D.MASK_INF.hi)
+        if ((x.data.hi & D.MASK_QNAN.hi) == D.MASK_QNAN.hi)
+            if ((x.data & D.MASK_SNAN.hi) == D.MASK_SNAN.hi)
+                return FastClass.signalingNaN;
+            else
+                return FastClass.quietNaN;
+        else
+            return FastClass.infinite;
+    else if ((x.data & D.MASK_EXT.hi) == D.MASK_EXT.hi)
+    {
+        cx = (x.data & D.MASK_COE2) | D.MASK_COEX;
+        if (cx > D.COEF_MAX)
+            return FastClass.zero;
+        ex = cast(uint)((x.data.hi & D.MASK_EXP2.hi) >>> (D.SHIFT_EXP2 - 64)) - D.EXP_BIAS;
+    }
+    else
+    {
+        cx = x.data & D.MASK_COE1;
+        if (cx == 0U)
+            return FastClass.zero;
+        ex = cast(uint)((x.data.hi & D.MASK_EXP1.hi) >>> (D.SHIFT_EXP1 - 64)) - D.EXP_BIAS;
+    }
+
+    return FastClass.finite;
+}
+
 ExceptionFlags decimalInc(D)(ref D x, const int precision, const RoundingMode mode)
 {
 
     DataType!D cx; int ex; bool sx;
-    switch(decimalDecode(x, cx, ex, sx))
+    switch(fastDecode(x, cx, ex, sx))
     {
-        case DecimalClass.signalingNaN:
+        case FastClass.signalingNaN:
             return ExceptionFlags.invalidOperation;
-        case DecimalClass.quietNaN:
-        case DecimalClass.negativeInfinity:
-        case DecimalClass.positiveInfinity:
+        case FastClass.quietNaN:
+        case FastClass.infinite:
             return ExceptionFlags.none;
-        case DecimalClass.negativeZero:
-        case DecimalClass.positiveZero:
+        case FastClass.zero:
             x = D.one;
             return ExceptionFlags.none;
         default:
@@ -7516,18 +7589,15 @@ ExceptionFlags decimalInc(D)(ref D x, const int precision, const RoundingMode mo
 
 ExceptionFlags decimalDec(D)(ref D x, const int precision, const RoundingMode mode)
 {
-
     DataType!D cx; int ex; bool sx;
-    switch(decimalDecode(x, cx, ex, sx))
+    switch(fastDecode(x, cx, ex, sx))
     {
-        case DecimalClass.signalingNaN:
+        case FastClass.signalingNaN:
             return ExceptionFlags.invalidOperation;
-        case DecimalClass.quietNaN:
-        case DecimalClass.negativeInfinity:
-        case DecimalClass.positiveInfinity:
+        case FastClass.quietNaN:
+        case FastClass.infinite:
             return ExceptionFlags.none;
-        case DecimalClass.negativeZero:
-        case DecimalClass.positiveZero:
+        case FastClass.zero:
             x = -D.one;
             return ExceptionFlags.none;
         default:
@@ -7536,20 +7606,17 @@ ExceptionFlags decimalDec(D)(ref D x, const int precision, const RoundingMode mo
     }
 }
 
-
 ExceptionFlags decimalRound(D)(ref D x, const int precision, const RoundingMode mode)
 if (isDecimal!D)
 {
     DataType!D cx; int ex; bool sx;
-    switch(decimalDecode(x, cx, ex, sx))
+    switch(fastDecode(x, cx, ex, sx))
     {
-        case DecimalClass.signalingNaN:
+        case FastClass.signalingNaN:
             return ExceptionFlags.invalidOperation; 
-        case DecimalClass.quietNaN:
-        case DecimalClass.negativeInfinity:
-        case DecimalClass.positiveInfinity:
-        case DecimalClass.negativeZero:
-        case DecimalClass.positiveZero:
+        case FastClass.quietNaN:
+        case FastClass.infinite:
+        case FastClass.zero:
             return ExceptionFlags.none;
         default:
             auto flags = coefficientAdjust(cx, ex, 0, D.EXP_MAX, D.COEF_MAX, sx, mode);
@@ -7560,15 +7627,13 @@ if (isDecimal!D)
 ExceptionFlags decimalAdjust(D)(ref D x, const int precision, const RoundingMode mode)
 {
     DataType!D cx; int ex; bool sx;
-    switch(decimalDecode(x, cx, ex, sx))
+    switch(fastDecode(x, cx, ex, sx))
     {
-        case DecimalClass.signalingNaN:
+        case FastClass.signalingNaN:
             return ExceptionFlags.invalidOperation; 
-        case DecimalClass.quietNaN:
-        case DecimalClass.negativeInfinity:
-        case DecimalClass.positiveInfinity:
-        case DecimalClass.negativeZero:
-        case DecimalClass.positiveZero:
+        case FastClass.quietNaN:
+        case FastClass.infinite:
+        case FastClass.zero:
             return ExceptionFlags.none;
         default:
             return x.adjustedPack(cx, ex, sx, precision, mode, ExceptionFlags.none);
@@ -7579,18 +7644,17 @@ ExceptionFlags decimalNextUp(D)(ref D x)
 if (isDecimal!D)
 {
     DataType!D cx; int ex; bool sx;
-    switch(decimalDecode(x, cx, ex, sx))
+    switch(fastDecode(x, cx, ex, sx))
     {
-        case DecimalClass.signalingNaN:
+        case FastClass.signalingNaN:
             return ExceptionFlags.invalidOperation; 
-        case DecimalClass.quietNaN:
-        case DecimalClass.positiveInfinity:
+        case FastClass.quietNaN:
             return ExceptionFlags.none;
-        case DecimalClass.negativeInfinity:
-            x = -D.max;
+        case FastClass.infinite:
+            if (sx)
+                x = -D.max;
             return ExceptionFlags.none;
-        case DecimalClass.negativeZero:
-        case DecimalClass.positiveZero:
+        case FastClass.zero:
             x.pack(DataType!D(1U), D.EXP_MIN, false);
             return ExceptionFlags.none;
         default:
@@ -7613,18 +7677,17 @@ ExceptionFlags decimalNextDown(D)(ref D x)
 if (isDecimal!D)
 {
     DataType!D cx; int ex; bool sx;
-    switch(decimalDecode(x, cx, ex, sx))
+    switch(fastDecode(x, cx, ex, sx))
     {
-        case DecimalClass.signalingNaN:
+        case FastClass.signalingNaN:
             return ExceptionFlags.invalidOperation; 
-        case DecimalClass.quietNaN:
-        case DecimalClass.negativeInfinity:
+        case FastClass.quietNaN:
             return ExceptionFlags.none;
-        case DecimalClass.positiveInfinity:
-            x = D.max;
+        case FastClass.infinite:
+            if (!sx)
+                x = D.max;
             return ExceptionFlags.none;
-        case DecimalClass.negativeZero:
-        case DecimalClass.positiveZero:
+        case FastClass.zero:
             x.pack(DataType!D(1U), D.EXP_MIN, true);
             return ExceptionFlags.none;
         default:
@@ -7646,96 +7709,39 @@ if (isDecimal!D)
 ExceptionFlags decimalMin(D1, D2, D)(auto const ref D1 x, auto const ref D2 y, out D z)
 if (isDecimal!(D1, D2, D) && is(D: CommonDecimal!(D1, D2)))
 {
+    DataType!D cx, cy; int ex, ey; bool sx, sy;
+    immutable fx = fastDecode(x, cx, ex, sx);
+    immutable fy = fastDecode(y, cy, ey, sy);
 
-    if (isSignaling(x))
+    if (fx == FastClass.signalingNaN)
     {
         z = x;
         return ExceptionFlags.invalidOperation;
     }
 
-    if (isSignaling(y))
+    if (fy == FastClass.signalingNaN)
     {
         z = y;
         return ExceptionFlags.invalidOperation;
     }
 
-    if (isNaN(x))
+    if (fx == FastClass.quietNaN)
     {
         z = y;
         return ExceptionFlags.none;
     }
 
-    if (isNaN(y))
+    if (fy == FastClass.quietNaN)
     {
         z = x;
         return ExceptionFlags.none;
     }
 
-    auto c = decimalCmp(x, y);
+    immutable c = coefficientCmp(cx, ex, sx, cy, ey, sy);
     if (c >= 0)
-        z = canonical(y);
+        z = y;
     else
-        z = canonical(x);
-
-    return ExceptionFlags.none;
-}
-
-ExceptionFlags decimalMax(D1, D2, D)(auto const ref D1 x, auto const ref D2 y, out D z)
-if (isDecimal!(D1, D2, D) && is(D: CommonDecimal!(D1, D2)))
-{
-    if (isSignaling(x) || isSignaling(y))
-    {
-        z = D.nan;
-        return ExceptionFlags.invalidOperation;
-    }
-
-    if (isNaN(x))
-    {
-        z = canonical(y);
-        return ExceptionFlags.none;
-    }
-
-    if (isNaN(y))
-    {
-        z = canonical(x);
-        return ExceptionFlags.none;
-    }
-
-    auto c = decimalCmp(x, y);
-    if (c <= 0)
-        z = canonical(y);
-    else
-        z = canonical(x);
-
-    return ExceptionFlags.none;
-}
-
-ExceptionFlags decimalMaxAbs(D1, D2, D)(auto const ref D1 x, auto const ref D2 y, out D z)
-if (isDecimal!(D1, D2, D) && is(D: CommonDecimal!(D1, D2)))
-{
-    if (isSignaling(x) || isSignaling(y))
-    {
-        z = D.nan;
-        return ExceptionFlags.invalidOperation;
-    }
-
-    if (isNaN(x))
-    {
-        z = canonical(y);
-        return ExceptionFlags.none;
-    }
-
-    if (isNaN(y))
-    {
-        z = canonical(x);
-        return ExceptionFlags.none;
-    }
-
-    auto c = decimalCmp(abs(x), abs(y));
-    if (c <= 0)
-        z = canonical(y);
-    else
-        z = canonical(x);
+        z = x;
 
     return ExceptionFlags.none;
 }
@@ -7743,32 +7749,124 @@ if (isDecimal!(D1, D2, D) && is(D: CommonDecimal!(D1, D2)))
 ExceptionFlags decimalMinAbs(D1, D2, D)(auto const ref D1 x, auto const ref D2 y, out D z)
 if (isDecimal!(D1, D2, D) && is(D: CommonDecimal!(D1, D2)))
 {
-    if (isSignaling(x) || isSignaling(y))
+    DataType!D cx, cy; int ex, ey; bool sx, sy;
+    immutable fx = fastDecode(x, cx, ex, sx);
+    immutable fy = fastDecode(y, cy, ey, sy);
+
+    if (fx == FastClass.signalingNaN)
     {
-        z = D.nan;
+        z = x;
         return ExceptionFlags.invalidOperation;
     }
 
-    if (isNaN(x))
+    if (fy == FastClass.signalingNaN)
     {
-        z = canonical(y);
+        z = y;
+        return ExceptionFlags.invalidOperation;
+    }
+
+    if (fx == FastClass.quietNaN)
+    {
+        z = y;
         return ExceptionFlags.none;
     }
 
-    if (isNaN(y))
+    if (fy == FastClass.quietNaN)
     {
-        z = canonical(x);
+        z = x;
         return ExceptionFlags.none;
     }
 
-    auto c = decimalCmp(abs(x), abs(y));
+    immutable c = coefficientCmp(cx, ex, cy, ey);
     if (c >= 0)
-        z = canonical(y);
+        z = y;
     else
-        z = canonical(x);
+        z = x;
 
     return ExceptionFlags.none;
 }
+
+ExceptionFlags decimalMax(D1, D2, D)(auto const ref D1 x, auto const ref D2 y, out D z)
+if (isDecimal!(D1, D2, D) && is(D: CommonDecimal!(D1, D2)))
+{
+    DataType!D cx, cy; int ex, ey; bool sx, sy;
+    immutable fx = fastDecode(x, cx, ex, sx);
+    immutable fy = fastDecode(y, cy, ey, sy);
+
+    if (fx == FastClass.signalingNaN)
+    {
+        z = x;
+        return ExceptionFlags.invalidOperation;
+    }
+
+    if (fy == FastClass.signalingNaN)
+    {
+        z = y;
+        return ExceptionFlags.invalidOperation;
+    }
+
+    if (fx == FastClass.quietNaN)
+    {
+        z = y;
+        return ExceptionFlags.none;
+    }
+
+    if (fy == FastClass.quietNaN)
+    {
+        z = x;
+        return ExceptionFlags.none;
+    }
+
+    immutable c = coefficientCmp(cx, ex, sx, cy, ey, sy);
+    if (c <= 0)
+        z = y;
+    else
+        z = x;
+
+    return ExceptionFlags.none;
+}
+
+ExceptionFlags decimalMaxAbs(D1, D2, D)(auto const ref D1 x, auto const ref D2 y, out D z)
+if (isDecimal!(D1, D2, D) && is(D: CommonDecimal!(D1, D2)))
+{
+    DataType!D cx, cy; int ex, ey; bool sx, sy;
+    immutable fx = fastDecode(x, cx, ex, sx);
+    immutable fy = fastDecode(y, cy, ey, sy);
+
+    if (fx == FastClass.signalingNaN)
+    {
+        z = x;
+        return ExceptionFlags.invalidOperation;
+    }
+
+    if (fy == FastClass.signalingNaN)
+    {
+        z = y;
+        return ExceptionFlags.invalidOperation;
+    }
+
+    if (fx == FastClass.quietNaN)
+    {
+        z = y;
+        return ExceptionFlags.none;
+    }
+
+    if (fy == FastClass.quietNaN)
+    {
+        z = x;
+        return ExceptionFlags.none;
+    }
+
+    immutable c = coefficientCmp(cx, ex, cy, ey);
+    if (c <= 0)
+        z = y;
+    else
+        z = x;
+
+    return ExceptionFlags.none;
+}
+
+
 
 ExceptionFlags decimalQuantize(D1, D2)(ref D1 x, auto const ref D2 y, const int precision, const RoundingMode mode)
 if (isDecimal!(D1, D2))
@@ -9040,6 +9138,9 @@ if (isDecimal!D && isFloatingPoint!F)
 int decimalCmp(D1, D2)(auto const ref D1 x, auto const ref D2 y)
 if (isDecimal!(D1, D2))
 {
+
+
+
     if (isNaN(x) || isNaN(y))
         return -2;
     
@@ -13023,53 +13124,63 @@ int coefficientCmp(T)(const T cx, const int ex, const bool sx, const T cy, const
     else if (!sx && sy)
         return 1;
     else
+        return sx ? -coefficientCmp(cx, ex, cy, ey) : coefficientCmp(cx, ex, cy, ey);
+}
+
+@safe pure nothrow @nogc
+int coefficientCmp(T)(const T cx, const int ex, const T cy, const int ey)
+{
+    if (!cx)
+        return cy ? -1 : 0;
+    if (!cy)
+        return 1;
+
+    int px = prec(cx);
+    int py = prec(cy);
+
+    if (px > py)
     {
-        int px = prec(cx);
-        int py = prec(cy);
-
-        if (px > py)
-        {
-            int eyy = ey - (px - py);
-            if (ex > eyy)
-                return sx ? -1 : 1;
-            if (ex < eyy)
-                return sx ? 1 : -1;
-            Unqual!T cyy = cy;
-            mulpow10(cyy, px - py);
-            if (cx > cyy)
-                return sx ? -1: +1;
-            if (cx < cyy)
-                return sx ? 1 : -1;
-            return 0;
-        }
-        
-        if (px < py)
-        {
-            int exx = ex - (py - px);
-            if (exx > ey)
-                return sx ? -1 : 1;
-            if (exx < ey)
-                return sx ? 1 : -1;
-            Unqual!T cxx = cx;
-            mulpow10(cxx, py - px);       
-            if (cxx > cy)
-                return sx ? -1: +1;
-            if (cxx < cy)
-                return sx ? 1 : -1;
-            return 0;
-        }
-
-        if (ex > ey)
-            return sx ? -1 : 1;
-        if (ex < ey)
-            return sx ? 1 : -1;
-
-        if (cx > cy)
-            return sx ? -1 : 1;
-        else if (cx < cy)
-            return sx ? 1 : -1;
+        int eyy = ey - (px - py);
+        if (ex > eyy)
+            return 1;
+        if (ex < eyy)
+            return -1;
+        Unqual!T cyy = cy;
+        mulpow10(cyy, px - py);
+        if (cx > cyy)
+            return 1;
+        if (cx < cyy)
+            return -1;
         return 0;
     }
+
+    if (px < py)
+    {
+        int exx = ex - (py - px);
+        if (exx > ey)
+            return 1;
+        if (exx < ey)
+            return -1;
+        Unqual!T cxx = cx;
+        mulpow10(cxx, py - px);       
+        if (cxx > cy)
+            return 1;
+        if (cxx < cy)
+            return -1;
+        return 0;
+    }
+
+    if (ex > ey)
+        return 1;
+    if (ex < ey)
+        return -1;
+
+    if (cx > cy)
+        return 1;
+    else if (cx < cy)
+        return -1;
+    return 0;
+    
 }
 
 @safe pure nothrow @nogc
