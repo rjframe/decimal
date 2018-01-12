@@ -2497,6 +2497,11 @@ if (isDecimal!(D1, D2))
         mulpow10(cxx, py - px);            
     }
 
+    if (ex > ey)
+        return sx ? -1 : 1;
+    else if (ex < ey)
+        return sx ? 1 : -1;
+
     if (cxx > cyy)
         return sx ? -1 : 1;
     else if (cxx < cyy)

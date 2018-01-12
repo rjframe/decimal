@@ -120,20 +120,23 @@ void randomize(T)(T[] a)
 import std.stdio;
 import decimal;
 
+
 void loopme(T) ()
 {
     "---".writeln;
-    T e = T(1000);
-    while (e > T(1e-6)) {
-        e.writeln;
+    T e = 10;
+    while (e > 1e-6) {
         e /= 10;
+        writeln (e, ' ', e > 1e-6);
     }
 }
 
 int main(string[] argv)
 {
-    loopme!float;
     loopme!decimal32;
+    loopme!decimal64;
+    loopme!decimal128;
+
 
     getchar();
     return 0;
