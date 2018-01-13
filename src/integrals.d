@@ -1135,13 +1135,13 @@ uint128 xsqr(const ulong x)
 {
     immutable xlo = cast(uint)x;
     immutable xhi = cast(uint)(x >>> 32);
-
     immutable hilo = xmul(xlo, xhi);
 
-    ulong w0 = cast(uint)hilo;
-    ulong k = hilo >>> 32;
+    ulong t = xsqr(xlo);
+    ulong w0 = cast(uint)t;
+    ulong k = t >>> 32;
 
-    ulong t = hilo + k;
+    t = hilo + k;
     ulong w1 = cast(uint)t;
     ulong w2 = t >>> 32;
 

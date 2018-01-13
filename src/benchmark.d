@@ -119,23 +119,31 @@ void randomize(T)(T[] a)
 
 import std.stdio;
 import decimal;
+import std.math;
 
-
-void loopme(T) ()
+void dump(double angle)
 {
-    "---".writeln;
-    T e = 10;
-    while (e > 1e-6) {
-        e /= 10;
-        writeln (e, ' ', e > 1e-6);
-    }
+    writefln("sin(%+2.1f): %+18.17f %+8.7f %+17.16f %+35.34f", angle,
+             sin(angle), 
+             sin(decimal32(angle)), 
+             sin(decimal64(angle)), 
+             sin(decimal128(angle)));
+    writefln("cos(%+2.1f): %+18.17f %+8.7f %+17.16f %+35.34f", angle,
+             cos(angle), 
+             cos(decimal32(angle)), 
+             cos(decimal64(angle)), 
+             cos(decimal128(angle)));
+    writefln("tan(%+2.1f): %+18.17f %+8.7f %+17.16f %+35.34f", angle,
+             tan(angle), 
+             tan(decimal32(angle)), 
+             tan(decimal64(angle)), 
+             tan(decimal128(angle)));
 }
 
 int main(string[] argv)
 {
-    loopme!decimal32;
-    loopme!decimal64;
-    loopme!decimal128;
+    for (auto i = -10; i < 10; ++i)
+        dump(i / 10.0);
 
 
     getchar();
