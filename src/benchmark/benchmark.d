@@ -142,8 +142,24 @@ void dump(double angle)
 
 int main(string[] argv)
 {
-    for (auto i = -10; i < 10; ++i)
-        dump(i / 10.0);
+
+    //real r;
+    //for (r = 1; r < 6; r += .1L) {
+    //    decimal128 d = r;
+    //    auto dsin = sin (d);
+    //    auto rsin = sin (r);
+    //    auto delta = dsin - rsin;
+    //    writefln ("%9.2f %30.24f %30.24f %12.4g", r, rsin, dsin, delta);
+    //}
+
+    real r;
+    for (r = 1; r < 6; r += .1L) {
+        decimal128 d = r;
+        auto dsin = sin (d);
+        auto rsin = sin (r);
+        auto delta = dsin - rsin;
+        writefln ("%9.2f %30.24f %30.24f %12.4g", r, rsin, dsin, delta);
+    }
 
 
     getchar();

@@ -947,19 +947,25 @@ public:
         ExceptionFlags flags;
         Unqual!T result;
         static if (isUnsigned!T)
-            flags = decimalToUnsigned(this, result, mode);
-        else static if (isSigned!T)
-            flags = decimalToSigned(this, result, mode);
+            flags = decimalToUnsigned(this, result, 
+                                      __ctfe ? RoundingMode.implicit : DecimalControl.rounding);
+        else static if (isIntegral!T)
+            flags = decimalToSigned(this, result, 
+                                    __ctfe ? RoundingMode.implicit : DecimalControl.rounding);
         else static if (is(T: D))
             result = this;
         else static if (isDecimal!T)
-            auto flags = decimalToDecimal(this, result, precision, mode);
+            flags = decimalToDecimal(this, result, 
+                                          __ctfe ? 0 : DecimalControl.precision,
+                                          __ctfe ? RoundingMode.implicit : DecimalControl.rounding);
         else static if (isFloatingPoint!T)
-            auto flags = decimalToFloat(this, result, mode);
+            flags = decimalToFloat(this, result, 
+                                        __ctfe ? RoundingMode.implicit : DecimalControl.rounding);
         else static if (isSomeChar!T)
         {
             uint r;
-            auto flags = decimalToUnsigned(this, r, mode);
+            flags = decimalToUnsigned(this, r, 
+                                           __ctfe ? RoundingMode.implicit : DecimalControl.rounding);
             result = cast(Unqual!T)r;
         }
         else static if (is(T: bool))
@@ -8223,63 +8229,52 @@ if (isDecimal!(D1, D2))
 ExceptionFlags decimalMul(D, T)(ref D x, auto const ref T y, const int precision, const RoundingMode mode)
 if (isDecimal!D && isIntegral!T)
 {
-    //
-
-    bool sx = cast(bool)signbit(x);
-    static if (isUnsigned!T)
-        enum sy = false;
-    else
-        bool sy = y < 0;
-
-    if (isSignaling(x))
-    {
-        x = sx ^ sy ? -D.nan : D.nan;
-        return ExceptionFlags.invalidOperation;
-    }
-
-    if (isNaN(x))
-    {
-        x = sx ^ sy ? -D.nan : D.nan;
-        return ExceptionFlags.none;
-    }
-
-    if (isInfinity(x))
-    {
-        if (!y)
-        {
-            x = sx ^ sy ? -D.nan : D.nan;
-            return ExceptionFlags.invalidOperation;
-        }
-        x = sx ^ sy ? -D.infinity : D.infinity;
-        return ExceptionFlags.none;
-    }
-
-    if (isZero(x) || y == 0)
-    {
-        x = sx ^ sy ? -D.zero : D.zero;
-        return ExceptionFlags.none;
-    }
-
-    DataType!D cx;
-    int ex;
-    x.unpack(cx, ex);
+    alias DT = DataType!D;
 
     static if (D.sizeof >= T.sizeof)
+        alias U = DT;
+    else
+        alias U = Unsigned!(Unqual!T);
+
+    U cx; int ex; bool sx;
+
+    static if (isUnsigned!T)
     {
-        DataType!D cy = Unsigned!T(sy ? -y : y);
-        alias cxx = cx;
-        enum cmax = D.COEF_MAX;
+        enum bool sy = false;
+        U cy = y;
     }
     else
     {
-        Unsigned!T cy = sy ? -y : y;
-        Unsigned!T cxx = cx;
-        Unsigned!T cmax = D.COEF_MAX;
-    }
+        immutable bool sy = y < 0;
+        U cy = cast(Unsigned!T)(sy ? -y : y);
+    } 
 
-    auto flags = coefficientMul(cxx, ex, sx, cy, 0, sy, mode);
-    flags |= coefficientAdjust(cxx, ex, cmax, sx, mode);
-    return x.adjustedPack(cvt!(DataType!D)(cxx), ex, sx, precision, mode, flags);
+    switch(fastDecode(x, cx, ex, sx))
+    {
+        case FastClass.signalingNaN:
+            return ExceptionFlags.invalidOperation;
+        case FastClass.quietNaN:
+            return ExceptionFlags.none;
+        case FastClass.infinite:
+            if (!y)
+            {
+                x = sx ^ sy ? -D.nan : D.nan;
+                return ExceptionFlags.invalidOperation;
+            }
+            return ExceptionFlags.none;
+        case FastClass.zero:
+            x = sx ^ sy ? -D.zero : D.zero;
+            return ExceptionFlags.none;
+        default:
+            if (!y)
+            {
+                x = sx ^ sy ? -D.zero : D.zero;
+                return ExceptionFlags.none;
+            }
+            auto flags = coefficientMul(cx, ex, sx, cy, 0, sy, RoundingMode.implicit);
+            flags |= coefficientAdjust(cx, ex, cvt!U(DT.max), sx, RoundingMode.implicit);
+            return x.adjustedPack(cvt!DT(cx), ex, sx, precision, mode, flags);
+    }
 }
 
 ExceptionFlags decimalMul(D, F)(ref D x, auto const ref F y, const int precision, const RoundingMode mode)
