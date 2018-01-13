@@ -5,8 +5,6 @@ module decimal.floats;
 /* FLOAT UTILITY FUNCTIONS                                                                                            */
 /* ****************************************************************************************************************** */
 
-
-
 private import decimal.integrals: uint128, clz, divrem;
 
 package:

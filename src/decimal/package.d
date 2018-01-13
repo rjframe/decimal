@@ -273,12 +273,31 @@ Source:    $(LINK2 https://github.com/rumbu13/decimal/blob/master/src/package.d,
 module decimal;
 
 public import std.traits: isIntegral, isFloatingPoint, isSomeChar, isSomeString;
-public import std.format: FormatSpec, FormatException, singleSpec;
+public import std.format: FormatSpec, FormatException;
 public import std.range.primitives: isInputRange, ElementType;
 
 version(Windows)
 {
     public import core.sys.windows.wtypes: DECIMAL;
+}
+else
+{
+    struct DECIMAL {
+        ushort wReserved;
+        struct {
+            ubyte scale;
+            ubyte sign;
+            enum ubyte DECIMAL_NEG = 0x80;
+        }
+        uint Hi32;
+        union {
+            struct {
+                uint Lo32;
+                uint Mid32;
+            }
+            ulong Lo64;
+        }
+    }
 }
 
 private import decimal.integrals;
@@ -296,8 +315,8 @@ else
 
 private import std.traits: Unqual, isUnsigned, Unsigned, isSigned;
 private import core.checkedint: adds, subs;
-private import std.range.primitives: front, popFront, empty;
 private import std.math: isNaN, isInfinity, signbit, IeeeFlags, FloatingPointControl;
+private import std.format: singleSpec;
 
 private
 {
@@ -6093,8 +6112,16 @@ if (isFloatingPoint!F && isDecimal!D)
 /**
 Converts the specified value to/from Microsoft currency data type;
 Throws:
-    $(MYREF InvalidOperationException), $(MYREF InexactException)
-    $(MYREF UnderflowException), $(MYREF OverflowException)
+$(BOOKTABLE,
+    $(TR $(TD $(MYREF InvalidOperationException)) 
+        $(TD x is NaN))
+    $(TR $(TD $(MYREF OverflowException)) 
+        $(TD x is infinite or outside the Currency limits))
+    $(TR $(TD $(MYREF UnderflowException)) 
+        $(TD x is too small to be represented as Currency))
+    $(TR $(TD $(MYREF InexactException)) 
+         $(TD x cannot be represented exactly))
+)
 Notes:
     The Microsoft currency data type is stored as long 
     always scaled by 10$(SUPERSCRIPT -4)
@@ -6119,7 +6146,7 @@ if (isDecimal!D)
     if (isZero(x))
         return 0;
 
-    ex +=2;
+    ex +=4;
 
     long result;
     flags = decimalToSigned!long(x, result, 
@@ -6142,117 +6169,120 @@ if (isDecimal!D)
     return result;
 }
 
-version(Windows)
+/**
+Converts the specified value to/from Microsoft _decimal data type;
+Throws:
+$(BOOKTABLE,
+    $(TR $(TD $(MYREF InvalidOperationException)) 
+        $(TD x is NaN))
+    $(TR $(TD $(MYREF OverflowException)) 
+        $(TD x is infinite or outside the DECIMAL limits))
+    $(TR $(TD $(MYREF UnderflowException)) 
+        $(TD x is too small to be represented as DECIMAL))
+    $(TR $(TD $(MYREF InexactException)) 
+         $(TD x cannot be represented exactly))
+)
+Notes:
+    The Microsoft _decimal data type is stored as a 96 bit integral 
+    scaled by a variable exponent between 10$(SUPERSCRIPT -28) and 10$(SUPERSCRIPT 0). 
+*/
+DECIMAL toMsDecimal(D)(auto const ref D x)
 {
+    ExceptionFlags flags;
+    DECIMAL result;
 
-    /**
-    Converts the specified value to/from Microsoft _decimal data type;
-    Throws:
-        $(MYREF InvalidOperationException), $(MYREF InexactException)
-        $(MYREF UnderflowException), $(MYREF OverflowException)
-    Notes:
-        The Microsoft _decimal data type is stored as a 96 bit integral 
-        scaled by a variable exponent between 10$(SUPERSCRIPT -28) and 10$(SUPERSCRIPT 0). 
-    Availability:
-        This conversion function is available only on Windows systems
-    */
-    DECIMAL toMsDecimal(D)(auto const ref D x)
+    if (isNaN(x))
     {
-        ExceptionFlags flags;
-        DECIMAL result;
-
-        if (isNaN(x))
-        {
-            if (__ctfe)
-                DecimalControl.checkFlags(ExceptionFlags.invalidOperation, ExceptionFlags.severe);
-            else
-            {
-                DecimalControl.raiseFlags(ExceptionFlags.invalidOperation);
-            }
-            return result;
-        }
-
-        if (isInfinity(x))
-        {
-            if (__ctfe)
-                DecimalControl.checkFlags(ExceptionFlags.overflow, ExceptionFlags.severe);
-            else
-            {
-                DecimalControl.raiseFlags(ExceptionFlags.overflow);
-            }
-            result.Lo64 = ulong.max;
-            result.Hi32 = uint.max;
-            if (signbit(x))
-                result.sign = DECIMAL.DECIMAL_NEG;
-            return result;
-        }
-
-        if (isZero(x))
-            return result;
-
-        DataType!D cx;
-        int ex;
-        bool sx = x.unpack(cx, ex);
-
-        
-        static if (is(D == decimal128))
-            alias cxx = cx;
-        else
-            uint128 cxx = cx;
-
-        enum cmax = uint128(cast(ulong)(uint.max), ulong.max);
-
-        flags = adjustCoefficient(cxx, ex, -28, 0, cmax, sx, 
-                                    __ctfe ? RoundingMode.implicit : DecimalControl.rounding);
-
-        if (flags & ExceptionFlags.overflow)
-        {
-            result.Lo64 = ulong.max;
-            result.Hi32 = uint.max;
-            if (signbit(x))
-                result.sign = DECIMAL.DECIMAL_NEG;
-        }
-        else if (flags & ExceptionFlags.underflow)
-        {
-            result.Lo64 = 0;
-            result.Hi32 = 0;
-            if (sx)
-                result.sign = DECIMAL.DECIMAL_NEG;
-        }
+        if (__ctfe)
+            DecimalControl.checkFlags(ExceptionFlags.invalidOperation, ExceptionFlags.severe);
         else
         {
-            result.Lo64 = cxx.lo;
-            result.Hi32 = cast(uint)(cxx.hi);
-            result.scale = -ex;
-            if (sx)
-                result.sign = DECIMAL.DECIMAL_NEG;
+            DecimalControl.raiseFlags(ExceptionFlags.invalidOperation);
         }
-        
-        DecimalControl.raiseFlags(flags);
         return result;
     }
 
-
-    ///ditto
-    D fromMsDecimal(D)(auto const ref DECIMAL x)
+    if (isInfinity(x))
     {
-        ExceptionFlags flags;
-        Unqual!D result;
-
-        uint128 cx = uint128(cast(ulong)(x.Hi32), x.Lo64);
-        int ex = -x.scale;
-        bool sx = (x.sign & DECIMAL.DECIMAL_NEG) == DECIMAL.DECIMAL_NEG; 
-        
-        flags = coefficientAdjust(cx, ex, cvt!uint128(D.COEF_MAX), RoundingMode.implicit);
-
-        flags |= result.adjustedPack(cvt!(DataType!D)(cx), ex, sx,
-                                     __ctfe ?  D.PRECISION : DecimalControl.precision,
-                                     __ctfe ? RoundingMode.implicit  : DecimalControl.rounding,
-                                     flags);
-        DecimalControl.raiseFlags(flags);
+        if (__ctfe)
+            DecimalControl.checkFlags(ExceptionFlags.overflow, ExceptionFlags.severe);
+        else
+        {
+            DecimalControl.raiseFlags(ExceptionFlags.overflow);
+        }
+        result.Lo64 = ulong.max;
+        result.Hi32 = uint.max;
+        if (signbit(x))
+            result.sign = DECIMAL.DECIMAL_NEG;
         return result;
     }
+
+    if (isZero(x))
+        return result;
+
+    DataType!D cx;
+    int ex;
+    bool sx = x.unpack(cx, ex);
+
+        
+    static if (is(D == decimal128))
+        alias cxx = cx;
+    else
+        uint128 cxx = cx;
+
+    enum cmax = uint128(cast(ulong)(uint.max), ulong.max);
+
+    flags = adjustCoefficient(cxx, ex, -28, 0, cmax, sx, 
+                                __ctfe ? RoundingMode.implicit : DecimalControl.rounding);
+
+    if (flags & ExceptionFlags.overflow)
+    {
+        result.Lo64 = ulong.max;
+        result.Hi32 = uint.max;
+        if (signbit(x))
+            result.sign = DECIMAL.DECIMAL_NEG;
+    }
+    else if (flags & ExceptionFlags.underflow)
+    {
+        result.Lo64 = 0;
+        result.Hi32 = 0;
+        if (sx)
+            result.sign = DECIMAL.DECIMAL_NEG;
+    }
+    else
+    {
+        result.Lo64 = cxx.lo;
+        result.Hi32 = cast(uint)(cxx.hi);
+        result.scale = -ex;
+        if (sx)
+            result.sign = DECIMAL.DECIMAL_NEG;
+    }
+        
+    DecimalControl.raiseFlags(flags);
+    return result;
 }
+
+
+///ditto
+D fromMsDecimal(D)(auto const ref DECIMAL x)
+{
+    ExceptionFlags flags;
+    Unqual!D result;
+
+    uint128 cx = uint128(cast(ulong)(x.Hi32), x.Lo64);
+    int ex = -x.scale;
+    bool sx = (x.sign & DECIMAL.DECIMAL_NEG) == DECIMAL.DECIMAL_NEG; 
+        
+    flags = coefficientAdjust(cx, ex, cvt!uint128(D.COEF_MAX), RoundingMode.implicit);
+
+    flags |= result.adjustedPack(cvt!(DataType!D)(cx), ex, sx,
+                                    __ctfe ?  D.PRECISION : DecimalControl.precision,
+                                    __ctfe ? RoundingMode.implicit  : DecimalControl.rounding,
+                                    flags);
+    DecimalControl.raiseFlags(flags);
+    return result;
+}
+
 
 
 /**
@@ -12072,86 +12102,6 @@ if (isDecimal!(D1, D2) && is(D: CommonDecimal!(D1, D2)))
 //coefficientSqr    - inexact, overflow, underflow
 
 
-pure @safe nothrow @nogc
-int cappedSub(ref int target, const int value)
-{
-    bool ovf;
-    int result = subs(target, value, ovf);
-    if (ovf)
-    {
-        if (value > 0)
-        {
-            //target was negative
-            result = target - int.min;
-            target = int.min;
-        }
-        else
-        {
-            //target was positive
-            result = target - int.max;
-            target = int.max;
-        }
-        return result;
-    }
-    else
-    {
-        target -= value;
-        return value;
-    }
-}
-
-pure @safe nothrow @nogc
-int cappedAdd(ref int target, const int value)
-{
-    bool ovf;
-    int result = adds(target, value, ovf);
-    if (ovf)
-    {
-        if (value > 0)
-        {
-            //target was positive
-            result = int.max - target;
-            target = int.max;      
-        }
-        else
-        {
-            //target was negative
-            result = int.min - target;
-            target = int.min;
-        }
-        return result;
-    }
-    else
-    {
-        target += value;
-        return value;
-    }
-}
-
-unittest
-{
-    int ex = int.min + 1;
-    int px = cappedSub(ex, 3);
-    assert (ex == int.min);
-    assert (px == 1);
-
-    ex = int.min + 3;
-    px = cappedSub(ex, 2);
-    assert (ex == int.min + 1);
-    assert (px == 2);
-
-    ex = int.max - 1;
-    px = cappedSub(ex, -2);
-    assert (ex == int.max);
-    assert (px == -1);
-
-    ex = int.max - 3;
-    px = cappedSub(ex, -2);
-    assert (ex == int.max - 1);
-    assert(px == -2);
-
-
-}
 
 
 //divides coefficient by 10^power

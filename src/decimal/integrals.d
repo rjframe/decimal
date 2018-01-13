@@ -2,7 +2,7 @@ module decimal.integrals;
 
 private import core.bitop : bsr, bsf;
 private import std.traits: isUnsigned, isSomeChar, Unqual, CommonType;
-private import core.checkedint: addu, subu, mulu;
+private import core.checkedint: addu, subu, mulu, adds, subs;
 
 package:
 
@@ -1668,6 +1668,88 @@ if (isAnyUnsigned!T && isAnyUnsigned!U)
         return value;
 }
 
+
+
+pure @safe nothrow @nogc
+int cappedSub(ref int target, const int value)
+{
+    bool ovf;
+    int result = subs(target, value, ovf);
+    if (ovf)
+    {
+        if (value > 0)
+        {
+            //target was negative
+            result = target - int.min;
+            target = int.min;
+        }
+        else
+        {
+            //target was positive
+            result = target - int.max;
+            target = int.max;
+        }
+        return result;
+    }
+    else
+    {
+        target -= value;
+        return value;
+    }
+}
+
+pure @safe nothrow @nogc
+int cappedAdd(ref int target, const int value)
+{
+    bool ovf;
+    int result = adds(target, value, ovf);
+    if (ovf)
+    {
+        if (value > 0)
+        {
+            //target was positive
+            result = int.max - target;
+            target = int.max;      
+        }
+        else
+        {
+            //target was negative
+            result = int.min - target;
+            target = int.min;
+        }
+        return result;
+    }
+    else
+    {
+        target += value;
+        return value;
+    }
+}
+
+unittest
+{
+    int ex = int.min + 1;
+    int px = cappedSub(ex, 3);
+    assert (ex == int.min);
+    assert (px == 1);
+
+    ex = int.min + 3;
+    px = cappedSub(ex, 2);
+    assert (ex == int.min + 1);
+    assert (px == 2);
+
+    ex = int.max - 1;
+    px = cappedSub(ex, -2);
+    assert (ex == int.max);
+    assert (px == -1);
+
+    ex = int.max - 3;
+    px = cappedSub(ex, -2);
+    assert (ex == int.max - 1);
+    assert(px == -2);
+
+
+}
 
 /* ****************************************************************************************************************** */
 /* 10-POWER CONSTANTS                                                                                                 */

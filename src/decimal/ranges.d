@@ -1,10 +1,38 @@
 module decimal.ranges;
 
-private import std.range.primitives: isInputRange, ElementType, front, popFront, empty;
+
+private import std.range.primitives: isInputRange, ElementType;
 private import std.traits: isSomeChar, Unqual;
 private import decimal.integrals: fma, uint128;
 
 package:
+
+//rewrite some range primitives because phobos is performing utf decoding and we are not interested
+//in throwing UTFException and consequentely bring the garbage collector into equation
+//Also, we don't need any decoding, we are working with the ASCII character set
+
+@safe pure nothrow @nogc
+void popFront(T)(ref T[] s)
+{
+    assert(s.length);
+    s = s[1 .. $];  
+}
+
+@safe pure nothrow @nogc
+@property T front(T)(const T[] s)
+{
+    assert(s.length);
+    return s[0];
+}
+
+@safe pure nothrow @nogc
+@property bool empty(T)(const T[] s)
+{
+    return !s.length;
+}
+
+
+
 
 //returns true and advance range if element is found
 bool expect(R, T)(ref R range, T element) 
