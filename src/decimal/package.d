@@ -10654,13 +10654,6 @@ if (isDecimal!D)
     }
 }
 
-unittest
-{
-    decimal32 x = "0.9";
-    decimalTan(x, 0, RoundingMode.implicit);
-}
-
-
 immutable decimal32[] im32 =
 [
     decimal32(s_m3),

@@ -429,17 +429,11 @@
   <filesToClean>*.obj;*.cmd;*.build;*.json;*.dep;*.tlog</filesToClean>
  </Config>
  <Folder name="doc">
-  <Folder name="macros">
-   <File path="macros\dlang.org.ddoc" />
-   <File path="macros\doc.ddoc" />
-   <File path="macros\html.ddoc" />
-   <File path="macros\macros.ddoc" />
-   <File path="macros\std.ddoc" />
-  </Folder>
-  <File path="floats.d" />
-  <File path="integrals.d" />
-  <File path="package.d" />
-  <File path="ranges.d" />
-  <File path="sinks.d" />
+  <File path="doc\dlang.org.ddoc" />
+  <File path="doc\doc.ddoc" />
+  <File path="doc\html.ddoc" />
+  <File path="doc\macros.ddoc" />
+  <File path="decimal\package.d" />
+  <File path="doc\std.ddoc" />
  </Folder>
 </DProject>

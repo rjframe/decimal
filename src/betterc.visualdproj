@@ -429,10 +429,11 @@
   <filesToClean>*.obj;*.cmd;*.build;*.json;*.dep;*.tlog</filesToClean>
  </Config>
  <Folder name="betterc">
-  <File path="betterc.d" />
-  <File path="floats.d" />
-  <File path="integrals.d" />
-  <File path="package.d" />
-  <File path="ranges.d" />
+  <File path="betterc\betterc.d" />
+  <File path="decimal\floats.d" />
+  <File path="decimal\integrals.d" />
+  <File path="decimal\package.d" />
+  <File path="decimal\ranges.d" />
+  <File path="decimal\sinks.d" />
  </Folder>
 </DProject>
