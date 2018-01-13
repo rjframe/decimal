@@ -1355,6 +1355,129 @@ public:
     }
 }
 
+
+@("Decimal should support decimal + float")
+unittest
+{
+    immutable expected = decimal128("2");
+
+    auto sut = decimal128("1");
+    auto result = sut + 1.0f;
+
+    assert(expected == result);
+}
+
+@("Decimal should support decimal - float")
+unittest
+{
+    immutable expected = decimal128("5");
+
+    auto sut = decimal128("9");
+    auto result = sut - 4.0f;
+
+    assert(expected == result);
+}
+
+@("Decimal should support decimal * float")
+unittest
+{
+    immutable expected = decimal128("13.3");
+
+    auto sut = decimal128("1.33");
+    auto result = sut * 10.0f;
+
+    assert(expected == result);
+}
+
+@("Decimal should support decimal / float")
+unittest
+{
+    immutable expected = decimal128("0.5");
+
+    auto sut = decimal128("1");
+    auto result = sut / 2.0f;
+
+    assert(expected == result);
+}
+
+@("Decimal should support decimal % float")
+unittest
+{
+    immutable expected = decimal128("1");
+
+    auto sut = decimal128("10");
+    auto result = sut % 3.0f;
+
+    assert(expected == result);
+}
+
+
+@("Decimal should support decimal + integral")
+unittest
+{
+    immutable expected = decimal128("3");
+
+    auto sut = decimal128("2");
+    auto result = sut + 1;
+
+    assert(expected == result);
+}
+
+@("Decimal should support decimal - integral")
+unittest
+{
+    immutable expected = decimal128("1");
+
+    auto sut = decimal128("3");
+    auto result = sut - 2;
+
+    assert(expected == result);
+}
+
+@("Decimal should support decimal * integral")
+unittest
+{
+    immutable expected = decimal128("123.4");
+
+    auto sut = decimal128("12.34");
+    auto result = sut * 10;
+
+    assert(expected == result);
+}
+
+@("Decimal should support decimal / integral")
+unittest
+{
+    immutable expected = decimal128("0.5");
+
+    auto sut = decimal128("1");
+    auto result = sut / 2;
+
+    assert(expected == result);
+}
+
+@("Decimal should support decimal % integral")
+unittest
+{
+    immutable expected = decimal128("1");
+
+    auto sut = decimal128("10");
+    auto result = sut % 3;
+
+    assert(expected == result);
+}
+
+@("Decimal should support decimal % unsigned integral")
+unittest
+{
+    immutable expected = decimal128("1");
+
+    auto sut = decimal128("10");
+    auto result = sut % 3u;
+
+    assert(expected == result);
+}
+
 ///Shorthand notations for $(MYREF Decimal) types
 alias decimal32 = Decimal!32;
 ///ditto
@@ -7448,7 +7571,7 @@ if (isDecimal!D && isFloatingPoint!T)
 
     static if (is(Unqual!D == decimal128))
     {
-        flags = adjustCoefficient(coefficient, exponent, uint128(ulong.max), isNegative, mode);
+        flags = coefficientAdjust(coefficient, exponent, uint128(ulong.max), isNegative, mode);
     }
 
     ulong c = cast(ulong)coefficient;
@@ -8130,14 +8253,14 @@ if (isDecimal!D && isIntegral!T)
 }
 
 ExceptionFlags decimalMul(D, F)(ref D x, auto const ref F y, const int precision, const RoundingMode mode)
-if (isDecimal!D && isFloatingPoint!D)
+if (isDecimal!D && isFloatingPoint!F)
 {
     bool sx = cast(bool)signbit(x);
     bool sy = cast(bool)signbit(y);
 
     if (isSignaling(x))
     {
-        x = sx ^ sy ? -D1.nan : D1.nan;
+        x = sx ^ sy ? -D.nan : D.nan;
         return ExceptionFlags.invalidOperation;
     }
 
@@ -8162,7 +8285,7 @@ if (isDecimal!D && isFloatingPoint!D)
     {
         if (isZero(x))
         {
-            x = sx ^ xy ? -D.nan : D.nan;
+            x = sx ^ sy ? -D.nan : D.nan;
             return ExceptionFlags.invalidOperation;
         }
         x = sx ^ sy ? -D.infinity : D.infinity;
@@ -8172,12 +8295,12 @@ if (isDecimal!D && isFloatingPoint!D)
     if (isZero(x) || y == 0.0)
     {
         x = sx ^ sy ? -D.zero : D.zero;
-        return ExceptionFlags.noe;
+        return ExceptionFlags.none;
     }
 
     Unqual!D z;
-    auto flags = z.packFloatingPoint(f, 0, mode);
-    return flags | decimalMul(x, z);
+    auto flags = z.packFloatingPoint(y, 0, mode);
+    return flags | decimalMul(x, z, precision, mode);
 }
 
 ExceptionFlags decimalMul(T, D)(auto const ref T x, auto const ref D y, out D z, const int precision, const RoundingMode mode)
@@ -8414,7 +8537,7 @@ if (isDecimal!D && isIntegral!T)
 }
 
 ExceptionFlags decimalDiv(D, F)(ref D x, auto const ref F y, const int precision, const RoundingMode mode)
-if (isDecimal!D && isFloatingPoint!D)
+if (isDecimal!D && isFloatingPoint!F)
 {
     bool sx = cast(bool)signbit(x);
     bool sy = cast(bool)signbit(y);
@@ -8467,7 +8590,7 @@ if (isDecimal!D && isFloatingPoint!D)
     }
 
     Unqual!D z;
-    auto flags = z.packFloatingPoint(y, f, 0, mode);
+    auto flags = z.packFloatingPoint(y, 0, mode);
     return flags | decimalDiv(x, z, precision, mode);
 }
 
@@ -8725,7 +8848,7 @@ if (isDecimal!D && isFloatingPoint!F)
         return ExceptionFlags.none;
 
     Unqual!D z;
-    auto flags = z.packFloatingPoint(f, 0 , mode);
+    auto flags = z.packFloatingPoint(y, 0 , mode);
     return decimalAdd(x, z, precision, mode);
 }
 
@@ -8980,7 +9103,7 @@ if (isDecimal!D && isIntegral!T)
     if (isInfinity(x) || y == 0)
     {
         x = sx ? -D.nan : D.nan;
-        flags = ExceptionFlags.invalidOperation;
+        return ExceptionFlags.invalidOperation;
     }
     DataType!D cx;
     int ex, ey;
@@ -8990,12 +9113,14 @@ if (isDecimal!D && isIntegral!T)
     static if (D.sizeof >= T.sizeof)
     {
         alias cxx = cx;
-        DataType!D cyy = sy ? -y : y;
+        DataType!D cyy = Unsigned!T(sy ? -y : y);
+        DataType!D cmax = D.COEF_MAX;
     }
     else
     {
         Unsigned!T cxx = cx;
         Unsigned!T cyy = sy ? -y : y;
+        Unsigned!T cmax = D.COEF_MAX;
     }
 
     auto flags = coefficientMod(cxx, ex, sx, cyy, ey, sy, mode);
@@ -9061,7 +9186,7 @@ if (isDecimal!D && isIntegral!T)
 }
 
 ExceptionFlags decimalMod(D, F)(ref D x, auto const ref F y, const int precision, const RoundingMode mode)
-if (isDecimal!D && isFloatingPoint!D)
+if (isDecimal!D && isFloatingPoint!F)
 {
     bool sx = cast(bool)signbit(x);
     bool sy = cast(bool)signbit(y);
@@ -9087,7 +9212,7 @@ if (isDecimal!D && isFloatingPoint!D)
     if (isInfinity(x) || y == 0.0)
     {
         x = sx ? -D.nan : D.nan;
-        flags = ExceptionFlags.invalidOperation;
+        return ExceptionFlags.invalidOperation;
     }
 
     if (isInfinity(y))
