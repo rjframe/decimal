@@ -305,7 +305,7 @@ private
 }
 
 
-version(unittest)
+version (unittest)
 {
     import std.typetuple;
     import std.stdio;
@@ -8193,7 +8193,7 @@ if (isDecimal!(D1, D2))
 ExceptionFlags decimalMul(D, T)(ref D x, auto const ref T y, const int precision, const RoundingMode mode)
 if (isDecimal!D && isIntegral!T)
 {
-    
+    //
 
     bool sx = cast(bool)signbit(x);
     static if (isUnsigned!T)
@@ -9267,6 +9267,10 @@ int decimalCmp(D1, D2)(auto const ref D1 x, auto const ref D2 y)
 if (isDecimal!(D1, D2))
 {
 
+    //alias D = CommonDecimal!(D1, D2);
+    //DataType!D cx, cy; int ex, ey; bool sx, sy;
+    //auto fx = fastDecode(x, cx, ex, sx);
+    //auto fy = fastDecode(y, cy, ey, sy);
 
 
     if (isNaN(x) || isNaN(y))
@@ -10430,103 +10434,6 @@ if (isDecimal!D && isIntegral!T)
     return flags | decimalPow(x, y, precision, mode);
 }
 
-//reduction at -2pi .. +2pi
-//ExceptionFlags decimalReduceAngle(D)(ref D x)
-//if (isDecimal!D)
-//{
-//    Unqual!D y = x;
-//    if (isLessOrEqual(abs(y), D.M_1_2PI))
-//        return ExceptionFlags.none;
-//
-//    auto flags = decimalMul(y, D.M_1_2PI);  
-//    flags |= decimalRound(y, 0, RoundingMode.implicit);      
-//    flags |= decimalMul(y, D.PI2, 0, RoundingMode.implicit); 
-//    flags |= decimalAdd(x, -y, 0, RoundingMode.implicit);
-//    return flags;
-//
-//}
-//
-////reduction at -pi/2 .. +pi/2
-//ExceptionFlags decimalReduceAngle(D)(ref D x, out int quadrant)
-//if (isDecimal!D)
-//{
-//    auto flags = decimalReduceAngle(x);
-//    flags |= decimalMul(x, D.M_2_PI, 0, RoundingMode.implicit);
-//    int factor;
-//    flags |= decimalToSigned(x, factor, RoundingMode.implicit);
-//    quadrant = factor % 4 + 1;
-//    flags |= decimalSub(x, factor, 0, RoundingMode.implicit);
-//    flags |= decimalMul(x, D.PI_2, 0, RoundingMode.implicit);
-//    return flags;
-//}
-
-immutable decimal32[] if32 =
-[
-    decimal32(s_f2),
-    decimal32(s_f3),
-    decimal32(s_f4),
-    decimal32(s_f5),
-    decimal32(s_f6),
-    decimal32(s_f7),
-    decimal32(s_f8),
-    decimal32(s_f9),
-    decimal32(s_f10),
-];
-
-immutable decimal64[] if64 =
-[
-    decimal64(s_f2),
-    decimal64(s_f3),
-    decimal64(s_f4),
-    decimal64(s_f5),
-    decimal64(s_f6),
-    decimal64(s_f7),
-    decimal64(s_f8),
-    decimal64(s_f9),
-    decimal64(s_f10),
-    decimal64(s_f11),
-    decimal64(s_f12),
-    decimal64(s_f13),
-    decimal64(s_f14),
-    decimal64(s_f15),
-    decimal64(s_f16),
-    decimal64(s_f17),
-    decimal64(s_f18),
-];
-
-immutable decimal128[] if128 =
-[
-    decimal128(s_f2),
-    decimal128(s_f3),
-    decimal128(s_f4),
-    decimal128(s_f5),
-    decimal128(s_f6),
-    decimal128(s_f7),
-    decimal128(s_f8),
-    decimal128(s_f9),
-    decimal128(s_f10),
-    decimal128(s_f11),
-    decimal128(s_f12),
-    decimal128(s_f13),
-    decimal128(s_f14),
-    decimal128(s_f15),
-    decimal128(s_f16),
-    decimal128(s_f17),
-    decimal128(s_f18),
-    decimal128(s_f19),
-    decimal128(s_f20),
-    decimal128(s_f21),
-    decimal128(s_f22),
-    decimal128(s_f23),
-    decimal128(s_f24),
-    decimal128(s_f25),
-    decimal128(s_f26),
-    decimal128(s_f27),
-    decimal128(s_f28),
-    decimal128(s_f29),
-    decimal128(s_f30),
-    decimal128(s_f31),
-];
 
 ExceptionFlags decimalSin(D)(ref D x, const int precision, const RoundingMode mode)
 if (isDecimal!D)
@@ -10654,181 +10561,31 @@ if (isDecimal!D)
     }
 }
 
-immutable decimal32[] im32 =
-[
-    decimal32(s_m3),
-    decimal32(s_m5),
-    decimal32(s_m7),
-    decimal32(s_m9),
-    decimal32(s_m11),
-    decimal32(s_m13),
-    decimal32(s_m15),
-];
-
-immutable decimal64[] im64 =
-[
-    decimal64(s_m3),
-    decimal64(s_m5),
-    decimal64(s_m7),
-    decimal64(s_m9),
-    decimal64(s_m11),
-    decimal64(s_m13),
-    decimal64(s_m15),
-    decimal64(s_m17),
-    decimal64(s_m19),
-    decimal64(s_m21),
-    decimal64(s_m23),
-    decimal64(s_m25),
-    decimal64(s_m27),
-    decimal64(s_m29),
-    decimal64(s_m31),
-    decimal64(s_m33),
-];
-
-immutable decimal128[] im128 =
-[
-    decimal128(s_m3),
-    decimal128(s_m5),
-    decimal128(s_m7),
-    decimal128(s_m9),
-    decimal128(s_m11),
-    decimal128(s_m13),
-    decimal128(s_m15),
-    decimal128(s_m17),
-    decimal128(s_m19),
-    decimal128(s_m21),
-    decimal128(s_m23),
-    decimal128(s_m25),
-    decimal128(s_m27),
-    decimal128(s_m29),
-    decimal128(s_m31),
-    decimal128(s_m33),
-    decimal128(s_m35),
-    decimal128(s_m37),
-    decimal128(s_m39),
-    decimal128(s_m41),
-    decimal128(s_m43),
-    decimal128(s_m45),
-    decimal128(s_m47),
-    decimal128(s_m49),
-    decimal128(s_m51),
-    decimal128(s_m53),
-    decimal128(s_m55),
-    decimal128(s_m57),
-    decimal128(s_m59),
-    decimal128(s_m61),
-    decimal128(s_m63),
-    decimal128(s_m65),
-    decimal128(s_m67),
-    decimal128(s_m69),
-];
-
 ExceptionFlags decimalAtan(D)(ref D x, const int precision, const RoundingMode mode)
 if (isDecimal!D)
 {
-
-    if (isSignaling(x))
+    DataType!D cx; int ex; bool sx;
+    switch (fastDecode(x, cx, ex, sx))
     {
-        x = D.nan;
-        return ExceptionFlags.invalidOperation;
-    }
-
-    if (isNaN(x) || isZero(x))
-        return ExceptionFlags.none;
-
-    if (isInfinity(x))
-    {
-        x = signbit(x) ? -D.PI_2 : D.PI_2;
-        return decimalAdjust(x, precision, mode);
-    }
-
-    bool sx = cast(bool)signbit(x);
-    x = abs(x);
-
-    if (decimalEqu(x, D.SQRT3))
-    {
-        x = sx ? -D.PI_3 : D.PI_3;
-        return ExceptionFlags.none;
-    }
-    
-    if (decimalEqu(x, D.one))
-    {
-        x = sx ? -D.PI_4 : D.PI_4;
-        return ExceptionFlags.none;
-    }
-
-    if (decimalEqu(x, D.M_SQRT3))
-    {
-        x = sx ? -D.PI_6 : D.PI_6;
-        return ExceptionFlags.none;
-    }
-
-    /* half angle formula: atan(x/2) = 2 * atan(x/(1 + sqrt(1 +x^^2))))
-       reduce x = x / (sqrt(x * x + 1) + 1);
-
-    - if x > sqrt(max), cannot calculate x^^2, but sqrt(1 + x^^2) can safely be assumed is x
-      atan(x/2) = 2 * atan(x/(1 + x)). x being so big, x/(1 + x) is in fact very close to 1.
-      atan(x/2) = 2 * atan(1) for x > sqrt(max)    
-    */
-   
-    int rfactor = 1;
-
-    ExceptionFlags flags;
-
-    while (x > D.half)
-    {
-        Unqual!D xp = x;
-        flags = decimalSqr(xp, 0, mode);
-        if (flags & ExceptionFlags.overflow)
-        {
-            x = 1U;
-            flags &= ~ExceptionFlags.overflow;
-        }
-        else
-        {
-            flags |= decimalAdd(xp, 1, 0, mode);
-            if (flags & ExceptionFlags.overflow)
+        case FastClass.signalingNaN:
+            return ExceptionFlags.invalidOperation;
+        case FastClass.quietNaN:
+        case FastClass.zero:
+            return ExceptionFlags.none;
+        case FastClass.infinite:
+            x = signbit(x) ? -D.PI_2 : D.PI_2;
+            return decimalAdjust(x, precision, mode);
+        default:
+            DataType!D reductions;
+            coefficientCapAtan(cx, ex, sx, reductions);
+            auto flags = coefficientAtan(cx, ex, sx);
+            if (reductions)
             {
-                x = 1U;
-                flags &= ~ExceptionFlags.overflow;
+                flags |= coefficientMul(cx, ex, sx, reductions, 0, false, RoundingMode.implicit);
+                flags |= coefficientMul(cx, ex, sx, DataType!D(2U), 0, false, RoundingMode.implicit);
             }
-            else
-            {
-                flags |= decimalSqrt(xp, 0, mode);
-                flags |= decimalAdd(xp, 1, 0, mode);
-                flags |= decimalDiv(x, xp, 0, mode);
-            }
-        }
-        rfactor *= 2;
+            return x.adjustedPack(cx, ex, sx, precision, mode, flags);
     }
-
-
-    static if (is(D : decimal32))
-        alias im = im32;
-    else static if (is(D: decimal64))
-        alias im = im64;
-    else
-        alias im = im128;
-
-    Unqual!D dividend = x;
-    Unqual!D xp = x;
-    flags |= decimalSqr(xp, 0, mode);
-   
-    int i = 0;
-    while (i < im.length)
-    {
-        flags |= decimalMul(dividend, -xp, 0, mode);
-        Unqual!D factor = dividend;
-        flags |= decimalMul(factor, im[i++], 0, mode);
-        flags |= decimalAdd(x, factor, 0, mode);
-    }
-    
-    flags |= decimalMul(x, rfactor, 0, mode);
-
-    if (sx)
-        x = -x;
-    
-    return flags | decimalAdjust(x, precision, mode);
 }
 
 ExceptionFlags decimalSinPi(D)(ref D x, const int precision, const RoundingMode mode)
@@ -13784,6 +13541,64 @@ ExceptionFlags coefficientSinCosQ(T)(const T cx, const int ex, const bool sx,
     return ExceptionFlags.inexact;
 }
 
+
+ExceptionFlags coefficientCapAtan(T)(ref T cx, ref int ex, ref bool sx, out T reductions)
+{
+    //half angle formula: atan(x/2) = 2 * atan(x/(1 + sqrt(1 +x^^2))))
+    //reduce x = x / (sqrt(x * x + 1) + 1);
+
+    reductions = 0U;
+    while (coefficientCmp(cx, ex, T(1U), 0) >= 0)
+    {
+        Unqual!T cy = cx; int ey = ex; bool sy = false;
+        coefficientSqr(cy, ey, RoundingMode.implicit);
+        coefficientAdd(cy, ey, sy, T(1U), 0, false, RoundingMode.implicit);
+        coefficientSqrt(cy, ey);
+        coefficientAdd(cy, ey, sy, T(1U), 0, false, RoundingMode.implicit);
+        coefficientDiv(cx, ex, sx, cy, ey, false, RoundingMode.implicit);
+        ++reductions;
+    }
+
+    return ExceptionFlags.inexact;
+}
+
+ExceptionFlags coefficientAtan(T)(ref T cx, ref int ex, bool sx)
+{
+    //taylor series:
+    //atan(x) = x - x^3/3 + x^5/5 - x^7/7 ...
+
+    Unqual!T cx2 = cx; int ex2 = ex;
+    coefficientSqr(cx2, ex2, RoundingMode.implicit);
+
+    Unqual!T cy; int ey; bool sy;
+
+    Unqual!T cxx = cx; int exx = ex; bool sxx = sx;
+
+    Unqual!T n = 3U;
+
+    do
+    {
+        cy = cx;
+        ey = ex;
+        sy = sx;
+
+        coefficientMul(cxx, exx, sxx, cx2, ex2, true, RoundingMode.implicit);
+        
+        Unqual!T cf = cxx;
+        int ef = exx;
+        bool sf = sxx;
+
+        coefficientDiv(cf, ef, sf, n, 0, false, RoundingMode.implicit);
+        coefficientAdd(cx, ex, sx, cf, ef, sf, RoundingMode.implicit);
+        n += 2U;
+        //writefln("%10d %10d %10d %10d %10d %10d", cx, ex, cy, ey, cf, ef);
+
+    }
+    while (!coefficientApproxEqu(cx, ex, sx, cy, ey, sy));
+    return ExceptionFlags.inexact;
+}
+
+
 struct Constants(T)
 {
     static if (is(T:uint))
@@ -13858,73 +13673,6 @@ enum
     s_1_6           = "0.1666666666666666666666666666666667",
     s_m_1_2pi       = "0.1591549430918953357688837633725144",
     s_pi2           = "6.2831853071795864769252867665590058",
-
-
-    s_f2            = "0.5000000_000000000_000000000000000000", // 1/2!
-    s_f3            = "0.1666666_666666666_666666666666666667", // 1/3!
-    s_f4            = "0.0416666_666666666_666666666666666667", // 1/4!
-    s_f5            = "0.0083333_333333333_333333333333333333", // 1/5!
-    s_f6            = "0.0013888_888888888_888888888888888889", // 1/6!
-    s_f7            = "0.0001984_126984126_984126984126984127", // 1/7!
-    s_f8            = "0.0000248_015873015_873015873015873016", // 1/8!
-    s_f9            = "0.0000027_557319223_985890652557319223", // 1/9!
-    s_f10           = "0.0000002_755731922_398589065255731922", // 1/10!
-    s_f11           = "0.0000000_250521083_854417187750521084", // 1/11!
-    s_f12           = "0.0000000_020876756_987868098979210090", // 1/12!
-    s_f13           = "0.0000000_001605904_383682161459939238", // 1/13!
-    s_f14           = "0.0000000_000114707_455977297247138517", // 1/14!
-    s_f15           = "0.0000000_000007647_163731819816475901", // 1/15!
-    s_f16           = "0.0000000_000000477_947733238738529744", // 1/16!
-    s_f17           = "0.0000000_000000028_114572543455207632", // 1/17!
-    s_f18           = "0.0000000_000000001_561920696858622646", // 1/18!
-    s_f19           = "0.0000000_000000000_082206352466243297", // 1/19!
-    s_f20           = "0.0000000_000000000_004110317623312165", // 1/20!
-    s_f21           = "0.0000000_000000000_000195729410633913", // 1/21!
-    s_f22           = "0.0000000_000000000_000008896791392451", // 1/22!
-    s_f23           = "0.0000000_000000000_000000386817017063", // 1/23!
-    s_f24           = "0.0000000_000000000_000000016117375711", // 1/24!
-    s_f25           = "0.0000000_000000000_000000000644695028", // 1/25!
-    s_f26           = "0.0000000_000000000_000000000024795963", // 1/26!
-    s_f27           = "0.0000000_000000000_000000000000918369", // 1/27!
-    s_f28           = "0.0000000_000000000_000000000000032799", // 1/28!
-    s_f29           = "0.0000000_000000000_000000000000001131", // 1/29!
-    s_f30           = "0.0000000_000000000_000000000000000038", // 1/30!
-    s_f31           = "0.0000000_000000000_000000000000000001", // 1/31!
-
-    s_m3            = "0.3333333_333333333_333333333333333333",
-    s_m5            = "0.2000000_000000000_000000000000000000",
-    s_m7            = "0.1428571_428571428_571428571428571429",
-    s_m9            = "0.1111111_111111111_111111111111111111",
-    s_m11           = "0.0909090_909090909_090909090909090909",
-    s_m13           = "0.0769230_769230769_230769230769230769",
-    s_m15           = "0.0666666_666666666_666666666666666667",
-    s_m17           = "0.0588235_294117647_058823529411764706",
-    s_m19           = "0.0526315_789473684_210526315789473684",
-    s_m21           = "0.0476190_476190476_190476190476190476",
-    s_m23           = "0.0434782_608695652_173913043478260869",
-    s_m25           = "0.0400000_000000000_000000000000000000",
-    s_m27           = "0.0370370_370370370_370370370370370371",
-    s_m29           = "0.0344827_586206896_551724137931034483",
-    s_m31           = "0.0322580_645161290_322580645161290326",
-    s_m33           = "0.0303030_303030303_030303030303030303",
-    s_m35           = "0.0285714_285714285_714285714285714285",
-    s_m37           = "0.0270270_270270270_270270270270270270",
-    s_m39           = "0.0256410_256410256_410256410256410256",
-    s_m41           = "0.0243902_439024390_243902439024390244",
-    s_m43           = "0.0232558_139534883_720930232558139535",
-    s_m45           = "0.0222222_222222222_222222222222222222",
-    s_m47           = "0.0212765_957446808_510638297872340426",
-    s_m49           = "0.0204081_632653061_224489795918367347",
-    s_m51           = "0.0196078_431372549_019607843137254902",
-    s_m53           = "0.0188679_245283018_867924528301886792",
-    s_m55           = "0.018181818181818181818181818181818182",
-    s_m57           = "0.0175438_596491228_070175438596491228",
-    s_m59           = "0.0169491_525423728_813559322033898305",
-    s_m61           = "0.0163934_426229508_196721311475409836",
-    s_m63           = "0.0158730_158730158_730158730158730159",
-    s_m65           = "0.0153846_153846153_846153846153846154",
-    s_m67           = "0.0149253_731343283_582089552238805970",
-    s_m69           = "0.0144927_536231884_057971014492753623",
 }
 
 struct IEEECompliant

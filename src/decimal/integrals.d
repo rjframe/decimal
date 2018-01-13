@@ -1,7 +1,7 @@
 module decimal.integrals;
 
 private import core.bitop : bsr, bsf;
-private import std.traits: isUnsigned, isSomeChar, Unqual;
+private import std.traits: isUnsigned, isSomeChar, Unqual, CommonType;
 private import core.checkedint: addu, subu, mulu;
 
 package:
