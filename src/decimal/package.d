@@ -13420,16 +13420,27 @@ ExceptionFlags coefficientSinQ(T)(ref T cx, ref int ex, ref bool sx)
         coefficientDiv(cf, ef, sf, n++, 0, false, RoundingMode.implicit);
         coefficientAdd(cx, ex, sx, cf, ef, sf, RoundingMode.implicit);
         //writefln("%10d %10d %10d %10d", cx, ex, cy, ey);
-        //writefln("%016x%016x %10d %016x%016x %10d", cx.hi, cx.lo, ex, cy.hi, cy.lo, ey);
+       // writefln("%016x%016x %10d %016x%016x %10d", cx.hi, cx.lo, ex, cy.hi, cy.lo, ey);
     }
     while (!coefficientApproxEqu(cx, ex, sx, cy, ey, sy));
     return ExceptionFlags.inexact;
 }
 
+unittest
+{
+    ulong cx = 11000000000000000855UL;
+    int ex = -19;
+    bool sx;
+
+    coefficientSinQ(cx, ex, sx);
+
+    //writefln("%35.34f", sin(decimal128("1.1000000000000000855000000000000000")));
+    //writefln("%35.34f", decimal128(1.1));
+}
 
 ExceptionFlags coefficientCosQ(T)(ref T cx, ref int ex, ref bool sx)
 {
-    //taylor series: sin(x) = 1 - x^2/2! + x^4/4! - x^6/6! ...
+    //taylor series: cos(x) = 1 - x^2/2! + x^4/4! - x^6/6! ...
 
     Unqual!T cx2 = cx; int ex2 = ex; bool sx2 = true;
     coefficientSqr(cx2, ex2, RoundingMode.implicit);

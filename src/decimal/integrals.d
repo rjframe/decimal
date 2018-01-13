@@ -1552,7 +1552,7 @@ if (isCustomUnsigned!T)
         else
         {
             shift = clz(y.hi) - clz(x.hi);
-            if (shift > T.HALF.sizeof - 1)
+            if (shift > T.HALF.sizeof * 8 - 1)
             {
                 r = x;
                 x = 0U;

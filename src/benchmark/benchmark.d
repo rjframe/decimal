@@ -158,9 +158,29 @@ int main(string[] argv)
         auto dsin = sin (d);
         auto rsin = sin (r);
         auto delta = dsin - rsin;
-        writefln ("%9.2f %30.24f %30.24f %12.4g", r, rsin, dsin, delta);
+        writefln ("%9.2f %+30.24f %+35.34f %+12.4g", r, rsin, dsin, delta);
     }
+    //
+    //writefln("%35.34f", sin(decimal128(1)));
+    //writefln("%35.34f", sin(decimal64(1)));
+    //writefln("%35.34f", sin(decimal32(1)));
+    //writefln("%35.34f", sin(cast(real)1.0));
+    //writefln("%35.34f", sin(cast(double)1.0));
+    //writefln("%35.34f", sin(cast(float)1.0));
 
+    writefln("%35.34f", sin(decimal32("5.7")));
+    writefln("%35.34f", sin(decimal64("5.7")));
+    writefln("%35.34f", sin(decimal128("5.7")));
+
+
+    writefln("%35.34f", sin(decimal32(5.7)));
+    writefln("%35.34f", sin(decimal64(5.7)));
+    writefln("%35.34f", sin(decimal128(5.7)));
+
+
+    writefln("%35.34f", decimal32(5.7));
+    writefln("%35.34f", decimal64(5.7));
+    writefln("%35.34f", decimal128(5.7));
 
     getchar();
     return 0;
