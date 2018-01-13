@@ -10633,18 +10633,17 @@ if (isDecimal!D)
             switch (quadrant)
             {
                 case 1:
+                    //sin/cos, -sin/-cos
+                case 3:
                     cx = csin; ex = esin; sx = ssin;
                     flags |= coefficientDiv(cx, ex, sx, ccos, ecos, scos, RoundingMode.implicit);
                     break;
                 case 2:
+                    //cos/-sin
                     cx = ccos; ex = ecos; sx = scos;
                     flags |= coefficientDiv(cx, ex, sx, csin, esin, !ssin, RoundingMode.implicit);
                     break;
-                case 3:
-                    cx = csin; ex = esin; sx = !ssin;
-                    flags |= coefficientDiv(cx, ex, sx, ccos, ecos, !scos, RoundingMode.implicit);
-                    break;
-                case 4:
+                case 4://-cos/sin
                     cx = ccos; ex = ecos; sx = !scos;
                     flags |= coefficientDiv(cx, ex, sx, csin, esin, ssin, RoundingMode.implicit);
                     break;
@@ -10653,6 +10652,12 @@ if (isDecimal!D)
             }
             return x.adjustedPack(cx, ex, sx, precision, mode, flags);
     }
+}
+
+unittest
+{
+    decimal32 x = "0.9";
+    decimalTan(x, 0, RoundingMode.implicit);
 }
 
 
@@ -13719,11 +13724,13 @@ ExceptionFlags coefficientSinQ(T)(ref T cx, ref int ex, ref bool sx)
         coefficientDiv(cf, ef, sf, n++, 0, false, RoundingMode.implicit);
         coefficientDiv(cf, ef, sf, n++, 0, false, RoundingMode.implicit);
         coefficientAdd(cx, ex, sx, cf, ef, sf, RoundingMode.implicit);
+        //writefln("%10d %10d %10d %10d", cx, ex, cy, ey);
         //writefln("%016x%016x %10d %016x%016x %10d", cx.hi, cx.lo, ex, cy.hi, cy.lo, ey);
     }
     while (!coefficientApproxEqu(cx, ex, sx, cy, ey, sy));
     return ExceptionFlags.inexact;
 }
+
 
 ExceptionFlags coefficientCosQ(T)(ref T cx, ref int ex, ref bool sx)
 {
@@ -13764,7 +13771,7 @@ ExceptionFlags coefficientSinCosQ(T)(const T cx, const int ex, const bool sx,
     ccos = 1U; ecos = 0; scos = false;
     Unqual!T cs, cc; int es, ec; bool ss, sc;
 
-    Unqual!T cf = cx; int ef; bool sf;
+    Unqual!T cf = cx; int ef = ex; bool sf = sx;
     Unqual!T n = 2U;
     do
     {
@@ -13776,16 +13783,13 @@ ExceptionFlags coefficientSinCosQ(T)(const T cx, const int ex, const bool sx,
         coefficientMul(cf, ef, sf, cx, ex, sx, RoundingMode.implicit);
         coefficientDiv(cf, ef, sf, n++, 0, false, RoundingMode.implicit);
         coefficientAdd(csin, esin, ssin, cf, ef, sf, RoundingMode.implicit);
-        //writefln("sin %10d %10d %10d %10d", csin, esin, cs, es);
-        //writefln("cos %10d %10d %10d %10d", ccos, ecos, cc, ec);
+        //writefln("%10d %10d %10d %10d %10d %10d %10d %10d", csin, esin, cs, es, ccos, ecos, cc, ec);
     }
     while(!coefficientApproxEqu(csin, esin, ssin, cs, es, ss) &&
           !coefficientApproxEqu(ccos, ecos, scos, cc, ec, sc));
 
     return ExceptionFlags.inexact;
 }
-
-
 
 struct Constants(T)
 {
