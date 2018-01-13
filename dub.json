@@ -5,21 +5,33 @@
     ],
     "description": "IEEE-754-2008 compliant decimal data type.",
     "copyright": "Copyright © 2017 rumbu13",
-    "license": "proprietary",
-    "sourcePaths": [ "src/" ],
+    "license": "boost",
+	"sourcePaths": [ "src"],
     "configurations": [
         {
             "name": "library",
-            "excludedSourceFiles": [ "src/benchmark.d", "src/test.d" ]
+			"targetType": "library",
+			"excludedSourceFiles": [ "src/benchmark/benchmark.d", "src/test/test.d", "src/betterc/betterc.d"]
         },
         {
             "name": "unittest",
-            "excludedSourceFiles": [ "src/benchmark.d", "src/test.d" ]
+            "targetType": "executable",
+			"excludedSourceFiles": [ "src/benchmark/benchmark.d", "src/betterc/betterc.d"]
         },
         {
             "name": "benchmark",
             "targetType": "executable",
-            "excludedSourceFiles": [ "src/test.d" ]
+			"excludedSourceFiles": [ "src/test/test.d", "src/betterc/betterc.d"]
+        },
+        {
+            "name": "betterc",
+            "targetType": "executable",
+			"excludedSourceFiles": [ "src/benchmark/benchmark.d", "src/test/test.d"]
+        },
+        {
+            "name": "doc",
+            "targetType": "library",
+			"excludedSourceFiles": [ "src/benchmark/benchmark.d", "src/test/test.d", "src/betterc/betterc.d"]
         }
     ]
 }
