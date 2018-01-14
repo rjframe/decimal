@@ -7543,6 +7543,9 @@ if (isDecimal!D && isFloatingPoint!T)
         exponent -= pow;
     }
 
+    if (isNegative)
+        target = -target;
+
     fpctrl.enableExceptions(savedExceptions);
 
     return flags;

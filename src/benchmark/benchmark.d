@@ -212,11 +212,28 @@ int main(string[] argv)
     //else
     //    writeln ("not < 0");
 
-    decimal32 d = "1";
-    auto p = 4 * d;
-    auto q = d * 4;
-    writeln (typeof(p).stringof);
-    writeln (typeof(q).stringof);
+    //decimal32 d = "1";
+    //auto p = 4 * d;
+    //auto q = d * 4;
+    //writeln (typeof(p).stringof);
+    //writeln (typeof(q).stringof);
+
+    real r;
+    for (r = 1; r < 6; r += .1L) {
+        decimal128 d = r;
+        auto dsin = sin (d);
+        auto rsin = sin (r);
+        real delta = cast(real) dsin;
+        delta -= rsin;
+        writefln ("%9.2f %30.24f %30.24f %12.4g", r, rsin, dsin, delta);
+    }
+
+    decimal32 a = "-0.279415498198925875720000";
+    decimal32 b = cast(real)-0.279415498198925875720000;
+    writefln("%+35.34f %+35.34f", a, b);
+
+    decimal32 c = cast(real)a;
+    writefln("%+35.34f %+35.34f", c, a);
 
     getchar();
     return 0;
