@@ -317,7 +317,7 @@ else
 
 private import std.traits: Unqual, isUnsigned, Unsigned, isSigned;
 private import core.checkedint: adds, subs;
-private import std.math: isNaN, isInfinity, signbit, IeeeFlags, FloatingPointControl;
+private import std.math: isNaN, isInfinity, signbit, ieeeFlags, FloatingPointControl, resetIeeeFlags;
 private import std.format: singleSpec;
 
 
@@ -7522,31 +7522,47 @@ if (isDecimal!D && isFloatingPoint!T)
 
     ulong c = cast(ulong)coefficient;
 
-    FloatingPointControl fpctrl;
-    auto savedExceptions = fpctrl.enabledExceptions;
-    fpctrl.disableExceptions(FloatingPointControl.allExceptions);
-
-    target = c;
-    while (exponent > 0)
+    synchronized
     {
-        int pow = exponent > pow10_64.length - 1 ? pow10_64.length - 1 : exponent;
-        target *= pow10_64[pow];
-        exponent -= pow;
+        FloatingPointControl fpctrl;
+        auto savedExceptions = fpctrl.enabledExceptions;
+        fpctrl.disableExceptions(FloatingPointControl.allExceptions);
+        resetIeeeFlags();
+    
+
+        target = c;
+        while (exponent > 0)
+        {
+            int pow = exponent > pow10_64.length - 1 ? pow10_64.length - 1 : exponent;
+            target *= pow10_64[pow];
+            exponent -= pow;
+        }
+
+        exponent = -exponent;
+
+        while (exponent > 0)
+        {
+            int pow = exponent > pow10_64.length - 1 ? pow10_64.length - 1 : exponent;
+            target /= pow10_64[pow];
+            exponent -= pow;
+        }
+
+        if (isNegative)
+            target = -target;
+    
+        if (ieeeFlags.inexact)
+            flags |= ExceptionFlags.inexact;
+        if (ieeeFlags.underflow)
+            flags |= ExceptionFlags.underflow;
+        if (ieeeFlags.overflow)
+            flags |= ExceptionFlags.overflow;
+        if (ieeeFlags.invalid)
+            flags |= ExceptionFlags.invalidOperation;
+        if (ieeeFlags.divByZero)
+            flags |= ExceptionFlags.divisionByZero;
+
+        fpctrl.enableExceptions(savedExceptions);
     }
-
-    exponent = -exponent;
-
-    while (exponent > 0)
-    {
-        int pow = exponent > pow10_64.length - 1 ? pow10_64.length - 1 : exponent;
-        target /= pow10_64[pow];
-        exponent -= pow;
-    }
-
-    if (isNegative)
-        target = -target;
-
-    fpctrl.enableExceptions(savedExceptions);
 
     return flags;
 
