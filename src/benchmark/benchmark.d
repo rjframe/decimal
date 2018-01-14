@@ -235,6 +235,8 @@ int main(string[] argv)
     decimal32 c = cast(real)a;
     writefln("%+35.34f %+35.34f", c, a);
 
+    writeln(real.sizeof);
+
     getchar();
     return 0;
 }

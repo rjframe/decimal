@@ -173,7 +173,7 @@ union RU
 {
     real r;
     struct
-    {   align(1):
+    {   //align(1):
         version(LittleEndian)
         {
             ulong m;

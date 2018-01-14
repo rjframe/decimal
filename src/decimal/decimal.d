@@ -574,7 +574,7 @@ private:
             uint m;
             isnegative = funpack(value, e, m, isinf, isnan);
         }
-        else static if (is(Unqual!T == real) && real.sizeof == 10)
+        else static if (is(Unqual!T == real) && real.mant_dig == 64)
         {
             ulong m;
             isnegative = runpack(value, e, m, isinf, isnan);
@@ -1602,6 +1602,8 @@ unittest
             static assert (is(typeof(D.init ^^= T.init) == D));
         }
     }
+
+
 
 }
 
@@ -9422,70 +9424,31 @@ if (isDecimal!D && isFloatingPoint!F)
 int decimalCmp(D1, D2)(auto const ref D1 x, auto const ref D2 y)
 if (isDecimal!(D1, D2))
 {
+    alias D = CommonDecimal!(D1, D2);
+    DataType!D cx, cy; int ex, ey; bool sx, sy;
+    auto fx = fastDecode(x, cx, ex, sx);
+    auto fy = fastDecode(y, cy, ey, sy);
 
-    //alias D = CommonDecimal!(D1, D2);
-    //DataType!D cx, cy; int ex, ey; bool sx, sy;
-    //auto fx = fastDecode(x, cx, ex, sx);
-    //auto fy = fastDecode(y, cy, ey, sy);
+    if (fx == FastClass.quietNaN || fx == FastClass.signalingNaN ||
+        fy == FastClass.quietNaN || fy == FastClass.signalingNaN)
+        return - 2;
 
+    if (fx == FastClass.zero)
+        return fy == FastClass.zero ? 0 : (sy ? 1 : -1);
 
-    if (isNaN(x) || isNaN(y))
-        return -2;
-    
-    bool sx = cast(bool)signbit(x);
-    bool sy = cast(bool)signbit(y);
-
-    if (isZero(x))
-    {
-        if (isZero(y))
-            return 0;
-        return sy ? 1 : -1;
-    }
-
-    if (isZero(y))
+    if (fy == FastClass.zero)
         return sx ? -1 : 1;
 
     if (sx != sy)
         return sx ? -1 : 1;
+    
+    if (fx == FastClass.infinite)
+        return fy == FastClass.infinite ? 0 : (sx ? -1 : 1);
 
-    if (isInfinity(x))
-    {
-        if (isInfinity(y))
-            return 0;
-        return sx ? -1 : 1;
-    }
-
-    if (isInfinity(y))
+    if (fy == FastClass.infinite)
         return sy ? 1 : -1;
-       
-    alias T1 = DataType!D1;
-    alias T2 = DataType!D2;
 
-    T1 cx;
-    T2 cy;
-    int ex, ey;
-
-    x.unpack(cx, ex);
-    y.unpack(cy, ey);
-
-    static if (D1.sizeof > D2.sizeof)
-    {
-        T1 cyy = cy;
-        alias cxx = cx;
-    }
-    else static if (D1.sizeof < D2.sizeof)
-    {
-        T2 cxx = cx;
-        alias cyy = cy;
-    }
-    else
-    {
-        alias cxx = cx;
-        alias cyy = cy;
-    }
-
-    return coefficientCmp(cxx, ex, sx, cyy, ey, sy);
-
+    return coefficientCmp(cx, ex, sx, cy, ey, sy);
 }
 
 int decimalCmp(D, T)(auto const ref D x, auto const ref T y)
@@ -9493,7 +9456,6 @@ if (isDecimal!D && isIntegral!T)
 {
     if (isNaN(x))
         return -2;
-
     bool sx = cast(bool)signbit(x);
     static if (isUnsigned!T)
         enum sy = false;
