@@ -896,8 +896,8 @@ public:
             flags = packString(value, 
                                  __ctfe ? 0 : DecimalControl.precision, 
                                  __ctfe ? RoundingMode.implicit : DecimalControl.rounding);
-        else static if (isInputRange!T && isSomeChar!(ElementType!T))
-            flags = packrange(value, 
+        else static if (isInputRange!T && isSomeChar!(ElementType!T) && !isSomeString!T)
+            flags = packRange(value, 
                                  __ctfe ? 0 : DecimalControl.precision, 
                                  __ctfe ? RoundingMode.implicit : DecimalControl.rounding);
         else static if (is(T: D))
@@ -1009,7 +1009,7 @@ public:
     @safe
     auto ref opUnary(string op: "++")()
     {
-        auto flags = decimalInc(this, 1U, 
+        auto flags = decimalInc(this,
                                 __ctfe ? 0 : DecimalControl.precision, 
                                 __ctfe ? RoundingMode.implicit : DecimalControl.rounding);
         DecimalControl.raiseFlags(flags);
@@ -1020,7 +1020,7 @@ public:
     @safe
     auto ref opUnary(string op: "--")()
     {
-        auto flags = decimalDec(this, -1, 
+        auto flags = decimalDec(this,
                                 __ctfe ? 0 : DecimalControl.precision, 
                                 __ctfe ? RoundingMode.implicit : DecimalControl.rounding);
         DecimalControl.raiseFlags(flags);
@@ -1160,7 +1160,7 @@ public:
             alias decimalOp = decimalDiv;
         else static if (op == "%")
             alias decimalOp = decimalMod;
-        else static if (op = "^^")
+        else static if (op == "^^")
             alias decimalOp = decimalPow;
         else 
             static assert(0);
@@ -1202,7 +1202,7 @@ public:
             alias decimalOp = decimalDiv;
         else static if (op == "%")
             alias decimalOp = decimalMod;
-        else static if (op = "^^")
+        else static if (op == "^^")
             alias decimalOp = decimalPow;
         else 
             static assert(0);
@@ -1235,11 +1235,6 @@ public:
     auto opOpAssign(string op, T)(auto const ref T value)
     if (op == "+" || op == "-" || op == "*" || op == "/" || op == "%" || op == "^^")
     {
-        static if (isDecimal!T)
-            CommonDecimal!(D, T) result = this;
-        else
-            Unqual!D result = this;
-
         static if (op == "+")
             alias decimalOp = decimalAdd;
         else static if (op == "-")
@@ -1250,7 +1245,7 @@ public:
             alias decimalOp = decimalDiv;
         else static if (op == "%")
             alias decimalOp = decimalMod;
-        else static if (op = "^^")
+        else static if (op == "^^")
             alias decimalOp = decimalPow;
         else 
             static assert(0);
@@ -1271,7 +1266,7 @@ public:
                             Unqual!T.stringof ~ "'");
 
         DecimalControl.raiseFlags(flags);
-        return result;
+        return this;
     }
     
     version (D_BetterC) {}
@@ -1377,6 +1372,239 @@ public:
         }
     }
 }
+
+@("Compilation tests")
+unittest
+{
+    struct DumbRange(C)
+    {
+        bool empty;
+        C front;
+        void popFront() {}
+    }
+
+    alias DecimalTypes = TypeTuple!(decimal32, decimal64, decimal128);
+    alias IntegralTypes = TypeTuple!(byte, short, int, long, ubyte, ushort, uint, ulong);
+    alias FloatTypes = TypeTuple!(float, double, real);
+    alias CharTypes = TypeTuple!(char, wchar, dchar);
+    alias StringTypes = TypeTuple!(string, wstring, dstring);
+    alias RangeTypes = TypeTuple!(DumbRange!char, DumbRange!wchar, DumbRange!dchar);
+
+    //constructors
+    foreach (D; DecimalTypes)
+    {
+        foreach (T; DecimalTypes)
+            static assert (is(typeof(D(T.init)) == D));
+        foreach (T; IntegralTypes)
+            static assert (is(typeof(D(T.init)) == D));
+        foreach (T; FloatTypes)
+            static assert (is(typeof(D(T.init)) == D));
+        foreach (T; CharTypes)
+            static assert (is(typeof(D(T.init)) == D));
+        foreach (T; StringTypes)
+            static assert (is(typeof(D(T.init)) == D));
+        static assert (is(typeof(D(true)) == D));
+    }
+
+    //assignment
+    foreach (D; DecimalTypes)
+    {
+        foreach (T; DecimalTypes)
+            static assert (__traits(compiles, { D d = T.init; }));
+        foreach (T; IntegralTypes)
+            static assert (__traits(compiles, { D d = T.init; }));
+        foreach (T; FloatTypes)
+            static assert (__traits(compiles, { D d = T.init; }));
+        foreach (T; CharTypes)
+            static assert (__traits(compiles, { D d = T.init; }));
+        foreach (T; StringTypes)
+            static assert (__traits(compiles, { D d = T.init; }));
+        static assert (__traits(compiles, { D d = true; }));
+    }
+
+    //cast
+    foreach (D; DecimalTypes)
+    {
+        foreach (T; DecimalTypes)
+            static assert (is(typeof(cast(T)(D.init)) == T));
+        foreach (T; IntegralTypes)
+            static assert (is(typeof(cast(T)(D.init)) == T));
+        foreach (T; FloatTypes)
+            static assert (is(typeof(cast(T)(D.init)) == T));
+        foreach (T; CharTypes)
+            static assert (is(typeof(cast(T)(D.init)) == T));
+        static assert (is(typeof(cast(bool)(D.init)) == bool));
+    }
+
+    //unary ops
+    foreach (D; DecimalTypes)
+    {
+        static assert(is(typeof(+D.init) == const D));
+        static assert(is(typeof(-D.init) == D));
+        static assert(is(typeof(++D.init) == D));
+        static assert(is(typeof(--D.init) == D));
+    }
+
+    //equality
+    foreach (D; DecimalTypes)
+    {
+        foreach (T; DecimalTypes)
+            static assert (is(typeof(D.init == T.init) == bool));
+        foreach (T; IntegralTypes)
+            static assert (is(typeof(D.init == T.init) == bool));
+        foreach (T; FloatTypes)
+            static assert (is(typeof(D.init == T.init) == bool));
+        foreach (T; CharTypes)
+            static assert (is(typeof(D.init == T.init) == bool));
+    }
+
+    //comparison
+    foreach (D; DecimalTypes)
+    {
+        foreach (T; DecimalTypes)
+            static assert (is(typeof(D.init > T.init) == bool));
+        foreach (T; IntegralTypes)
+            static assert (is(typeof(D.init > T.init) == bool));
+        foreach (T; FloatTypes)
+            static assert (is(typeof(D.init > T.init) == bool));
+        foreach (T; CharTypes)
+            static assert (is(typeof(D.init > T.init) == bool));
+    }
+
+    //binary left
+    foreach (D; DecimalTypes)
+    {
+        foreach (T; DecimalTypes)
+        {
+            static assert (is(typeof(D.init + T.init) == CommonDecimal!(D, T)));
+            static assert (is(typeof(D.init - T.init) == CommonDecimal!(D, T)));
+            static assert (is(typeof(D.init * T.init) == CommonDecimal!(D, T)));
+            static assert (is(typeof(D.init / T.init) == CommonDecimal!(D, T)));
+            static assert (is(typeof(D.init % T.init) == CommonDecimal!(D, T)));
+            static assert (is(typeof(D.init ^^ T.init) == CommonDecimal!(D, T)));
+        }
+
+        foreach (T; IntegralTypes)
+        {
+            static assert (is(typeof(D.init + T.init) == D));
+            static assert (is(typeof(D.init - T.init) == D));
+            static assert (is(typeof(D.init * T.init) == D));
+            static assert (is(typeof(D.init / T.init) == D));
+            static assert (is(typeof(D.init % T.init) == D));
+            static assert (is(typeof(D.init ^^ T.init) == D));
+        }
+
+        foreach (T; FloatTypes)
+        {
+            static assert (is(typeof(D.init + T.init) == D));
+            static assert (is(typeof(D.init - T.init) == D));
+            static assert (is(typeof(D.init * T.init) == D));
+            static assert (is(typeof(D.init / T.init) == D));
+            static assert (is(typeof(D.init % T.init) == D));
+            static assert (is(typeof(D.init ^^ T.init) == D));
+        }
+
+        foreach (T; CharTypes)
+        {
+            static assert (is(typeof(D.init + T.init) == D));
+            static assert (is(typeof(D.init - T.init) == D));
+            static assert (is(typeof(D.init * T.init) == D));
+            static assert (is(typeof(D.init / T.init) == D));
+            static assert (is(typeof(D.init % T.init) == D));
+            static assert (is(typeof(D.init ^^ T.init) == D));
+        }
+    }
+
+    //binary right
+    foreach (D; DecimalTypes)
+    {
+        foreach (T; DecimalTypes)
+        {
+            static assert (is(typeof(T.init + D.init) == CommonDecimal!(D, T)));
+            static assert (is(typeof(T.init - D.init) == CommonDecimal!(D, T)));
+            static assert (is(typeof(T.init * D.init) == CommonDecimal!(D, T)));
+            static assert (is(typeof(T.init / D.init) == CommonDecimal!(D, T)));
+            static assert (is(typeof(T.init % D.init) == CommonDecimal!(D, T)));
+            static assert (is(typeof(T.init ^^ D.init) == CommonDecimal!(D, T)));
+        }
+
+        foreach (T; IntegralTypes)
+        {
+            static assert (is(typeof(T.init + D.init) == D));
+            static assert (is(typeof(T.init - D.init) == D));
+            static assert (is(typeof(T.init * D.init) == D));
+            static assert (is(typeof(T.init / D.init) == D));
+            static assert (is(typeof(T.init % D.init) == D));
+            static assert (is(typeof(T.init ^^ D.init) == D));
+        }
+
+        foreach (T; FloatTypes)
+        {
+            static assert (is(typeof(T.init + D.init) == D));
+            static assert (is(typeof(T.init - D.init) == D));
+            static assert (is(typeof(T.init * D.init) == D));
+            static assert (is(typeof(T.init / D.init) == D));
+            static assert (is(typeof(T.init % D.init) == D));
+            static assert (is(typeof(T.init ^^ D.init) == D));
+        }
+
+        foreach (T; CharTypes)
+        {
+            static assert (is(typeof(T.init + D.init) == D));
+            static assert (is(typeof(T.init - D.init) == D));
+            static assert (is(typeof(T.init * D.init) == D));
+            static assert (is(typeof(T.init / D.init) == D));
+            static assert (is(typeof(T.init % D.init) == D));
+            static assert (is(typeof(T.init ^^ D.init) == D));
+        }
+    }
+
+    //op assignment
+    foreach (D; DecimalTypes)
+    {
+        foreach (T; DecimalTypes)
+        {
+            static assert (is(typeof(D.init += T.init) == D));
+            static assert (is(typeof(D.init -= T.init) == D));
+            static assert (is(typeof(D.init *= T.init) == D));
+            static assert (is(typeof(D.init /= T.init) == D));
+            static assert (is(typeof(D.init %= T.init) == D));
+            static assert (is(typeof(D.init ^^= T.init) == D));
+        }
+
+        foreach (T; IntegralTypes)
+        {
+            static assert (is(typeof(D.init += T.init) == D));
+            static assert (is(typeof(D.init -= T.init) == D));
+            static assert (is(typeof(D.init *= T.init) == D));
+            static assert (is(typeof(D.init /= T.init) == D));
+            static assert (is(typeof(D.init %= T.init) == D));
+            static assert (is(typeof(D.init ^^= T.init) == D));
+        }
+
+        foreach (T; FloatTypes)
+        {
+            static assert (is(typeof(D.init += T.init) == D));
+            static assert (is(typeof(D.init -= T.init) == D));
+            static assert (is(typeof(D.init *= T.init) == D));
+            static assert (is(typeof(D.init /= T.init) == D));
+            static assert (is(typeof(D.init %= T.init) == D));
+            static assert (is(typeof(D.init ^^= T.init) == D));
+        }
+
+        foreach (T; CharTypes)
+        {
+            static assert (is(typeof(D.init += T.init) == D));
+            static assert (is(typeof(D.init -= T.init) == D));
+            static assert (is(typeof(D.init *= T.init) == D));
+            static assert (is(typeof(D.init /= T.init) == D));
+            static assert (is(typeof(D.init %= T.init) == D));
+            static assert (is(typeof(D.init ^^= T.init) == D));
+        }
+    }
+
+}
+
 
 
 @("Decimal should support decimal + float")
@@ -7703,7 +7931,7 @@ ExceptionFlags decimalInc(D)(ref D x, const int precision, const RoundingMode mo
             x = D.one;
             return ExceptionFlags.none;
         default:
-            flags = coefficientAdd(cx, ex, sx, T(1U), 0, false, RoundingMode.implicit);
+            auto flags = coefficientAdd(cx, ex, sx, DataType!D(1U), 0, false, RoundingMode.implicit);
             return x.adjustedPack(cx, ex, sx, precision, mode, flags);
     }
 }
@@ -7722,7 +7950,7 @@ ExceptionFlags decimalDec(D)(ref D x, const int precision, const RoundingMode mo
             x = -D.one;
             return ExceptionFlags.none;
         default:
-            flags = coefficientAdd(cx, ex, sx, T(1U), 0, true, RoundingMode.implicit);
+            auto flags = coefficientAdd(cx, ex, sx, DataType!D(1U), 0, true, RoundingMode.implicit);
             return x.adjustedPack(cx, ex, sx, precision, mode, flags);
     }
 }
@@ -8249,51 +8477,57 @@ if (isDecimal!D && isFloatingPoint!F)
     }
 
     Unqual!D z;
-    auto flags = z.packFloatingPoint(y, 0, mode);
+    auto flags = z.packFloatingPoint(y, 0, RoundingMode.implicit);
     return flags | decimalMul(x, z, precision, mode);
 }
 
 ExceptionFlags decimalMul(T, D)(auto const ref T x, auto const ref D y, out D z, const int precision, const RoundingMode mode)
 if (isDecimal!D && isIntegral!T)
 {
-   auto flags = z.packIntegral(x, 0, mode);
-   return flags | decimalMul(z, y, precision, mode);
+   z = y;
+   return decimalMul(z, x, precision, mode);
 }
 
 ExceptionFlags decimalMul(F, D)(auto const ref F x, auto const ref D y, out D z, const int precision, const RoundingMode mode)
 if (isDecimal!D && isFloatingPoint!F)
 {
-    auto flags = z.packFloatingPoint(x, 0, mode);
-    return flags | decimalMul(z, y, precision, mode);
+    z = y;
+    return decimalMul(z, x, precision, mode);
 }
 
 ExceptionFlags decimalDiv(D1, D2)(ref D1 x, auto const ref D2 y, const int precision, const RoundingMode mode)
 if (isDecimal!(D1, D2))
 {
-    bool sx = cast(bool)signbit(x);
-    bool sy = cast(bool)signbit(y);
+    alias D = CommonDecimal!(D1, D2);
+    alias T = DataType!D;
+    alias T1 = DataType!D1;
 
-    if (isSignaling(x) || isSignaling(y))
+    T cx, cy; int ex, ey; bool sx, sy;
+
+    auto fx = fastDecode(x, cx, ex, sx);
+    auto fy = fastDecode(y, cy, ey, sy);
+
+    if (fx == FastClass.signalingNaN || fy == FastClass.signalingNaN)
     {
         x = sx ^ sy ? -D1.nan : D1.nan;
         return ExceptionFlags.invalidOperation;
     }
 
-    if (isNaN(x) || isNaN(y))
+    if (fx == FastClass.quietNaN || fy == FastClass.quietNaN)
     {
         x = sx ^ sy ? -D1.nan : D1.nan;
         return ExceptionFlags.none;
     }
 
-    if (isInfinity(x))
+    if (fx == FastClass.infinite)
     {
-        if (isZero(y))
+        if (fy == FastClass.zero)
         {
             x = sx ^ sy ? -D1.nan : D1.nan;
             return ExceptionFlags.invalidOperation | ExceptionFlags.divisionByZero;
         }
 
-        if (isInfinity(y))
+        if (fy == FastClass.infinite)
         {
             x = sx ^ sy ? -D1.nan : D1.nan;
             return ExceptionFlags.invalidOperation;
@@ -8302,56 +8536,27 @@ if (isDecimal!(D1, D2))
         return ExceptionFlags.none;
     }
 
-    if (isInfinity(y))
+    if (fy == FastClass.infinite)
     {
         x = sx ^ sy ? -D1.infinity : D1.infinity;
         return ExceptionFlags.none;
     }
 
-    if (isZero(x))
+    if (fx == FastClass.zero)
     {
         x = sx ^ sy ? -D1.zero : D1.zero;
         return ExceptionFlags.none;
     }
 
-    if (isZero(y))
+    if (fy == FastClass.zero)
     {
         x = sx ^ sy ? -D1.infinity : D1.infinity;
         return ExceptionFlags.divisionByZero;
     }
-
-    alias T1 = DataType!D1;
-    alias T2 = DataType!D2;
-
-    T1 cx;
-    T2 cy;
-    int ex, ey;
-
-    x.unpack(cx, ex);
-    y.unpack(cy, ey);
-
-    static if (D1.sizeof > D2.sizeof)
-    {
-        T1 cyy = cy;
-        alias cxx = cx;
-        enum cmax = D1.COEF_MAX;
-    }
-    else static if (D1.sizeof < D2.sizeof)
-    {
-        T2 cxx = cx;
-        alias cyy = cy;
-        T2 cmax = D1.COEF_MAX;
-    }
-    else
-    {
-        alias cxx = cx;
-        alias cyy = cy;
-        enum cmax = D1.COEF_MAX;
-    }
-
-    auto flags = coefficientDiv(cxx, ex, sx, cyy, ey, sy, mode);
-    flags |= coefficientAdjust(cxx, ex, cmax, sx, mode);
-    return x.adjustedPack(cvt!T1(cxx), ex, sx, precision, mode, flags);
+ 
+    auto flags = coefficientDiv(cx, ex, sx, cy, ey, sy, RoundingMode.implicit);
+    flags |= coefficientAdjust(cx, ex, cvt!T(T1.max), sx, RoundingMode.implicit);
+    return x.adjustedPack(cvt!T1(cx), ex, sx, precision, mode, flags);
 }
 
 ExceptionFlags decimalDiv(D, T)(ref D x, auto const ref T y, const int precision, const RoundingMode mode)
@@ -8470,7 +8675,7 @@ if (isDecimal!D && isIntegral!T)
 
     static if (D.sizeof >= T.sizeof)
     {
-        DataType!D cx = sx ? -x : x;
+        DataType!D cx = Unsigned!T(sx ? -x : x);
         alias cyy = cy;
         enum cmax = D.COEF_MAX;
     }
@@ -8597,7 +8802,7 @@ if (isDecimal!D && isFloatingPoint!F)
         return ExceptionFlags.divisionByZero;
     }
 
-    auto flags = z.packFloatingPoint(f, 0, mode);
+    auto flags = z.packFloatingPoint(x, 0, mode);
     return flags | decimalDiv(z, y, precision, mode);
 }
 
@@ -8809,8 +9014,8 @@ if (isDecimal!D && isIntegral!T)
     return decimalAdd(z, x, precision, mode);
 }
 
-ExceptionFlags decimalAdd(F, D)(auto const ref F x, ref D y, out D z, const int precision, const RoundingMode mode)
-if (isDecimal!D && isFloatingPoint!T)
+ExceptionFlags decimalAdd(F, D)(auto const ref F x, auto const ref D y, out D z, const int precision, const RoundingMode mode)
+if (isDecimal!D && isFloatingPoint!F)
 {
     z = y;
     return decimalAdd(z, x, precision, mode);
@@ -8892,7 +9097,7 @@ ExceptionFlags decimalSub(T, D)(auto const ref T x, auto const ref D y, out D z,
 if (isDecimal!D && isIntegral!T)
 {
     static if (isUnsigned!T)
-        enum sx = false;
+        bool sx = false;
     else
         bool sx = x < 0;
     bool sy = cast(bool)signbit(y);
@@ -8933,21 +9138,23 @@ if (isDecimal!D && isIntegral!T)
     static if (D.sizeof >= T.sizeof)
     {
         alias cyy = cy;
-        DataType!D cxx = sx ? -x : x;
+        DataType!D cxx = Unsigned!T(sx ? -x : x);
+        alias cmax = D.COEF_MAX;
     }
     else
     {
         Unsigned!T cyy = cy;
         Unsigned!T cxx = sx ? -x : x;
+        Unsigned!T cmax = D.COEF_MAX;
     }
 
     auto flags = coefficientAdd(cxx, ex, sx, cyy, ey, !sy, mode);
     flags |= coefficientAdjust(cxx, ex, cmax, sx, mode);
-    return x.adjustedPack(cvt!(DataType!D)(cxx), ex, sx, precision, mode, flags);
+    return z.adjustedPack(cvt!(DataType!D)(cxx), ex, sx, precision, mode, flags);
 }
 
 ExceptionFlags decimalSub(F, D)(auto const ref F x, auto const ref D y, out D z, const int precision, const RoundingMode mode)
-if (isDecimal!D && isFloatingPoint!D)
+if (isDecimal!D && isFloatingPoint!F)
 {
     z = -y;
     return decimalAdd(z, x, precision, mode);
@@ -9083,7 +9290,7 @@ ExceptionFlags decimalMod(T, D)(auto const ref T x, auto const ref D y, out D z,
 if (isDecimal!D && isIntegral!T)
 {
     static if (isUnsigned!T)
-        enum sx = false;
+        bool sx = false;
     else
         bool sx = x < 0;
     bool sy = cast(bool)signbit(y);
@@ -9104,7 +9311,7 @@ if (isDecimal!D && isIntegral!T)
     if (isZero(y))
     {
         z = sy ? -D.nan : D.nan;
-        flags = ExceptionFlags.invalidOperation;
+        return ExceptionFlags.invalidOperation;
     }
 
     if (isInfinity(y))
@@ -9118,20 +9325,19 @@ if (isDecimal!D && isIntegral!T)
     static if (D.sizeof >= T.sizeof)
     {
         alias cyy = cy;
-        DataType!D cxx = sx ? -x : x;
+        DataType!D cxx = Unsigned!T(sx ? -x : x);
         alias cmax = D.COEF_MAX;
     }
     else
     {
         Unsigned!T cyy = cy;
         Unsigned!T cxx = sx ? -x : x;
-        Unsigned!T cmax = D.COEFMAX;
+        Unsigned!T cmax = D.COEF_MAX;
     }
 
     auto flags = coefficientMod(cxx, ex, sx, cyy, ey, sy, mode);
     flags |= coefficientAdjust(cxx, ex, cmax, sx, mode);
     return z.adjustedPack(cvt!(DataType!D)(cxx), ex, sx, precision, mode, flags);
-    return flags;
 
 }
 
@@ -9183,25 +9389,25 @@ if (isDecimal!D && isFloatingPoint!F)
 
     if (isSignaling(y))
     {
-        x = sy ? -D.nan : D.nan;
+        z = sy ? -D.nan : D.nan;
         return ExceptionFlags.invalidOperation;
     }
 
     if (isNaN(x))
     {
-        x = sx ? -D.nan : D.nan;
+        z = sx ? -D.nan : D.nan;
         return ExceptionFlags.none;
     }
 
     if (isNaN(y))
     {
-        x = sy ? -D.nan : D.nan;
+        z = sy ? -D.nan : D.nan;
         return ExceptionFlags.none;
     }
 
     if (isInfinity(x) || isZero(y))
     {
-        x = sx ? -D.nan : D.nan;
+        z = sx ? -D.nan : D.nan;
         return ExceptionFlags.invalidOperation;
     }
 
@@ -9318,7 +9524,7 @@ if (isDecimal!D && isIntegral!T)
     static if (D.sizeof >= T.sizeof)
     {
         alias cxx = cx;
-        DataType!D cyy = sy ? -y : y;
+        DataType!D cyy = cast(Unsigned!T)(sy ? -y : y);
     }
     else
     {
@@ -9514,7 +9720,7 @@ if (isDecimal!D && isFloatingPoint!F)
 
     Unqual!D v = void;
     auto flags = v.packFloatingPoint(y, D.PRECISION, RoundingMode.towardZero);
-    return (!flags && equ(x, v));
+    return (!flags && decimalEqu(x, v));
 }
 
 ExceptionFlags decimalSqrt(D)(ref D x, const int precision, const RoundingMode mode)
@@ -9869,7 +10075,7 @@ ExceptionFlags decimalPow(D1, D2)(ref D1 x, auto const ref D2 y, const int preci
 if (isDecimal!(D1, D2))
 {
     long ip;
-    auto flags = decimalToSigned(y, ip, 0, mode);
+    auto flags = decimalToSigned(y, ip, mode);
     if (flags == ExceptionFlags.none)
         return decimalPow(x, ip, precision, mode);
 
@@ -9882,22 +10088,24 @@ ExceptionFlags decimalPow(D, F)(ref D x, auto const ref F y, const int precision
 if (isDecimal!D && isFloatingPoint!F)
 {
     Unqual!D z;
-    flags = z.packFloatingPoint(y, 0, mode);
+    auto flags = z.packFloatingPoint(y, 0, mode);
     return flags | decimalPow(x, z, precision, mode);
 }
 
-ExceptionFlags decimalPow(T, D)(auto const ref T x, auto const ref D y, out D z, const int precision, const RoundingMode mode)
+ExceptionFlags decimalPow(T, D)(auto const ref T x, auto const ref D y, out D result, const int precision, const RoundingMode mode)
 if (isDecimal!D && isIntegral!T)
 {
-    flags = z.packIntegral(x, 0, mode);
-    return flags | decimalPow(x, y, precision, mode);
+    decimal128 r = x;
+    auto flags = decimalPow(r, y, precision, mode);
+    return flags | decimalToDecimal(r, result, precision, mode);
 }
 
-ExceptionFlags decimalPow(F, D)(auto const ref F x, auto const ref D y, out D z, const int precision, const RoundingMode mode)
+ExceptionFlags decimalPow(F, D)(auto const ref F x, auto const ref D y, out D result, const int precision, const RoundingMode mode)
 if (isDecimal!D && isFloatingPoint!F)
 {
-    flags = z.packFloatingPoint(x, 0, mode);
-    return flags | decimalPow(x, y, precision, mode);
+    decimal128 r = x;
+    auto flags = decimalPow(r, y, precision, mode);
+    return flags | decimalToDecimal(r, result, precision, mode);
 }
 
 ExceptionFlags decimalExp(D)(ref D x, const int precision, const RoundingMode mode)
@@ -10003,22 +10211,6 @@ if (isDecimal!D)
     bool sx = x.unpack(cx, ex);
     auto flags = coefficientLog(cx, ex, sx);
     return x.adjustedPack(cx, ex, sx, precision, mode, flags);
-}
-
-ExceptionFlags decimalPow(T, D)(auto const ref T x, auto const ref D y, out D result, const int precision, const RoundingMode mode)
-if (isDecimal!D && isIntegral!T)
-{
-    decimal128 r = x;
-    auto flags = decimalPow(r, y, precision, mode);
-    return flags | decimalToDecimal(r, result);
-}
-
-ExceptionFlags decimalPow(F, D)(auto const ref F x, auto const ref D y, out D result, const int precision, const RoundingMode mode)
-if (isDecimal!D && isIntegral!T)
-{
-    decimal128 r = x;
-    auto flags = decimalPow(r, y, precision, mode);
-    return flags | decimalToDecimal(r, result);
 }
 
 ExceptionFlags decimalExp10(D)(out D x, int n, const int precision, const RoundingMode mode)
