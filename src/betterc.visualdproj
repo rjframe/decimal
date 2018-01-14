@@ -430,6 +430,7 @@
  </Config>
  <Folder name="betterc">
   <File path="betterc\betterc.d" />
+  <File path="decimal\decimal.d" />
   <File path="decimal\floats.d" />
   <File path="decimal\integrals.d" />
   <File path="decimal\package.d" />

@@ -430,6 +430,7 @@
  </Config>
  <Folder name="benchmark">
   <File path="benchmark\benchmark.d" />
+  <File path="decimal\decimal.d" />
   <File path="decimal\floats.d" />
   <File path="decimal\integrals.d" />
   <File path="decimal\package.d" />

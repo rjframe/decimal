@@ -10,7 +10,7 @@
 <meta charset="utf-8">
 <meta name="keywords" content="D programming language">
 <meta name="description" content="D Programming Language">
-<title>decimal - D Programming Language</title>
+<title>decimal.decimal - D Programming Language</title>
 
 <link rel="stylesheet" href="https://dlang.org/css/codemirror.css">
 <link rel="stylesheet" href="https://dlang.org/css/style.css">
@@ -19,7 +19,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=0.1, maximum-scale=10.0">
 
 </head>
-<body id='decimal' class='std'>
+<body id='decimal.decimal' class='std'>
 <script type="text/javascript">document.body.className += ' have-javascript'</script>
 <div id="top"><div class="helper"><div class="helper expand-container">    <div class="logo"><a href=".."><img id="logo" alt="D Logo" src="https://dlang.org/images/dlogo.svg"></a></div>
     <a href="https://dlang.org/menu.html" title="Menu" class="hamburger expand-toggle"><span>Menu</span></a>
@@ -83,11 +83,11 @@
 
 <div class="container">    
     <div class="hyphenate" id="content">        
-<div id="tools"><div >	<div class="tip smallprint">		<a href="https://issues.dlang.org/enter_bug.cgi?bug_file_loc=http%3A%2F%2Fdlang.org/phobos/&amp;bug_severity=enhancement&amp;component=dlang.org&amp;op_sys=All&amp;priority=P3&amp;product=D&amp;rep_platform=All&amp;short_desc=%5Bdecimal%5D&amp;version=D2">Report a bug</a>
+<div id="tools"><div >	<div class="tip smallprint">		<a href="https://issues.dlang.org/enter_bug.cgi?bug_file_loc=http%3A%2F%2Fdlang.org/phobos/&amp;bug_severity=enhancement&amp;component=dlang.org&amp;op_sys=All&amp;priority=P3&amp;product=D&amp;rep_platform=All&amp;short_desc=%5Bdecimal.decimal%5D&amp;version=D2">Report a bug</a>
 		<div >			If you spot a problem with this page, click here to create a Bugzilla issue.
 		</div>
 	</div>
-	<div class="tip smallprint">		<a href="https://github.com/dlang/dlang.org/edit/master/decimal\package.d">Improve this page</a>
+	<div class="tip smallprint">		<a href="https://github.com/dlang/dlang.org/edit/master/decimal\decimal.d">Improve this page</a>
 		<div >			Quickly fork, edit online, and submit a pull request for this page.
 			Requires a signed-in GitHub account. This works well for small changes.
 			If you'd like to make larger changes you may want to consider using
@@ -95,7 +95,7 @@
 		</div>
 	</div>
 </div></div>
-        <h1><span class="d_inlinecode donthyphenate notranslate">decimal</span></h1>
+        <h1><span class="d_inlinecode donthyphenate notranslate">decimal.decimal</span></h1>
         <div class="quickindex" id="quickindex"></div>
         IEEE 754-2008 implementation of decimal floating point data types.
 Decimal values are represented in memory using a coefficient and a 10-base exponent.
@@ -635,27 +635,27 @@ This function is not intended for direct use, it's provided as support for assoc
 <dd>Root object for all decimal exceptions<br><br>
 
 </dd>
-<dt><em class="big"><span class="def-anchor" id=".InvalidOperationException"></span><div class="quickindex" id="quickindex.InvalidOperationException"></div>class <span class="def-anchor" id="InvalidOperationException"></span><code class="ddoc_psymbol">InvalidOperationException</code>: <span class="ddoc_psuper_symbol">decimal.DecimalException</span>;
+<dt><em class="big"><span class="def-anchor" id=".InvalidOperationException"></span><div class="quickindex" id="quickindex.InvalidOperationException"></div>class <span class="def-anchor" id="InvalidOperationException"></span><code class="ddoc_psymbol">InvalidOperationException</code>: <span class="ddoc_psuper_symbol">decimal.decimal.DecimalException</span>;
 </em></dt>
 <dd>Thrown if any operand of a decimal operation is not a number or si not finite<br><br>
 
 </dd>
-<dt><em class="big"><span class="def-anchor" id=".DivisionByZeroException"></span><div class="quickindex" id="quickindex.DivisionByZeroException"></div>class <span class="def-anchor" id="DivisionByZeroException"></span><code class="ddoc_psymbol">DivisionByZeroException</code>: <span class="ddoc_psuper_symbol">decimal.DecimalException</span>;
+<dt><em class="big"><span class="def-anchor" id=".DivisionByZeroException"></span><div class="quickindex" id="quickindex.DivisionByZeroException"></div>class <span class="def-anchor" id="DivisionByZeroException"></span><code class="ddoc_psymbol">DivisionByZeroException</code>: <span class="ddoc_psuper_symbol">decimal.decimal.DecimalException</span>;
 </em></dt>
 <dd>Thrown if the denominator of a decimal division operation is zero.<br><br>
 
 </dd>
-<dt><em class="big"><span class="def-anchor" id=".OverflowException"></span><div class="quickindex" id="quickindex.OverflowException"></div>class <span class="def-anchor" id="OverflowException"></span><code class="ddoc_psymbol">OverflowException</code>: <span class="ddoc_psuper_symbol">decimal.DecimalException</span>;
+<dt><em class="big"><span class="def-anchor" id=".OverflowException"></span><div class="quickindex" id="quickindex.OverflowException"></div>class <span class="def-anchor" id="OverflowException"></span><code class="ddoc_psymbol">OverflowException</code>: <span class="ddoc_psuper_symbol">decimal.decimal.DecimalException</span>;
 </em></dt>
 <dd>Thrown if the result of a decimal operation exceeds the largest finite number of the destination format.<br><br>
 
 </dd>
-<dt><em class="big"><span class="def-anchor" id=".UnderflowException"></span><div class="quickindex" id="quickindex.UnderflowException"></div>class <span class="def-anchor" id="UnderflowException"></span><code class="ddoc_psymbol">UnderflowException</code>: <span class="ddoc_psuper_symbol">decimal.DecimalException</span>;
+<dt><em class="big"><span class="def-anchor" id=".UnderflowException"></span><div class="quickindex" id="quickindex.UnderflowException"></div>class <span class="def-anchor" id="UnderflowException"></span><code class="ddoc_psymbol">UnderflowException</code>: <span class="ddoc_psuper_symbol">decimal.decimal.DecimalException</span>;
 </em></dt>
 <dd>Thrown if the result of a decimal operation is smaller the smallest finite number of the destination format.<br><br>
 
 </dd>
-<dt><em class="big"><span class="def-anchor" id=".InexactException"></span><div class="quickindex" id="quickindex.InexactException"></div>class <span class="def-anchor" id="InexactException"></span><code class="ddoc_psymbol">InexactException</code>: <span class="ddoc_psuper_symbol">decimal.DecimalException</span>;
+<dt><em class="big"><span class="def-anchor" id=".InexactException"></span><div class="quickindex" id="quickindex.InexactException"></div>class <span class="def-anchor" id="InexactException"></span><code class="ddoc_psymbol">InexactException</code>: <span class="ddoc_psuper_symbol">decimal.decimal.DecimalException</span>;
 </em></dt>
 <dd>Thrown if the result of a decimal operation was rounded to fit in the destination format.<br><br>
 
@@ -3179,7 +3179,7 @@ This operation is silent, doesn't throw any exception.
 </dl>
 
         <div class="smallprint" id="copyright">Copyright &copy; 1999-2018 by the <a href="https://dlang.org/foundation.html">D Language Foundation</a> | Page generated by
-<a href="https://dlang.org/spec/ddoc.html">Ddoc</a> on Sat Jan 13 18:31:36 2018
+<a href="https://dlang.org/spec/ddoc.html">Ddoc</a> on Sun Jan 14 00:48:53 2018
 </div>
     </div>
 </div>

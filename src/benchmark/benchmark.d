@@ -120,6 +120,7 @@ void randomize(T)(T[] a)
 import std.stdio;
 import decimal;
 import std.math;
+import std.range;
 
 void dump(double angle)
 {
@@ -140,6 +141,27 @@ void dump(double angle)
              tan(decimal128(angle)));
 }
 
+immutable size_t N = 100;
+
+void unity (T) ()
+{
+    writeln ("\n=== ", T.stringof, " ===\n");
+    immutable one = T (1);
+    immutable two = T (2);
+    immutable π = atan (one) * 4;
+    writefln!"π = <%30.24f>" (π);
+
+    foreach (i; iota(N + 1)) {
+        auto φ = two * π * i / N;
+        auto sinφ = sin (φ);
+        auto cosφ = cos (φ);
+        auto unity = sinφ * sinφ + cosφ * cosφ;
+        auto δ = one - unity;
+        writeln ("φ = <", φ, ">, δ = <", δ, ">");
+    }
+}
+
+
 int main(string[] argv)
 {
 
@@ -152,14 +174,14 @@ int main(string[] argv)
     //    writefln ("%9.2f %30.24f %30.24f %12.4g", r, rsin, dsin, delta);
     //}
 
-    real r;
-    for (r = 1; r < 6; r += .1L) {
-        decimal128 d = r;
-        auto dsin = sin (d);
-        auto rsin = sin (r);
-        auto delta = dsin - rsin;
-        writefln ("%9.2f %+30.24f %+35.34f %+12.4g", r, rsin, dsin, delta);
-    }
+    //real r;
+    //for (r = 1; r < 6; r += .1L) {
+    //    decimal128 d = r;
+    //    auto dsin = sin (d);
+    //    auto rsin = sin (r);
+    //    auto delta = dsin - rsin;
+    //    writefln ("%9.2f %+30.24f %+35.34f %+12.4g", r, rsin, dsin, delta);
+    //}
     //
     //writefln("%35.34f", sin(decimal128(1)));
     //writefln("%35.34f", sin(decimal64(1)));
@@ -168,19 +190,33 @@ int main(string[] argv)
     //writefln("%35.34f", sin(cast(double)1.0));
     //writefln("%35.34f", sin(cast(float)1.0));
 
-    writefln("%35.34f", sin(decimal32("5.7")));
-    writefln("%35.34f", sin(decimal64("5.7")));
-    writefln("%35.34f", sin(decimal128("5.7")));
+    //writefln("%35.34f", sin(decimal32("5.7")));
+    //writefln("%35.34f", sin(decimal64("5.7")));
+    //writefln("%35.34f", sin(decimal128("5.7")));
+    //
+    //
+    //writefln("%35.34f", sin(decimal32(5.7)));
+    //writefln("%35.34f", sin(decimal64(5.7)));
+    //writefln("%35.34f", sin(decimal128(5.7)));
+    //
+    //
+    //writefln("%35.34f", decimal32(5.7));
+    //writefln("%35.34f", decimal64(5.7));
+    //writefln("%35.34f", decimal128(5.7));
 
+    //unity!decimal64;
 
-    writefln("%35.34f", sin(decimal32(5.7)));
-    writefln("%35.34f", sin(decimal64(5.7)));
-    writefln("%35.34f", sin(decimal128(5.7)));
+    //decimal32 d;
+    //if (d < 0)
+    //    writeln ("< 0");
+    //else
+    //    writeln ("not < 0");
 
-
-    writefln("%35.34f", decimal32(5.7));
-    writefln("%35.34f", decimal64(5.7));
-    writefln("%35.34f", decimal128(5.7));
+    decimal32 d = "1";
+    auto p = 4 * d;
+    auto q = d * 4;
+    writeln (typeof(p).stringof);
+    writeln (typeof(q).stringof);
 
     getchar();
     return 0;
