@@ -1642,8 +1642,6 @@ unittest
         static assert (is(typeof(D.init.toHash()) == size_t));
         static assert (is(typeof(D.init.toString()) == string));
     }
-
-
 }
 
 
@@ -8807,147 +8805,102 @@ if (isDecimal!D && isFloatingPoint!F)
 ExceptionFlags decimalAdd(D1, D2)(ref D1 x, auto const ref D2 y, const int precision, const RoundingMode mode)
 if (isDecimal!(D1, D2))
 {
-    bool sx = cast(bool)signbit(x);
-    bool sy = cast(bool)signbit(y);
+    alias D = CommonDecimal!(D1, D2);
+    alias T = DataType!D;
+    alias T1 = DataType!D1;
 
-    if (isSignaling(x))
-    {
-        x = sx ? -D1.nan : D1.nan;
+    T cx, cy; int ex, ey; bool sx, sy;
+
+    auto fx = fastDecode(x, cx, ex, sx);
+    auto fy = fastDecode(y, cy, ey, sy);
+
+    if (fx == FastClass.signalingNaN)
         return ExceptionFlags.invalidOperation;
-    }
 
-    if (isSignaling(y))
+    if (fy == FastClass.signalingNaN)
     {
         x = sy ? -D1.nan : D1.nan;
         return ExceptionFlags.invalidOperation;
     }
 
-    if (isNaN(x))
-    {
-        x = sx ? -D1.nan : D1.nan;
+    if (fx == FastClass.quietNaN)
         return ExceptionFlags.none;
-    }
 
-    if (isNaN(y))
+    if (fy == FastClass.quietNaN)
     {
         x = sy ? -D1.nan : D1.nan;
-        return ExceptionFlags.none;
+        return ExceptionFlags.invalidOperation;
     }
 
-    if (isInfinity(x))
+    if (fx == FastClass.infinite)
     {
-        if (isInfinity(y))
+        if (fy == FastClass.infinite && sx != sy)
         {
-            if (sx != sy)
-            {
-                x = sx ? -D1.nan : D1.nan;
-                return ExceptionFlags.invalidOperation;
-            }
+            x = sx ? -D1.nan : D1.nan;
+            return ExceptionFlags.invalidOperation;
         }
-        x = sx ? -D1.infinity : D1.infinity;
         return ExceptionFlags.none;  
     }
 
-    if (isInfinity(y))
+    if (fy == FastClass.infinite)
     {
         x = sy ? -D1.infinity : D1.infinity;
         return ExceptionFlags.none;   
     }
 
-    if (isZero(x))
+    if (fx == FastClass.zero)
         return decimalToDecimal(y, x, precision, mode);
 
-    if (isZero(y))
+    if (fy == FastClass.zero)
         return ExceptionFlags.none;
 
-    alias T1 = DataType!D1;
-    alias T2 = DataType!D2;
+    auto flags = coefficientAdd(cx, ex, sx, cy, ey, sy, RoundingMode.implicit);
+    flags |= coefficientAdjust(cx, ex, cvt!T(T1.max), sx, RoundingMode.implicit);
+    return x.adjustedPack(cvt!T1(cx), ex, sx, precision, mode, flags);
 
-    T1 cx;
-    T2 cy;
-    int ex, ey;
-
-    x.unpack(cx, ex);
-    y.unpack(cy, ey);
-
-    static if (T1.sizeof > T2.sizeof)
-    {
-        alias cxx = cx;
-        T1 cyy = cy;
-        enum cmax = D1.COEF_MAX;
-    }
-    else static if (T1.sizeof < T2.sizeof)
-    {
-        T2 cxx = cx;
-        alias cyy = cy;
-        T2 cmax = D1.COEF_MAX;
-    }
-    else
-    {
-        alias cxx = cx;
-        alias cyy = cy;
-        enum cmax = D1.COEF_MAX;
-    }
-
-    auto flags = coefficientAdd(cxx, ex, sx, cyy, ey, sy, mode);
-    flags |= coefficientAdjust(cxx, ex, cmax, sx, mode);
-    return x.adjustedPack(cvt!T1(cxx), ex, sx, precision, mode, flags);
+   
 }
 
 ExceptionFlags decimalAdd(D, T)(ref D x, auto const ref T y, const int precision, const RoundingMode mode)
 if (isDecimal!D && isIntegral!T)
 {
-    bool sx = cast(bool)signbit(x);
-    static if (isUnsigned!T)
-        enum sy = false;
-    else
-        bool sy = y < 0;
 
-    if (isSignaling(x))
-    {
-        x = sx ? -D.nan : D.nan;
-        return ExceptionFlags.invalidOperation;
-    }
+    alias DT = DataType!D;
 
-    if (isNaN(x))
-    {
-        x = sx ? -D.nan : D.nan;
-        return ExceptionFlags.none;
-    }
-
-    if (isInfinity(x))
-    {
-        x = sx ? -D.infinity : D.infinity;
-        return ExceptionFlags.none;  
-    }
-
-    if (isZero(x))
-        return x.packIntegral(y, precision, mode);
-
-    if (y == 0)
-        return ExceptionFlags.none;
-
-    DataType!D cx;
-    int ex, ey;
-
-    x.unpack(cx, ex);
-    
     static if (D.sizeof >= T.sizeof)
+        alias U = DT;
+    else
+        alias U = Unsigned!(Unqual!T);
+
+    U cx; int ex; bool sx;
+
+    static if (isUnsigned!T)
     {
-        alias cxx = cx;
-        DataType!D cyy = Unsigned!T(sy ? -y : y);
-        alias cmax = D.COEF_MAX;
+        enum bool sy = false;
+        U cy = y;
     }
     else
     {
-        Unsigned!T cxx = cx;
-        Unsigned!T cyy = sy ? -y : y;
-        Unsigned!T cmax = D.COEF_MAX;
-    }
+        immutable bool sy = y < 0;
+        U cy = cast(Unsigned!T)(sy ? -y : y);
+    } 
 
-    auto flags = coefficientAdd(cxx, ex, sx, cyy, ey, sy, mode);
-    flags |= coefficientAdjust(cxx, ex, cmax, sx, mode);
-    return x.adjustedPack(cvt!(DataType!D)(cxx), ex, sx, precision, mode, flags);
+    switch(fastDecode(x, cx, ex, sx))
+    {
+        case FastClass.signalingNaN:
+            return ExceptionFlags.invalidOperation;
+        case FastClass.quietNaN:
+        case FastClass.infinite:
+            return ExceptionFlags.none;
+        case FastClass.zero:
+            return x.packIntegral(y, precision, mode);
+        default:
+            if (!y)
+                return ExceptionFlags.none;
+            auto flags = coefficientAdd(cx, ex, sx, cy, 0, sy, RoundingMode.implicit);
+            flags |= coefficientAdjust(cx, ex, cvt!U(DT.max), sx, RoundingMode.implicit);
+            return x.adjustedPack(cvt!DT(cx), ex, sx, precision, mode, flags);
+    }
 }
 
 ExceptionFlags decimalAdd(D, F)(ref D x, auto const ref F y, const int precision, const RoundingMode mode)
@@ -8957,16 +8910,10 @@ if (isDecimal!D && isFloatingPoint!F)
     bool sy = cast(bool)signbit(y);
 
     if (isSignaling(x))
-    {
-        x = sx ? -D.nan : D.nan;
         return ExceptionFlags.invalidOperation;
-    }
 
     if (isNaN(x))
-    {
-        x = sx ? -D.nan : D.nan;
         return ExceptionFlags.none;
-    }
 
     if (isNaN(y))
     {
@@ -8976,15 +8923,11 @@ if (isDecimal!D && isFloatingPoint!F)
 
     if (isInfinity(x))
     {
-        if (isInfinity(y))
+        if (isInfinity(y) && sx != sy)
         {
-            if (sx != sy)
-            {
-                x = sx ? -D.nan : D.nan;
-                return ExceptionFlags.invalidOperation;
-            }
+            x = sx ? -D.nan : D.nan;
+            return ExceptionFlags.invalidOperation;
         }
-        x = sx ? -D.infinity : D.infinity;
         return ExceptionFlags.none;  
     }
 
@@ -9028,61 +8971,45 @@ if (isDecimal!(D1, D2))
 ExceptionFlags decimalSub(D, T)(ref D x, auto const ref T y, const int precision, const RoundingMode mode)
 if (isDecimal!D && isIntegral!T)
 {
-    bool sx = cast(bool)signbit(x);
-    static if (isUnsigned!T)
-        enum sy = false;
-    else
-        bool sy = y < 0;
 
-    if (isSignaling(x))
-    {
-        x = sx ? -D.nan : D.nan;
-        return ExceptionFlags.invalidOperation;
-    }
-
-    if (isNaN(x))
-    {
-        x = sx ? -D.nan : D.nan;
-        return ExceptionFlags.none;
-    }
-
-    if (isInfinity(x))
-    {
-        x = sx ? -D.infinity : D.infinity;
-        return ExceptionFlags.none;  
-    }
-
-    if (isZero(x))
-    {
-        auto flags = x.packIntegral(y, D.realPrecision(precision), mode);
-        x = -x;
-        return flags;
-    }
-
-    if (y == 0)
-        return ExceptionFlags.none;
-
-    DataType!D cx;
-    int ex, ey;
-
-    x.unpack(cx, ex);
+    alias DT = DataType!D;
 
     static if (D.sizeof >= T.sizeof)
+        alias U = DT;
+    else
+        alias U = Unsigned!(Unqual!T);
+
+    U cx; int ex; bool sx;
+
+    static if (isUnsigned!T)
     {
-        alias cxx = cx;
-        DataType!D cyy = Unsigned!T(sy ? -y : y);
-        alias cmax = D.COEF_MAX;
+        enum bool sy = false;
+        U cy = y;
     }
     else
     {
-        Unsigned!T cxx = cx;
-        Unsigned!T cyy = sy ? -y : y;
-        Unsigned!T cmax = D.COEF_MAX;
-    }
+        immutable bool sy = y < 0;
+        U cy = cast(Unsigned!T)(sy ? -y : y);
+    } 
 
-    auto flags = coefficientAdd(cxx, ex, sx, cyy, ey, !sy, mode);
-    flags |= coefficientAdjust(cxx, ex, cmax, sx, mode);
-    return x.adjustedPack(cvt!(DataType!D)(cxx), ex, sx, precision, mode, flags);
+    switch(fastDecode(x, cx, ex, sx))
+    {
+        case FastClass.signalingNaN:
+            return ExceptionFlags.invalidOperation;
+        case FastClass.quietNaN:
+        case FastClass.infinite:
+            return ExceptionFlags.none;
+        case FastClass.zero:
+            auto flags = x.packIntegral(y, precision, mode);
+            x = -x;
+            return flags;
+        default:
+            if (!y)
+                return ExceptionFlags.none;
+            auto flags = coefficientAdd(cx, ex, sx, cy, 0, !sy, RoundingMode.implicit);
+            flags |= coefficientAdjust(cx, ex, cvt!U(DT.max), sx, RoundingMode.implicit);
+            return x.adjustedPack(cvt!DT(cx), ex, sx, precision, mode, flags);
+    }
 }
 
 ExceptionFlags decimalSub(D, F)(ref D x, auto const ref F y, const int precision, const RoundingMode mode)
@@ -9094,61 +9021,8 @@ if (isDecimal!D && isFloatingPoint!F)
 ExceptionFlags decimalSub(T, D)(auto const ref T x, auto const ref D y, out D z, const int precision, const RoundingMode mode)
 if (isDecimal!D && isIntegral!T)
 {
-    static if (isUnsigned!T)
-        bool sx = false;
-    else
-        bool sx = x < 0;
-    bool sy = cast(bool)signbit(y);
-    
-
-    if (isSignaling(y))
-    {
-        z = sy ? -D.nan : D.nan;
-        return ExceptionFlags.invalidOperation;
-    }
-
-    if (isNaN(y))
-    {
-        z = sx ? -D.nan : D.nan;
-        return ExceptionFlags.none;
-    }
-
-    if (isInfinity(y))
-    {
-        z = sy ? -D.infinity : D.infinity;
-        return ExceptionFlags.none;  
-    }
-
-    if (isZero(y))
-        return z.packIntegral(x, D.realPrecision(precision), mode);
-
-    if (x == 0)
-    {
-        z = -y;
-        return ExceptionFlags.none;
-    }
-
-    DataType!D cy;
-    int ex, ey;
-
-    y.unpack(cy, ey);
-
-    static if (D.sizeof >= T.sizeof)
-    {
-        alias cyy = cy;
-        DataType!D cxx = Unsigned!T(sx ? -x : x);
-        alias cmax = D.COEF_MAX;
-    }
-    else
-    {
-        Unsigned!T cyy = cy;
-        Unsigned!T cxx = sx ? -x : x;
-        Unsigned!T cmax = D.COEF_MAX;
-    }
-
-    auto flags = coefficientAdd(cxx, ex, sx, cyy, ey, !sy, mode);
-    flags |= coefficientAdjust(cxx, ex, cmax, sx, mode);
-    return z.adjustedPack(cvt!(DataType!D)(cxx), ex, sx, precision, mode, flags);
+    z = -y;
+    return decimalAdd(z, x, precision, mode);
 }
 
 ExceptionFlags decimalSub(F, D)(auto const ref F x, auto const ref D y, out D z, const int precision, const RoundingMode mode)
