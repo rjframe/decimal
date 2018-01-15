@@ -354,6 +354,7 @@ private:
 
     enum MASK_QNAN      = U(0b01111100U) << (bits - 8);
     enum MASK_SNAN      = U(0b01111110U) << (bits - 8);
+    enum MASK_SNANBIT   = U(0b00000010U) << (bits - 8);
     enum MASK_INF       = U(0b01111000U) << (bits - 8);
     enum MASK_SGN       = U(0b10000000U) << (bits - 8);
     enum MASK_EXT       = U(0b01100000U) << (bits - 8);
@@ -878,42 +879,64 @@ public:
     @IEEECompliant("decodeBinary", 23)
     this(T)(auto const ref T value)
     {
-        ExceptionFlags flags;
-
         static if (isIntegral!T)
-            flags = packIntegral(value, 
+        {
+            auto flags = packIntegral(value, 
                                  __ctfe ? 0 : DecimalControl.precision, 
                                  __ctfe ? RoundingMode.implicit : DecimalControl.rounding);
+            DecimalControl.raiseFlags(flags);
+        }
         else static if (isSomeChar!T)
-            flags = packIntegral(cast(uint)value, 
+        {
+            auto flags = packIntegral(cast(uint)value, 
                                  __ctfe ? 0 : DecimalControl.precision, 
                                  __ctfe ? RoundingMode.implicit : DecimalControl.rounding);
+            DecimalControl.raiseFlags(flags);
+        }
         else static if (isFloatingPoint!T)
-            flags = packFloatingPoint(value, 
+        {
+            auto flags = packFloatingPoint(value, 
                                  __ctfe ? 0 : DecimalControl.precision, 
                                  __ctfe ? RoundingMode.implicit : DecimalControl.rounding);
+            DecimalControl.raiseFlags(flags);
+        }
         else static if (isSomeString!T)
-            flags = packString(value, 
+        {
+            auto flags = packString(value, 
                                  __ctfe ? 0 : DecimalControl.precision, 
                                  __ctfe ? RoundingMode.implicit : DecimalControl.rounding);
+            DecimalControl.raiseFlags(flags);
+        }
         else static if (isInputRange!T && isSomeChar!(ElementType!T) && !isSomeString!T)
-            flags = packRange(value, 
+        {
+            auto flags = packRange(value, 
                                  __ctfe ? 0 : DecimalControl.precision, 
                                  __ctfe ? RoundingMode.implicit : DecimalControl.rounding);
+            DecimalControl.raiseFlags(flags);
+        }
         else static if (is(T: D))
             this.data = value.data;
+        else static if (is(T: bool))
+        {
+            this.data = value ? one.data : zero.data;
+        }
+        else static if (is(D: decimal64) && is(T: decimal32))
+            decimalToDecimal(value, this, 0, RoundingMode.implicit);
+        else static if (is(D: decimal128) && (is(T: decimal32) || is(T: decimal64)))
+            decimalToDecimal(value, this, 0, RoundingMode.implicit);
         else static if (isDecimal!T)
-            flags = decimalToDecimal(value, this, 
+        {
+            auto flags = decimalToDecimal(value, this, 
                                  __ctfe ? 0 : DecimalControl.precision, 
                                  __ctfe ? RoundingMode.implicit : DecimalControl.rounding);
-        else static if (is(T: bool))
-            this.data = value ? one.data : zero.data;
+            DecimalControl.raiseFlags(flags);
+        }
         else
             static assert (0, "Cannot convert expression of type '" ~ 
                            Unqual!T.stringof ~ "' to '" ~
                            Unqual!D.stringof ~ "'");
-        DecimalControl.raiseFlags(flags);
-    }
+    }  
+
 
 
     /**
@@ -942,29 +965,45 @@ public:
     @IEEECompliant("encodeBinary", 23)
     T opCast(T)() const
     {
-        ExceptionFlags flags;
         Unqual!T result;
         static if (isUnsigned!T)
-            flags = decimalToUnsigned(this, result, 
+        {
+            auto flags = decimalToUnsigned(this, result, 
                                       __ctfe ? RoundingMode.implicit : DecimalControl.rounding);
+            DecimalControl.raiseFlags(flags);
+        }
         else static if (isIntegral!T)
-            flags = decimalToSigned(this, result, 
+        {
+            auto flags = decimalToSigned(this, result, 
                                     __ctfe ? RoundingMode.implicit : DecimalControl.rounding);
+            DecimalControl.raiseFlags(flags);
+        }
         else static if (is(T: D))
             result = this;
+        else static if (is(D: decimal32) && (is(T: decimal64) || is(T: decimal128)))
+            decimalToDecimal(this, result, 0, RoundingMode.implicit);
+        else static if (is(D: decimal64) && is(T: decimal128))
+            decimalToDecimal(this, result, 0, RoundingMode.implicit);
         else static if (isDecimal!T)
-            flags = decimalToDecimal(this, result, 
+        {
+            auto flags = decimalToDecimal(this, result, 
                                           __ctfe ? 0 : DecimalControl.precision,
                                           __ctfe ? RoundingMode.implicit : DecimalControl.rounding);
+            DecimalControl.raiseFlags(flags);
+        }
         else static if (isFloatingPoint!T)
-            flags = decimalToFloat(this, result, 
+        {
+            auto flags = decimalToFloat(this, result, 
                                         __ctfe ? RoundingMode.implicit : DecimalControl.rounding);
+            DecimalControl.raiseFlags(flags);
+        }
         else static if (isSomeChar!T)
         {
             uint r;
-            flags = decimalToUnsigned(this, r, 
+            auto flags = decimalToUnsigned(this, r, 
                                            __ctfe ? RoundingMode.implicit : DecimalControl.rounding);
             result = cast(Unqual!T)r;
+            DecimalControl.raiseFlags(flags);
         }
         else static if (is(T: bool))
             result = !isZero(this);
@@ -972,7 +1011,7 @@ public:
             static assert(0, "Cannot cast a value of type '" ~ 
                           Unqual!D.stringof ~ "' to '" ~ 
                           Unqual!T.stringof ~ "'");
-        DecimalControl.raiseFlags(flags);
+        
         return result;
     }
     
@@ -1164,8 +1203,6 @@ public:
             alias decimalOp = decimalPow;
         else 
             static assert(0);
-
-
 
         static if (isIntegral!T || isFloatingPoint!T || isDecimal!T)
             auto flags = decimalOp(result, value, 
@@ -1436,6 +1473,7 @@ unittest
         static assert (is(typeof(cast(bool)(D.init)) == bool));
     }
 
+
     //unary ops
     foreach (D; DecimalTypes)
     {
@@ -1458,6 +1496,7 @@ unittest
             static assert (is(typeof(D.init == T.init) == bool));
     }
 
+    
     //comparison
     foreach (D; DecimalTypes)
     {
@@ -1500,7 +1539,7 @@ unittest
             static assert (is(typeof(D.init - T.init) == D));
             static assert (is(typeof(D.init * T.init) == D));
             static assert (is(typeof(D.init / T.init) == D));
-            static assert (is(typeof(D.init % T.init) == D));
+//           static assert (is(typeof(D.init % T.init) == D));
             static assert (is(typeof(D.init ^^ T.init) == D));
         }
 
@@ -1515,6 +1554,7 @@ unittest
         }
     }
 
+    auto x = 1.0 % decimal32();
     //binary right
     foreach (D; DecimalTypes)
     {
@@ -7836,6 +7876,63 @@ if (isDecimal!D && isFloatingPoint!T)
 /* DECIMAL ARITHMETIC                                                                                      */
 /* ****************************************************************************************************************** */
 
+template CommonStorage(D, T) if (isDecimal!D && isDecimal!T)
+{
+    alias CommonStorage = CommonDecimal!(D, T);
+}
+
+template CommonStorage(D, T) if (isDecimal!D && isIntegral!T)
+{
+    static if (D.sizeof >= T.sizeof)
+        alias CommonStorage = DataType!D;
+    else
+        alias CommonStorage = Unsigned!T;
+}
+
+template CommonStorage(D, T) if (isDecimal!D && isFloatingPoint!T)
+{
+    static if (is(Unqual!T == float))
+        alias CommonStorage = DataType!D;
+    else
+        alias CommonStorage = CommonStorage!(D, ulong);
+}
+
+
+@safe pure nothrow @nogc
+D canonical(D)(auto const ref D x)
+if (isDecimal!D)
+{
+    Unqual!D result = x;
+    canonicalize(result);
+    return x;
+}
+
+@safe pure nothrow @nogc
+void canonicalize(D)(ref D x)
+if (isDecimal!D)
+{
+    if ((x.data & D.MASK_INF) == D.MASK_INF)
+    {
+        if ((x.data & D.MASK_QNAN) == D.MASK_QNAN)
+            x.data &= D.MASK_SNAN | D.MASK_SGN | D.MASK_PAYL;
+        else
+            x.data &= D.MASK_INF | D.MASK_SGN;
+    }
+    else if ((x.data & D.MASK_EXT) == D.MASK_EXT && 
+             (((x.data & D.MASK_COE2) | D.MASK_COEX) > D.COEF_MAX))
+        x.data &= D.MASK_ZERO | D.MASK_SGN;    
+    else if ((x.data & D.MASK_COE1) == 0U)
+        x.data &= D.MASK_ZERO | D.MASK_SGN;
+}
+
+@safe pure nothrow @nogc
+void unsignalize(D)(ref D x)
+if (isDecimal!D)
+{
+    x.data &= ~D.MASK_SNANBIT;
+}
+
+@safe pure nothrow @nogc
 DecimalClass decimalDecode(D, T)(auto const ref D x, out T cx, out int ex, out bool sx) 
 if (isDecimal!D && is(T: DataType!D))
 {
@@ -7886,6 +7983,7 @@ enum FastClass
     finite,
 }
 
+@safe pure nothrow @nogc
 FastClass fastDecode(D, T)(auto const ref D x, out T cx, out int ex, out bool sx) 
 if ((is(D: decimal32) || is(D: decimal64)) && isAnyUnsigned!T)
 {
@@ -7919,6 +8017,7 @@ if ((is(D: decimal32) || is(D: decimal64)) && isAnyUnsigned!T)
     return FastClass.finite;
 }
 
+@safe pure nothrow @nogc
 FastClass fastDecode(D, T)(auto const ref D x, out T cx, out int ex, out bool sx) 
 if (is(D: decimal128) && isAnyUnsigned!T)
 {
@@ -7952,145 +8051,195 @@ if (is(D: decimal128) && isAnyUnsigned!T)
     return FastClass.finite;
 }
 
+@safe pure nothrow @nogc
+FastClass fastDecode(F, T)(auto const ref F x, out T cx, out int ex, out bool sx)
+if (isFloatingPoint!F && isAnyUnsigned!T)
+{
+    if (x == 0.0)
+        return FastClass.zero;
+
+    bool inf, nan;
+    static if (is(Unqual!F == float))
+    {
+        uint m;
+        sx = funpack(x, ex, m, inf, nan);
+    }
+    else static if (is(Unqual!F == real) && real.mant_dig == 64)
+    {
+        ulong m;
+        sx = runpack(x, ex, m, inf, nan);
+    }
+    else
+    {
+        ulong m;
+        sx = dunpack(cast(double)x, ex, m, inf, nan);
+    }
+    
+    if (inf)
+        return FastClass.infinite;
+
+    if (nan)
+        return FastClass.quietNaN;
+
+    cx = m;
+    exp2to10(cx, ex);
+
+    return cx ? FastClass.finite : FastClass.zero;
+
+}
+
+@safe pure nothrow @nogc
 ExceptionFlags decimalInc(D)(ref D x, const int precision, const RoundingMode mode)
 {
 
     DataType!D cx; int ex; bool sx;
-    switch(fastDecode(x, cx, ex, sx))
+    final switch(fastDecode(x, cx, ex, sx))
     {
-        case FastClass.signalingNaN:
-            return ExceptionFlags.invalidOperation;
-        case FastClass.quietNaN:
-        case FastClass.infinite:
-            return ExceptionFlags.none;
+        case FastClass.finite:
+            auto flags = coefficientAdd(cx, ex, sx, DataType!D(1U), 0, false, RoundingMode.implicit);
+            return x.adjustedPack(cx, ex, sx, precision, mode, flags);
         case FastClass.zero:
             x = D.one;
             return ExceptionFlags.none;
-        default:
-            auto flags = coefficientAdd(cx, ex, sx, DataType!D(1U), 0, false, RoundingMode.implicit);
-            return x.adjustedPack(cx, ex, sx, precision, mode, flags);
-    }
-}
-
-ExceptionFlags decimalDec(D)(ref D x, const int precision, const RoundingMode mode)
-{
-    DataType!D cx; int ex; bool sx;
-    switch(fastDecode(x, cx, ex, sx))
-    {
-        case FastClass.signalingNaN:
-            return ExceptionFlags.invalidOperation;
         case FastClass.quietNaN:
         case FastClass.infinite:
             return ExceptionFlags.none;
-        case FastClass.zero:
-            x = -D.one;
-            return ExceptionFlags.none;
-        default:
-            auto flags = coefficientAdd(cx, ex, sx, DataType!D(1U), 0, true, RoundingMode.implicit);
-            return x.adjustedPack(cx, ex, sx, precision, mode, flags);
+        case FastClass.signalingNaN:
+            unsignalize(x);
+            return ExceptionFlags.invalidOperation;
     }
 }
 
+@safe pure nothrow @nogc
+ExceptionFlags decimalDec(D)(ref D x, const int precision, const RoundingMode mode)
+{
+    DataType!D cx; int ex; bool sx;
+    final switch(fastDecode(x, cx, ex, sx))
+    {
+        case FastClass.finite:
+            auto flags = coefficientAdd(cx, ex, sx, DataType!D(1U), 0, true, RoundingMode.implicit);
+            return x.adjustedPack(cx, ex, sx, precision, mode, flags);
+        case FastClass.zero:
+            x = -D.one;
+            return ExceptionFlags.none;
+        case FastClass.infinite:
+        case FastClass.quietNaN:
+            return ExceptionFlags.none;
+        case FastClass.signalingNaN:
+            unsignalize(x);
+            return ExceptionFlags.invalidOperation;
+    }
+}
+
+@safe pure nothrow @nogc
 ExceptionFlags decimalRound(D)(ref D x, const int precision, const RoundingMode mode)
 if (isDecimal!D)
 {
     DataType!D cx; int ex; bool sx;
-    switch(fastDecode(x, cx, ex, sx))
+    final switch(fastDecode(x, cx, ex, sx))
     {
-        case FastClass.signalingNaN:
-            return ExceptionFlags.invalidOperation; 
-        case FastClass.quietNaN:
-        case FastClass.infinite:
-        case FastClass.zero:
-            return ExceptionFlags.none;
-        default:
+        case FastClass.finite:
             auto flags = coefficientAdjust(cx, ex, 0, D.EXP_MAX, D.COEF_MAX, sx, mode);
             return x.adjustedPack(cx, ex, sx, precision, mode, flags);
+        case FastClass.zero:
+        case FastClass.infinite:
+        case FastClass.quietNaN:
+            return ExceptionFlags.none;
+        case FastClass.signalingNaN:
+            unsignalize(x);
+            return ExceptionFlags.invalidOperation; 
     }
 }
 
+@safe pure nothrow @nogc
 ExceptionFlags decimalAdjust(D)(ref D x, const int precision, const RoundingMode mode)
 {
     DataType!D cx; int ex; bool sx;
-    switch(fastDecode(x, cx, ex, sx))
+    final switch(fastDecode(x, cx, ex, sx))
     {
-        case FastClass.signalingNaN:
-            return ExceptionFlags.invalidOperation; 
-        case FastClass.quietNaN:
-        case FastClass.infinite:
-        case FastClass.zero:
-            return ExceptionFlags.none;
-        default:
+        case FastClass.finite:
             return x.adjustedPack(cx, ex, sx, precision, mode, ExceptionFlags.none);
+        case FastClass.zero:
+        case FastClass.infinite:
+        case FastClass.quietNaN:
+            return ExceptionFlags.none;
+        case FastClass.signalingNaN:
+            unsignalize(x);
+            return ExceptionFlags.invalidOperation; 
     }
 }
 
+@safe pure nothrow @nogc
 ExceptionFlags decimalNextUp(D)(ref D x)
 if (isDecimal!D)
 {
     DataType!D cx; int ex; bool sx;
-    switch(fastDecode(x, cx, ex, sx))
+    final switch(fastDecode(x, cx, ex, sx))
     {
-        case FastClass.signalingNaN:
-            return ExceptionFlags.invalidOperation; 
-        case FastClass.quietNaN:
+        case FastClass.finite:
+            if (sx)
+            {
+                if (cx == 1U)
+                {
+                    cx = 10U;
+                    --exponent;
+                }
+                --cx;
+            }
+            else
+                ++cx;
+            return x.adjustedPack(cx, ex, sx, precision, mode, ExceptionFlags.none);
+        case FastClass.zero:
+            x.pack(DataType!D(1U), D.EXP_MIN, false);
             return ExceptionFlags.none;
         case FastClass.infinite:
             if (sx)
                 x = -D.max;
             return ExceptionFlags.none;
-        case FastClass.zero:
-            x.pack(DataType!D(1U), D.EXP_MIN, false);
+        case FastClass.quietNaN:
             return ExceptionFlags.none;
-        default:
-            if (sx)
-            {
-                if (coefficient == 1U)
-                {
-                    coefficient = 10U;
-                    --exponent;
-                }
-                --coefficient;
-            }
-            else
-                ++coefficient;
-            return x.adjustedPack(cx, ex, sx, precision, mode, ExceptionFlags.none);
+        case FastClass.signalingNaN:
+            unsignalize(x);
+            return ExceptionFlags.invalidOperation; 
     }  
 }
 
+@safe pure nothrow @nogc
 ExceptionFlags decimalNextDown(D)(ref D x)
 if (isDecimal!D)
 {
     DataType!D cx; int ex; bool sx;
-    switch(fastDecode(x, cx, ex, sx))
+    final switch(fastDecode(x, cx, ex, sx))
     {
-        case FastClass.signalingNaN:
-            return ExceptionFlags.invalidOperation; 
-        case FastClass.quietNaN:
+        case FastClass.finite:
+            if (!sx)
+            {
+                if (cx == 1U)
+                {
+                    cx = 10U;
+                    --exponent;
+                }
+                --cx;
+            }
+            else
+                ++coefficient;
+            return x.adjustedPack(cx, ex, sx, precision, mode, ExceptionFlags.none);
+        case FastClass.zero:
+            x.pack(DataType!D(1U), D.EXP_MIN, true);
             return ExceptionFlags.none;
         case FastClass.infinite:
             if (!sx)
                 x = D.max;
             return ExceptionFlags.none;
-        case FastClass.zero:
-            x.pack(DataType!D(1U), D.EXP_MIN, true);
+        case FastClass.quietNaN:
             return ExceptionFlags.none;
-        default:
-            if (!sx)
-            {
-                if (coefficient == 1U)
-                {
-                    coefficient = 10U;
-                    --exponent;
-                }
-                --coefficient;
-            }
-            else
-                ++coefficient;
-            return x.adjustedPack(cx, ex, sx, precision, mode, ExceptionFlags.none);
+        case FastClass.signalingNaN:
+            unsignalize(x);
+            return ExceptionFlags.invalidOperation;  
     }
 }
 
+@safe pure nothrow @nogc
 ExceptionFlags decimalMin(D1, D2, D)(auto const ref D1 x, auto const ref D2 y, out D z)
 if (isDecimal!(D1, D2, D) && is(D: CommonDecimal!(D1, D2)))
 {
@@ -8098,15 +8247,29 @@ if (isDecimal!(D1, D2, D) && is(D: CommonDecimal!(D1, D2)))
     immutable fx = fastDecode(x, cx, ex, sx);
     immutable fy = fastDecode(y, cy, ey, sy);
 
+    if ((fx == FastClass.finite || fx == FastClass.zero) && 
+        (fy == FastClass.finite || fy == FastClass.zero))
+    {
+        immutable c = coefficientCmp(cx, ex, sx, cy, ey, sy);
+        if (c >= 0)
+            z = y;
+        else
+            z = x;
+        return ExceptionFlags.none;
+    }
+
     if (fx == FastClass.signalingNaN)
     {
-        z = x;
+        if (fy == FastClass.signalingNaN)
+            z = D.nan;
+        else
+            z = y;
         return ExceptionFlags.invalidOperation;
     }
 
     if (fy == FastClass.signalingNaN)
     {
-        z = y;
+        z = x;
         return ExceptionFlags.invalidOperation;
     }
 
@@ -8122,15 +8285,28 @@ if (isDecimal!(D1, D2, D) && is(D: CommonDecimal!(D1, D2)))
         return ExceptionFlags.none;
     }
 
-    immutable c = coefficientCmp(cx, ex, sx, cy, ey, sy);
-    if (c >= 0)
-        z = y;
-    else
-        z = x;
+    if (fx == FastClass.infinite)
+    {
+        if (sx)
+            z = x;
+        else
+            z = y;
+        return ExceptionFlags.none;
+    }
 
-    return ExceptionFlags.none;
+    if (fy == FastClass.infinite)
+    {
+        if (sy)
+            z = y;
+        else
+            z = x;
+        return ExceptionFlags.none;
+    }
+
+    assert(0);
 }
 
+@safe pure nothrow @nogc
 ExceptionFlags decimalMinAbs(D1, D2, D)(auto const ref D1 x, auto const ref D2 y, out D z)
 if (isDecimal!(D1, D2, D) && is(D: CommonDecimal!(D1, D2)))
 {
@@ -8138,15 +8314,29 @@ if (isDecimal!(D1, D2, D) && is(D: CommonDecimal!(D1, D2)))
     immutable fx = fastDecode(x, cx, ex, sx);
     immutable fy = fastDecode(y, cy, ey, sy);
 
+    if ((fx == FastClass.finite || fx == FastClass.zero) && 
+        (fy == FastClass.finite || fy == FastClass.zero))
+    {
+        immutable c = coefficientCmp(cx, ex, cy, ey);
+        if (c >= 0)
+            z = y;
+        else
+            z = x;
+        return ExceptionFlags.none;
+    }
+
     if (fx == FastClass.signalingNaN)
     {
-        z = x;
+        if (fy == FastClass.signalingNaN)
+            z = D.nan;
+        else
+            z = y;
         return ExceptionFlags.invalidOperation;
     }
 
     if (fy == FastClass.signalingNaN)
     {
-        z = y;
+        z = x;
         return ExceptionFlags.invalidOperation;
     }
 
@@ -8162,15 +8352,22 @@ if (isDecimal!(D1, D2, D) && is(D: CommonDecimal!(D1, D2)))
         return ExceptionFlags.none;
     }
 
-    immutable c = coefficientCmp(cx, ex, cy, ey);
-    if (c >= 0)
+    if (fx == FastClass.infinite)
+    {
         z = y;
-    else
-        z = x;
+        return ExceptionFlags.none;
+    }
 
-    return ExceptionFlags.none;
+    if (fy == FastClass.infinite)
+    {
+        z = x;
+        return ExceptionFlags.none;
+    }
+
+    assert(0);
 }
 
+@safe pure nothrow @nogc
 ExceptionFlags decimalMax(D1, D2, D)(auto const ref D1 x, auto const ref D2 y, out D z)
 if (isDecimal!(D1, D2, D) && is(D: CommonDecimal!(D1, D2)))
 {
@@ -8178,15 +8375,29 @@ if (isDecimal!(D1, D2, D) && is(D: CommonDecimal!(D1, D2)))
     immutable fx = fastDecode(x, cx, ex, sx);
     immutable fy = fastDecode(y, cy, ey, sy);
 
+    if ((fx == FastClass.finite || fx == FastClass.zero) && 
+        (fy == FastClass.finite || fy == FastClass.zero))
+    {
+        immutable c = coefficientCmp(cx, ex, sx, cy, ey, sy);
+        if (c >= 0)
+            z = x;
+        else
+            z = y;
+        return ExceptionFlags.none;
+    }
+
     if (fx == FastClass.signalingNaN)
     {
-        z = x;
+        if (fy == FastClass.signalingNaN)
+            z = D.nan;
+        else
+            z = y;
         return ExceptionFlags.invalidOperation;
     }
 
     if (fy == FastClass.signalingNaN)
     {
-        z = y;
+        z = x;
         return ExceptionFlags.invalidOperation;
     }
 
@@ -8202,15 +8413,28 @@ if (isDecimal!(D1, D2, D) && is(D: CommonDecimal!(D1, D2)))
         return ExceptionFlags.none;
     }
 
-    immutable c = coefficientCmp(cx, ex, sx, cy, ey, sy);
-    if (c <= 0)
-        z = y;
-    else
-        z = x;
+    if (fx == FastClass.infinite)
+    {
+        if (!sx)
+            z = x;
+        else
+            z = y;
+        return ExceptionFlags.none;
+    }
 
-    return ExceptionFlags.none;
+    if (fy == FastClass.infinite)
+    {
+        if (!sy)
+            z = y;
+        else
+            z = x;
+        return ExceptionFlags.none;
+    }
+
+    assert(0);
 }
 
+@safe pure nothrow @nogc
 ExceptionFlags decimalMaxAbs(D1, D2, D)(auto const ref D1 x, auto const ref D2 y, out D z)
 if (isDecimal!(D1, D2, D) && is(D: CommonDecimal!(D1, D2)))
 {
@@ -8218,15 +8442,29 @@ if (isDecimal!(D1, D2, D) && is(D: CommonDecimal!(D1, D2)))
     immutable fx = fastDecode(x, cx, ex, sx);
     immutable fy = fastDecode(y, cy, ey, sy);
 
+    if ((fx == FastClass.finite || fx == FastClass.zero) && 
+        (fy == FastClass.finite || fy == FastClass.zero))
+    {
+        immutable c = coefficientCmp(cx, ex, cy, ey);
+        if (c >= 0)
+            z = x;
+        else
+            z = y;
+        return ExceptionFlags.none;
+    }
+
     if (fx == FastClass.signalingNaN)
     {
-        z = x;
+        if (fy == FastClass.signalingNaN)
+            z = D.nan;
+        else
+            z = y;
         return ExceptionFlags.invalidOperation;
     }
 
     if (fy == FastClass.signalingNaN)
     {
-        z = y;
+        z = x;
         return ExceptionFlags.invalidOperation;
     }
 
@@ -8242,15 +8480,22 @@ if (isDecimal!(D1, D2, D) && is(D: CommonDecimal!(D1, D2)))
         return ExceptionFlags.none;
     }
 
-    immutable c = coefficientCmp(cx, ex, cy, ey);
-    if (c <= 0)
-        z = y;
-    else
+    if (fx == FastClass.infinite)
+    {
         z = x;
+        return ExceptionFlags.none;
+    }
 
-    return ExceptionFlags.none;
+    if (fy == FastClass.infinite)
+    {
+        z = y;
+        return ExceptionFlags.none;
+    }
+
+    assert(0);
 }
 
+@safe pure nothrow @nogc
 ExceptionFlags decimalQuantize(D1, D2)(ref D1 x, auto const ref D2 y, const int precision, const RoundingMode mode)
 if (isDecimal!(D1, D2))
 {
@@ -8259,11 +8504,14 @@ if (isDecimal!(D1, D2))
     immutable fy = fastDecode(y, cy, ey, sy);
 
     if (fx == FastClass.signalingNaN)
+    {
+        unsignalize(x);
         return ExceptionFlags.invalidOperation;
+    }
 
     if (fy == FastClass.signalingNaN)
     {
-        x = y;
+        x = D1.nan;
         return ExceptionFlags.invalidOperation;
     }
     
@@ -8272,7 +8520,7 @@ if (isDecimal!(D1, D2))
 
     if (fy == FastClass.quietNaN)
     {
-        x = y;
+        x = D1.nan;
         return ExceptionFlags.none;
     }
 
@@ -8294,73 +8542,61 @@ if (isDecimal!(D1, D2))
        
 }
 
+@safe pure nothrow @nogc
 ExceptionFlags decimalScale(D)(ref D x, const int n, const int precision, const RoundingMode mode)
 if (isDecimal!D)
 {
     DataType!D cx; int ex; bool sx;
-    switch(fastDecode(x, cx, ex, sx))
+    final switch(fastDecode(x, cx, ex, sx))
     {
-        case FastClass.signalingNaN:
-            return ExceptionFlags.invalidOperation;
-        case FastClass.quietNaN:
-        case FastClass.infinite:
-        case FastClass.zero:
-            return ExceptionFlags.none;
-        default:
+        case FastClass.finite:
             if (!n)
                 return ExceptionFlags.none;
-            if (n < 0)
-                coefficientShrink(cx, ex);
-            else
-                coefficientExpand(cx, ex);
-            ExceptionFlags flags;
-            if (cappedAdd(ex, n) != n)
-                flags = ex < 0 ? ExceptionFlags.underflow : ExceptionFlags.overflow;
+            auto remainder = cappedAdd(x, n) - n;
+            if (remainder)
+            {
+                if (remainder < 0)
+                    coefficientShrink(cx, ex);
+                else
+                    coefficientExpand(cx, ex);
+                if (cappedAdd(ex, remainder) != remainder)
+                    flags = ex < 0 ? ExceptionFlags.underflow : ExceptionFlags.overflow;
+            }                
             return x.adjustedPack(cx, ex, sx, precision, mode, flags);
-    }   
-}
-
-ExceptionFlags decimalLog(D)(auto const ref D x, out int y)
-if (isDecimal!D)
-{
-    DataType!D cx; int ex; bool sx;
-    switch(fastDecode(x, cx, ex, sx))
-    {
-        case FastClass.signalingNaN:
-        case FastClass.quietNaN:
-            y = int.min;
-            return ExceptionFlags.invalidOperation;  
-        case FastClass.infinite:
-            y = int.min + 1;
-            return ExceptionFlags.invalidOperation;
         case FastClass.zero:
-            y = int.min + 2;
-            return ExceptionFlags.invalidOperation;
-        default:
-            y = prec(cx) + ex - 1;
+        case FastClass.infinite:
+        case FastClass.quietNaN:
             return ExceptionFlags.none;
+        case FastClass.signalingNaN:
+            unsignalize(x);
+            return ExceptionFlags.invalidOperation;
     }   
 }
 
 @safe pure nothrow @nogc
-D canonical(D)(auto const ref D x)
+ExceptionFlags decimalLog(D)(auto const ref D x, out int y)
 if (isDecimal!D)
 {
-    Unqual!D result = x;
-    if ((result.data & D.MASK_INF) == D.MASK_INF)
+    DataType!D cx; int ex; bool sx;
+    final switch(fastDecode(x, cx, ex, sx))
     {
-        if ((result.data & D.MASK_QNAN) == D.MASK_QNAN &&
-            (result.data & D.MASK_PAYL) > D.PAYL_MAX)
-            result.data &= D.MASK_SNAN | D.MASK_SGN;
-        else
-            result.data &= D.MASK_INF | D.MASK_SGN;
-    }
-    else if ((result.data & D.MASK_EXT) == D.MASK_EXT && 
-             (((result.data & D.MASK_COE2) | D.MASK_COEX) > D.COEF_MAX))
-        result.data = D.MASK_ZERO;    
-    return result;
+        case FastClass.finite:
+            y = prec(cx) + ex - 1;
+            return ExceptionFlags.none;
+        case FastClass.zero:
+            y = int.min + 2;
+            return ExceptionFlags.invalidOperation;
+        case FastClass.infinite:
+            y = int.min + 1;
+            return ExceptionFlags.invalidOperation;
+        case FastClass.quietNaN:
+        case FastClass.signalingNaN:
+            y = int.min;
+            return ExceptionFlags.invalidOperation;  
+    }   
 }
 
+@safe pure nothrow @nogc
 ExceptionFlags decimalMul(D1, D2)(ref D1 x, auto const ref D2 y, const int precision, const RoundingMode mode)
 if (isDecimal!(D1, D2))
 {
@@ -8370,8 +8606,8 @@ if (isDecimal!(D1, D2))
 
     T cx, cy; int ex, ey; bool sx, sy;
 
-    auto fx = fastDecode(x, cx, ex, sx);
-    auto fy = fastDecode(y, cy, ey, sy);
+    immutable fx = fastDecode(x, cx, ex, sx);
+    immutable fy = fastDecode(y, cy, ey, sy);
 
     if (fx == FastClass.signalingNaN || fy == FastClass.signalingNaN)
     {
@@ -8418,15 +8654,12 @@ if (isDecimal!(D1, D2))
     return x.adjustedPack(cvt!T1(cx), ex, sx, precision, mode, flags);
 }
 
+@safe pure nothrow @nogc
 ExceptionFlags decimalMul(D, T)(ref D x, auto const ref T y, const int precision, const RoundingMode mode)
 if (isDecimal!D && isIntegral!T)
 {
-    alias DT = DataType!D;
-
-    static if (D.sizeof >= T.sizeof)
-        alias U = DT;
-    else
-        alias U = Unsigned!(Unqual!T);
+    alias U = CommonStorage!(D, T);
+    alias X = DataType!D;
 
     U cx; int ex; bool sx;
 
@@ -8441,11 +8674,19 @@ if (isDecimal!D && isIntegral!T)
         U cy = cast(Unsigned!T)(sy ? -y : y);
     } 
 
-    switch(fastDecode(x, cx, ex, sx))
+    final switch(fastDecode(x, cx, ex, sx))
     {
-        case FastClass.signalingNaN:
-            return ExceptionFlags.invalidOperation;
-        case FastClass.quietNaN:
+        case FastClass.finite:
+            if (!y)
+            {
+                x = sx ^ sy ? -D.zero : D.zero;
+                return ExceptionFlags.none;
+            }
+            auto flags = coefficientMul(cx, ex, sx, cy, 0, sy, RoundingMode.implicit);
+            flags |= coefficientAdjust(cx, ex, cvt!U(X.max), sx, RoundingMode.implicit);
+            return x.adjustedPack(cvt!X(cx), ex, sx, precision, mode, flags);
+        case FastClass.zero:
+            x = sx ^ sy ? -D.zero : D.zero;
             return ExceptionFlags.none;
         case FastClass.infinite:
             if (!y)
@@ -8454,68 +8695,71 @@ if (isDecimal!D && isIntegral!T)
                 return ExceptionFlags.invalidOperation;
             }
             return ExceptionFlags.none;
-        case FastClass.zero:
-            x = sx ^ sy ? -D.zero : D.zero;
+        case FastClass.quietNaN:
             return ExceptionFlags.none;
-        default:
-            if (!y)
-            {
-                x = sx ^ sy ? -D.zero : D.zero;
-                return ExceptionFlags.none;
-            }
-            auto flags = coefficientMul(cx, ex, sx, cy, 0, sy, RoundingMode.implicit);
-            flags |= coefficientAdjust(cx, ex, cvt!U(DT.max), sx, RoundingMode.implicit);
-            return x.adjustedPack(cvt!DT(cx), ex, sx, precision, mode, flags);
+        case FastClass.signalingNaN:
+            unsignalize(x);
+            return ExceptionFlags.invalidOperation;
     }
 }
 
+@safe pure nothrow @nogc
 ExceptionFlags decimalMul(D, F)(ref D x, auto const ref F y, const int precision, const RoundingMode mode)
 if (isDecimal!D && isFloatingPoint!F)
 {
-    bool sx = cast(bool)signbit(x);
-    bool sy = cast(bool)signbit(y);
+    alias T = CommonStorage!(D, F);
 
-    if (isSignaling(x))
+    T cx, cy; int ex, ey; bool sx, sy;
+
+    immutable fx = fastDecode(x, cx, ex, sx);
+    immutable fy = fastDecode(y, cy, ey, sy);
+
+    if (fx == FastClass.signalingNaN)
+    {
+        x = sx ^ sy ? -D.nan : D.nan;
         return ExceptionFlags.invalidOperation;
+    }
 
-    if (isNaN(x) || isNaN(y))
+    if (fx == FastClass.quietNaN || fy == FastClass.quietNaN)
     {
         x = sx ^ sy ? -D.nan : D.nan;
         return ExceptionFlags.none;
     }
 
-    if (isInfinity(x))
+    if (fx == FastClass.infinite)
     {
-        if (y == 0.0)
+        if (fy == FastClass.zero)
         {
             x = sx ^ sy ? -D.nan : D.nan;
             return ExceptionFlags.invalidOperation;
         }
+        x = sx ^ sy ? -D.infinity : D.infinity;
         return ExceptionFlags.none;
     }
 
-    if (isInfinity(y))
+    if (fy == FastClass.infinite)
     {
-        if (isZero(x))
+        if (fx == FastClass.zero)
         {
             x = sx ^ sy ? -D.nan : D.nan;
             return ExceptionFlags.invalidOperation;
         }
-        x = y;
+        x = sx ^ sy ? -D.infinity : D.infinity;
         return ExceptionFlags.none;
     }
 
-    if (isZero(x) || y == 0.0)
+    if (fx == FastClass.zero || fy == FastClass.zero)
     {
         x = sx ^ sy ? -D.zero : D.zero;
         return ExceptionFlags.none;
     }
 
-    Unqual!D z;
-    auto flags = z.packFloatingPoint(y, 0, RoundingMode.implicit);
-    return flags | decimalMul(x, z, precision, mode);
+    auto flags = coefficientMul(cx, ex, sx, cy, ey, sy, RoundingMode.implicit);
+    flags |= coefficientAdjust(cx, ex, cvt!T(DataType!D.max), sx, RoundingMode.implicit);
+    return x.adjustedPack(cvt!(DataType!D)(cx), ex, sx, precision, mode, flags);
 }
 
+@safe pure nothrow @nogc
 ExceptionFlags decimalMul(T, D)(auto const ref T x, auto const ref D y, out D z, const int precision, const RoundingMode mode)
 if (isDecimal!D && isIntegral!T)
 {
@@ -8523,6 +8767,7 @@ if (isDecimal!D && isIntegral!T)
    return decimalMul(z, x, precision, mode);
 }
 
+@safe pure nothrow @nogc
 ExceptionFlags decimalMul(F, D)(auto const ref F x, auto const ref D y, out D z, const int precision, const RoundingMode mode)
 if (isDecimal!D && isFloatingPoint!F)
 {
@@ -8530,6 +8775,7 @@ if (isDecimal!D && isFloatingPoint!F)
     return decimalMul(z, x, precision, mode);
 }
 
+@safe pure nothrow @nogc
 ExceptionFlags decimalDiv(D1, D2)(ref D1 x, auto const ref D2 y, const int precision, const RoundingMode mode)
 if (isDecimal!(D1, D2))
 {
@@ -8539,8 +8785,8 @@ if (isDecimal!(D1, D2))
 
     T cx, cy; int ex, ey; bool sx, sy;
 
-    auto fx = fastDecode(x, cx, ex, sx);
-    auto fy = fastDecode(y, cy, ey, sy);
+    immutable fx = fastDecode(x, cx, ex, sx);
+    immutable fy = fastDecode(y, cy, ey, sy);
 
     if (fx == FastClass.signalingNaN || fy == FastClass.signalingNaN)
     {
@@ -8594,15 +8840,11 @@ if (isDecimal!(D1, D2))
     return x.adjustedPack(cvt!T1(cx), ex, sx, precision, mode, flags);
 }
 
+@safe pure nothrow @nogc
 ExceptionFlags decimalDiv(D, T)(ref D x, auto const ref T y, const int precision, const RoundingMode mode)
 if (isDecimal!D && isIntegral!T)
 {
-    alias DT = DataType!D;
-
-    static if (D.sizeof >= T.sizeof)
-        alias U = DT;
-    else
-        alias U = Unsigned!(Unqual!T);
+    alias U = CommonStorage!(D, T);
     
     U cx; int ex; bool sx;
 
@@ -8617,11 +8859,19 @@ if (isDecimal!D && isIntegral!T)
         U cy = cast(Unsigned!T)(sy ? -y : y);
     } 
 
-    switch (fastDecode(x, cx, ex, sx))
+    final switch (fastDecode(x, cx, ex, sx))
     {
-        case FastClass.signalingNaN:
-            return ExceptionFlags.invalidOperation;
-        case FastClass.quietNaN:
+        case FastClass.finite:
+            if (!y)
+            {
+                x = sx ^ sy ? -D.infinity : D.infinity;
+                return ExceptionFlags.divisionByZero;
+            }
+            auto flags = coefficientDiv(cx, ex, sx, cy, 0, sy, RoundingMode.implicit);
+            flags |= coefficientAdjust(cx, ex, cvt!U(DataType!D.max), sx, RoundingMode.implicit);
+            return x.adjustedPack(cvt!(DataType!D)(cx), ex, sx, precision, mode, flags);
+        case FastClass.zero:
+            x = sx ^ sy ? -D.zero : D.zero;
             return ExceptionFlags.none;
         case FastClass.infinite:
             if (!y)
@@ -8630,21 +8880,15 @@ if (isDecimal!D && isIntegral!T)
                 return ExceptionFlags.invalidOperation | ExceptionFlags.divisionByZero;
             }
             return ExceptionFlags.none;
-        case FastClass.zero:
-            x = sx ^ sy ? -D.zero : D.zero;
+        case FastClass.quietNaN:
             return ExceptionFlags.none;
-        default:
-            if (!y)
-            {
-                x = sx ^ sy ? -D.infinity : D.infinity;
-                return ExceptionFlags.divisionByZero;
-            }
-            auto flags = coefficientDiv(cx, ex, sx, cy, 0, sy, RoundingMode.implicit);
-            flags |= coefficientAdjust(cx, ex, cvt!U(DT.max), sx, RoundingMode.implicit);
-            return x.adjustedPack(cvt!DT(cx), ex, sx, precision, mode, flags);
+        case FastClass.signalingNaN:
+            unsignalize(x);
+            return ExceptionFlags.invalidOperation;
     }
 }
 
+@safe pure nothrow @nogc
 ExceptionFlags decimalDiv(T, D)(auto const ref T x, auto const ref D y, out D z, const int precision, const RoundingMode mode)
 if (isDecimal!D && isIntegral!T)
 {
@@ -8669,51 +8913,59 @@ if (isDecimal!D && isIntegral!T)
         U cx = cast(Unsigned!T)(sx ? -x : x);
     } 
 
-    switch (fastDecode(y, cy, ey, sy))
+    final switch (fastDecode(y, cy, ey, sy))
     {
-        case FastClass.signalingNaN:
-            z = sx ^ sy ? -D.snan : D.snan;
-            return ExceptionFlags.invalidOperation;
-        case FastClass.quietNaN:
-            z = sx ^ sy ? -D.nan : D.nan;
-            return ExceptionFlags.none;
-        case FastClass.infinite:
-            z = y;
-            return ExceptionFlags.none;
-        case FastClass.zero:
-            z = sx ^ sy ? -D.infinity : D.infinity;
-            return ExceptionFlags.divisionByZero;
-        default:
+        case FastClass.finite:
             auto flags = coefficientDiv(cx, ex, sx, cy, 0, sy, RoundingMode.implicit);
             flags |= coefficientAdjust(cx, ex, cvt!U(DT.max), sx, RoundingMode.implicit);
             return z.adjustedPack(cvt!DT(cx), ex, sx, precision, mode, flags);
+        case FastClass.zero:
+            z = sx ^ sy ? -D.infinity : D.infinity;
+            return ExceptionFlags.divisionByZero;
+        case FastClass.infinite:
+            z = y;
+            return ExceptionFlags.none;
+        case FastClass.quietNaN:
+            z = sx ^ sy ? -D.nan : D.nan;
+            return ExceptionFlags.none;
+        case FastClass.signalingNaN:
+            z = sx ^ sy ? -D.nan : D.nan;
+            return ExceptionFlags.invalidOperation;
     }
 }
 
+@safe pure nothrow @nogc
 ExceptionFlags decimalDiv(D, F)(ref D x, auto const ref F y, const int precision, const RoundingMode mode)
 if (isDecimal!D && isFloatingPoint!F)
 {
-    bool sx = cast(bool)signbit(x);
-    bool sy = cast(bool)signbit(y);
+    alias T = CommonStorage!(D, F);
+   
+    T cx, cy; int ex, ey; bool sx, sy;
 
-    if (isSignaling(x))
+    immutable fx = fastDecode(x, cx, ex, sx);
+    immutable fy = fastDecode(y, cy, ey, sy);
+
+    if (fx == FastClass.signalingNaN)
+    {
+        x = sx ^ sy ? -D.nan : D.nan;
         return ExceptionFlags.invalidOperation;
+    }
 
-    if (isNaN(x) || isNaN(y))
+    if (fx == FastClass.quietNaN || fy == FastClass.quietNaN)
     {
         x = sx ^ sy ? -D.nan : D.nan;
         return ExceptionFlags.none;
     }
 
-    if (isInfinity(x))
+    if (fx == FastClass.infinite)
     {
-        if (y == 0.0)
+        if (fy == FastClass.zero)
         {
             x = sx ^ sy ? -D.nan : D.nan;
             return ExceptionFlags.invalidOperation | ExceptionFlags.divisionByZero;
         }
 
-        if (isInfinity(y))
+        if (fy == FastClass.infinite)
         {
             x = sx ^ sy ? -D.nan : D.nan;
             return ExceptionFlags.invalidOperation;
@@ -8722,56 +8974,61 @@ if (isDecimal!D && isFloatingPoint!F)
         return ExceptionFlags.none;
     }
 
-    if (isInfinity(y))
+    if (fy == FastClass.infinite)
     {
         x = sx ^ sy ? -D.infinity : D.infinity;
         return ExceptionFlags.none;
     }
 
-    if (isZero(x))
+    if (fx == FastClass.zero)
     {
         x = sx ^ sy ? -D.zero : D.zero;
         return ExceptionFlags.none;
     }
 
-    if (y == 0.0)
+    if (fy == FastClass.zero)
     {
         x = sx ^ sy ? -D.infinity : D.infinity;
         return ExceptionFlags.divisionByZero;
     }
 
-    Unqual!D z;
-    auto flags = z.packFloatingPoint(y, 0, mode);
-    return flags | decimalDiv(x, z, precision, mode);
+    auto flags = coefficientDiv(cx, ex, sx, cy, ey, sy, RoundingMode.implicit);
+    flags |= coefficientAdjust(cx, ex, cvt!T(DataType!D.max), sx, RoundingMode.implicit);
+    return x.adjustedPack(cvt!(DataType!D)(cx), ex, sx, precision, mode, flags);
 }
 
+@safe pure nothrow @nogc
 ExceptionFlags decimalDiv(F, D)(auto const ref F x, auto const ref D y, out D z, const int precision, const RoundingMode mode)
 if (isDecimal!D && isFloatingPoint!F)
 {
-    bool sx = cast(bool)signbit(x);
-    bool sy = cast(bool)signbit(y);
+    alias T = CommonStorage!(D, F);
 
-    if (isSignaling(y))
+    T cx, cy; int ex, ey; bool sx, sy;
+
+    immutable fx = fastDecode(x, cx, ex, sx);
+    immutable fy = fastDecode(y, cy, ey, sy);
+
+    if (fy == FastClass.signalingNaN)
     {
         z = sx ^ sy ? -D.nan : D.nan;
         return ExceptionFlags.invalidOperation;
     }
 
-    if (isNaN(x) || isNaN(y))
+    if (fx == FastClass.quietNaN || fy == FastClass.quietNaN)
     {
         z = sx ^ sy ? -D.nan : D.nan;
         return ExceptionFlags.none;
     }
 
-    if (isInfinity(x))
+    if (fx == FastClass.infinite)
     {
-        if (isZero(y))
+        if (fy == FastClass.zero)
         {
             z = sx ^ sy ? -D.nan : D.nan;
             return ExceptionFlags.invalidOperation | ExceptionFlags.divisionByZero;
         }
 
-        if (isInfinity(y))
+        if (fy == FastClass.infinite)
         {
             z = sx ^ sy ? -D.nan : D.nan;
             return ExceptionFlags.invalidOperation;
@@ -8780,28 +9037,30 @@ if (isDecimal!D && isFloatingPoint!F)
         return ExceptionFlags.none;
     }
 
-    if (isInfinity(y))
+    if (fy == FastClass.infinite)
     {
         z = sx ^ sy ? -D.infinity : D.infinity;
         return ExceptionFlags.none;
     }
 
-    if (x == 0.0)
+    if (fx == FastClass.zero)
     {
         z = sx ^ sy ? -D.zero : D.zero;
         return ExceptionFlags.none;
     }
 
-    if (isZero(y))
+    if (fy == FastClass.zero)
     {
         z = sx ^ sy ? -D.infinity : D.infinity;
         return ExceptionFlags.divisionByZero;
     }
 
-    auto flags = z.packFloatingPoint(x, 0, mode);
-    return flags | decimalDiv(z, y, precision, mode);
+    auto flags = coefficientDiv(cx, ex, sx, cy, ey, sy, RoundingMode.implicit);
+    flags |= coefficientAdjust(cx, ex, cvt!T(DataType!D.max), sx, RoundingMode.implicit);
+    return z.adjustedPack(cvt!(DataType!D)(cx), ex, sx, precision, mode, flags);
 }
 
+@safe pure nothrow @nogc
 ExceptionFlags decimalAdd(D1, D2)(ref D1 x, auto const ref D2 y, const int precision, const RoundingMode mode)
 if (isDecimal!(D1, D2))
 {
@@ -8811,13 +9070,10 @@ if (isDecimal!(D1, D2))
 
     T cx, cy; int ex, ey; bool sx, sy;
 
-    auto fx = fastDecode(x, cx, ex, sx);
-    auto fy = fastDecode(y, cy, ey, sy);
+    immutable fx = fastDecode(x, cx, ex, sx);
+    immutable fy = fastDecode(y, cy, ey, sy);
 
-    if (fx == FastClass.signalingNaN)
-        return ExceptionFlags.invalidOperation;
-
-    if (fy == FastClass.signalingNaN)
+    if (fx == FastClass.signalingNaN || fy == FastClass.signalingNaN)
     {
         x = sy ? -D1.nan : D1.nan;
         return ExceptionFlags.invalidOperation;
@@ -8861,16 +9117,12 @@ if (isDecimal!(D1, D2))
    
 }
 
+@safe pure nothrow @nogc
 ExceptionFlags decimalAdd(D, T)(ref D x, auto const ref T y, const int precision, const RoundingMode mode)
 if (isDecimal!D && isIntegral!T)
 {
-
-    alias DT = DataType!D;
-
-    static if (D.sizeof >= T.sizeof)
-        alias U = DT;
-    else
-        alias U = Unsigned!(Unqual!T);
+    alias U = CommonStorage!(D, T);
+    alias X = DataType!D;
 
     U cx; int ex; bool sx;
 
@@ -8885,45 +9137,55 @@ if (isDecimal!D && isIntegral!T)
         U cy = cast(Unsigned!T)(sy ? -y : y);
     } 
 
-    switch(fastDecode(x, cx, ex, sx))
+    final switch(fastDecode(x, cx, ex, sx))
     {
-        case FastClass.signalingNaN:
-            return ExceptionFlags.invalidOperation;
-        case FastClass.quietNaN:
-        case FastClass.infinite:
-            return ExceptionFlags.none;
-        case FastClass.zero:
-            return x.packIntegral(y, precision, mode);
-        default:
+        case FastClass.finite:
             if (!y)
                 return ExceptionFlags.none;
             auto flags = coefficientAdd(cx, ex, sx, cy, 0, sy, RoundingMode.implicit);
-            flags |= coefficientAdjust(cx, ex, cvt!U(DT.max), sx, RoundingMode.implicit);
-            return x.adjustedPack(cvt!DT(cx), ex, sx, precision, mode, flags);
+            flags |= coefficientAdjust(cx, ex, cvt!U(X.max), sx, RoundingMode.implicit);
+            return x.adjustedPack(cvt!X(cx), ex, sx, precision, mode, flags);
+        case FastClass.zero:
+            return x.packIntegral(y, precision, mode);
+        case FastClass.infinite:
+        case FastClass.quietNaN:
+            return ExceptionFlags.none;
+        case FastClass.signalingNaN:
+            unsignalize(x);
+            return ExceptionFlags.invalidOperation;
     }
 }
 
+@safe pure nothrow @nogc
 ExceptionFlags decimalAdd(D, F)(ref D x, auto const ref F y, const int precision, const RoundingMode mode)
 if (isDecimal!D && isFloatingPoint!F)
 {
-    bool sx = cast(bool)signbit(x);
-    bool sy = cast(bool)signbit(y);
+    alias T = CommonStorage!(D, F);
+    alias X = DataType!D;
 
-    if (isSignaling(x))
-        return ExceptionFlags.invalidOperation;
+    T cx, cy; int ex, ey; bool sx, sy;
 
-    if (isNaN(x))
-        return ExceptionFlags.none;
+    immutable fx = fastDecode(x, cx, ex, sx);
+    immutable fy = fastDecode(y, cy, ey, sy);
 
-    if (isNaN(y))
+    if (fx == FastClass.signalingNaN)
     {
         x = sy ? -D.nan : D.nan;
-        return ExceptionFlags.none;
+        return ExceptionFlags.invalidOperation;
     }
 
-    if (isInfinity(x))
+    if (fx == FastClass.quietNaN)
+        return ExceptionFlags.none;
+
+    if (fy == FastClass.quietNaN)
     {
-        if (isInfinity(y) && sx != sy)
+        x = sy ? -D.nan : D.nan;
+        return ExceptionFlags.invalidOperation;
+    }
+
+    if (fx == FastClass.infinite)
+    {
+        if (fy == FastClass.infinite && sx != sy)
         {
             x = sx ? -D.nan : D.nan;
             return ExceptionFlags.invalidOperation;
@@ -8931,23 +9193,27 @@ if (isDecimal!D && isFloatingPoint!F)
         return ExceptionFlags.none;  
     }
 
-    if (isInfinity(y))
+    if (fy == FastClass.infinite)
     {
         x = sy ? -D.infinity : D.infinity;
         return ExceptionFlags.none;   
     }
 
-    if (isZero(x))
-        return x.packFloatingPoint(y, precision, mode);
+    if (fx == FastClass.zero)
+    {
+        auto flags = coefficientAdjust(cy, ey, cvt!T(X.max), sy, RoundingMode.implicit);
+        return x.adjustedPack(cvt!X(cy), ey, sy, precision, mode, flags);
+    }
 
-    if (y == 0.0)
+    if (fy == FastClass.zero)
         return ExceptionFlags.none;
 
-    Unqual!D z;
-    auto flags = z.packFloatingPoint(y, 0 , mode);
-    return decimalAdd(x, z, precision, mode);
+    auto flags = coefficientAdd(cx, ex, sx, cy, ey, sy, RoundingMode.implicit);
+    flags |= coefficientAdjust(cx, ex, cvt!T(X.max), sx, RoundingMode.implicit);
+    return x.adjustedPack(cvt!X(cx), ex, sx, precision, mode, flags);
 }
 
+@safe pure nothrow @nogc
 ExceptionFlags decimalAdd(T, D)(auto const ref T x, auto const ref D y, out D z, const int precision, const RoundingMode mode)
 if (isDecimal!D && isIntegral!T)
 {
@@ -8955,6 +9221,7 @@ if (isDecimal!D && isIntegral!T)
     return decimalAdd(z, x, precision, mode);
 }
 
+@safe pure nothrow @nogc
 ExceptionFlags decimalAdd(F, D)(auto const ref F x, auto const ref D y, out D z, const int precision, const RoundingMode mode)
 if (isDecimal!D && isFloatingPoint!F)
 {
@@ -8962,22 +9229,138 @@ if (isDecimal!D && isFloatingPoint!F)
     return decimalAdd(z, x, precision, mode);
 }
 
+@safe pure nothrow @nogc
 ExceptionFlags decimalSub(D1, D2)(ref D1 x, auto const ref D2 y, const int precision, const RoundingMode mode)
 if (isDecimal!(D1, D2))
 {
    return decimalAdd(x, -y, precision, mode);
 }
 
+@safe pure nothrow @nogc
 ExceptionFlags decimalSub(D, T)(ref D x, auto const ref T y, const int precision, const RoundingMode mode)
 if (isDecimal!D && isIntegral!T)
 {
 
-    alias DT = DataType!D;
+    alias U = CommonStorage!(D, T);
+    alias X = DataType!D;
 
-    static if (D.sizeof >= T.sizeof)
-        alias U = DT;
+   
+    U cx; int ex; bool sx;
+
+    static if (isUnsigned!T)
+    {
+        enum bool sy = false;
+        U cy = y;
+    }
     else
-        alias U = Unsigned!(Unqual!T);
+    {
+        immutable bool sy = y < 0;
+        U cy = cast(Unsigned!T)(sy ? -y : y);
+    } 
+
+    final switch(fastDecode(x, cx, ex, sx))
+    {
+        case FastClass.finite:
+            if (!y)
+                return ExceptionFlags.none;
+            auto flags = coefficientAdd(cx, ex, sx, cy, 0, !sy, RoundingMode.implicit);
+            flags |= coefficientAdjust(cx, ex, cvt!U(X.max), sx, RoundingMode.implicit);
+            return x.adjustedPack(cvt!X(cx), ex, sx, precision, mode, flags);
+        case FastClass.zero:
+            auto flags = x.packIntegral(y, precision, mode);
+            x = -x;
+            return flags;
+        case FastClass.infinite:
+        case FastClass.quietNaN:
+            return ExceptionFlags.none;
+        case FastClass.signalingNaN:
+            unsignalize(x);
+            return ExceptionFlags.invalidOperation;
+    }
+}
+
+@safe pure nothrow @nogc
+ExceptionFlags decimalSub(D, F)(ref D x, auto const ref F y, const int precision, const RoundingMode mode)
+if (isDecimal!D && isFloatingPoint!F)
+{
+    return decimalAdd(x, -y, precision, mode);
+}
+
+@safe pure nothrow @nogc
+ExceptionFlags decimalSub(T, D)(auto const ref T x, auto const ref D y, out D z, const int precision, const RoundingMode mode)
+if (isDecimal!D && isIntegral!T)
+{
+    z = -y;
+    return decimalAdd(z, x, precision, mode);
+}
+
+@safe pure nothrow @nogc
+ExceptionFlags decimalSub(F, D)(auto const ref F x, auto const ref D y, out D z, const int precision, const RoundingMode mode)
+if (isDecimal!D && isFloatingPoint!F)
+{
+    z = -y;
+    return decimalAdd(z, x, precision, mode);
+}
+
+@safe pure nothrow @nogc
+ExceptionFlags decimalMod(D1, D2)(ref D1 x, auto const ref D2 y, const int precision, const RoundingMode mode)
+if (isDecimal!(D1, D2))
+{
+
+    alias D = CommonDecimal!(D1, D2);
+    alias T = DataType!D;
+    alias T1 = DataType!D1;
+
+    T cx, cy; int ex, ey; bool sx, sy;
+
+    immutable fx = fastDecode(x, cx, ex, sx);
+    immutable fy = fastDecode(y, cy, ey, sy);
+
+    if (fx == FastClass.signalingNaN)
+    {
+        unsignalize(x);
+        return ExceptionFlags.invalidOperation;
+    }
+
+    if (fx == FastClass.signalingNaN)
+    {
+        x = sy ? -D1.nan : D1.nan;
+        return ExceptionFlags.invalidOperation;
+    }
+    
+    if (fx == FastClass.quietNaN)
+        return ExceptionFlags.none;
+
+    if (fy == FastClass.quietNaN)
+    {
+        x = sy ? -D1.nan : D1.nan;
+        return ExceptionFlags.none;
+    }
+
+    if (fx == FastClass.infinite || fy == FastClass.zero)
+    {
+        x = sx ? -D1.nan : D1.nan;
+        return ExceptionFlags.invalidOperation;
+    }
+
+    if (fx == FastClass.zero)
+        return ExceptionFlags.none;
+
+    if (fy == FastClass.infinite)
+        return ExceptionFlags.none;
+ 
+    auto flags = coefficientMod(cx, ex, sx, cy, ey, sy, mode);
+    flags |= coefficientAdjust(cx, ex, cvt!T(T1.max), sx, RoundingMode.implicit);
+    return x.adjustedPack(cvt!T1(cx), ex, sx, precision, mode, flags);
+
+}
+
+@safe pure nothrow @nogc
+ExceptionFlags decimalMod(D, T)(ref D x, auto const ref T y, const int precision, const RoundingMode mode)
+if (isDecimal!D && isIntegral!T)
+{
+    alias U = CommonStorage!(D, T);
+    alias X = DataType!D;
 
     U cx; int ex; bool sx;
 
@@ -8992,312 +9375,176 @@ if (isDecimal!D && isIntegral!T)
         U cy = cast(Unsigned!T)(sy ? -y : y);
     } 
 
-    switch(fastDecode(x, cx, ex, sx))
+    if (!y)
     {
-        case FastClass.signalingNaN:
+        x = sx ^ sy ? -D.nan : D.nan;
+        return ExceptionFlags.invalidOperation;
+    }
+
+    final switch (fastDecode(x, cx, ex, sx))
+    {
+        case FastClass.finite:
+            auto flags = coefficientMod(cx, ex, sx, cy, 0, sy, mode);
+            flags |= coefficientAdjust(cx, ex, cvt!U(X.max), sx, RoundingMode.implicit);
+            return x.adjustedPack(cvt!X(cx), ex, sx, precision, mode, flags);
+        case FastClass.zero:
+            return ExceptionFlags.none;
+        case FastClass.infinite:
+            x = sx ? -D.nan : D.nan;
             return ExceptionFlags.invalidOperation;
         case FastClass.quietNaN:
-        case FastClass.infinite:
             return ExceptionFlags.none;
-        case FastClass.zero:
-            auto flags = x.packIntegral(y, precision, mode);
-            x = -x;
-            return flags;
-        default:
-            if (!y)
-                return ExceptionFlags.none;
-            auto flags = coefficientAdd(cx, ex, sx, cy, 0, !sy, RoundingMode.implicit);
-            flags |= coefficientAdjust(cx, ex, cvt!U(DT.max), sx, RoundingMode.implicit);
-            return x.adjustedPack(cvt!DT(cx), ex, sx, precision, mode, flags);
+        case FastClass.signalingNaN:
+            unsignalize(x);
+            return ExceptionFlags.invalidOperation;
     }
 }
 
-ExceptionFlags decimalSub(D, F)(ref D x, auto const ref F y, const int precision, const RoundingMode mode)
-if (isDecimal!D && isFloatingPoint!F)
-{
-    return decimalAdd(x, -y, precision, mode);
-}
-
-ExceptionFlags decimalSub(T, D)(auto const ref T x, auto const ref D y, out D z, const int precision, const RoundingMode mode)
-if (isDecimal!D && isIntegral!T)
-{
-    z = -y;
-    return decimalAdd(z, x, precision, mode);
-}
-
-ExceptionFlags decimalSub(F, D)(auto const ref F x, auto const ref D y, out D z, const int precision, const RoundingMode mode)
-if (isDecimal!D && isFloatingPoint!F)
-{
-    z = -y;
-    return decimalAdd(z, x, precision, mode);
-}
-
-ExceptionFlags decimalMod(D1, D2)(ref D1 x, auto const ref D2 y, const int precision, const RoundingMode mode)
-if (isDecimal!(D1, D2))
-{
-    bool sx = cast(bool)signbit(x);
-    bool sy = cast(bool)signbit(y);
-
-    ExceptionFlags flags;
-
-    if (isSignaling(x))
-    {
-        x = sx ? -D1.nan : D1.nan;
-        return ExceptionFlags.invalidOperation;
-    }
-
-    if (isSignaling(y))
-    {
-        x = sy ? -D1.nan : D1.nan;
-        return ExceptionFlags.invalidOperation;
-    }
-    
-    if (isNaN(x))
-    {
-        x = sx ? -D1.nan : D1.nan;
-        return ExceptionFlags.none;
-    }
-
-    if (isNaN(y))
-    {
-        x = sy ? -D1.nan : D1.nan;
-        return ExceptionFlags.none;
-    }
-
-    if (isInfinity(x) || isZero(y))
-    {
-        x = sx ? -D1.nan : D1.nan;
-        return ExceptionFlags.invalidOperation;
-    }
-
-    if (isInfinity(y))
-        return ExceptionFlags.none;
-    
-    alias T1 = DataType!D1;
-    alias T2 = DataType!D2;
-
-    T1 cx;
-    T2 cy;
-    int ex, ey;
-
-    x.unpack(cx, ex);
-    y.unpack(cy, ey);
-
-    static if (D1.sizeof > D2.sizeof)
-    {
-        T1 cyy = cy;
-        alias cxx = cx;
-        enum cmax = D1.COEF_MAX;
-    }
-    else static if (D1.sizeof < D2.sizeof)
-    {
-        T2 cxx = cx;
-        alias cyy = cy;
-        T2 cmax = D1.COEF_MAX;
-    }
-    else
-    {
-        alias cxx = cx;
-        alias cyy = cy;
-        alias cmax = D1.COEF_MAX;
-    }
-
-    flags = coefficientMod(cxx, ex, sx, cyy, ey, sy, mode);
-    flags |= coefficientAdjust(cxx, ex, cmax, sx, mode);
-    return x.adjustedPack(cvt!T1(cxx), ex, sx, precision, mode, flags);
-
-}
-
-ExceptionFlags decimalMod(D, T)(ref D x, auto const ref T y, const int precision, const RoundingMode mode)
-if (isDecimal!D && isIntegral!T)
-{
-    bool sx = cast(bool)signbit(x);
-    static if (isUnsigned!T)
-        enum sy = false;
-    else
-        bool sy = y < 0;
-
-    if (isSignaling(x))
-    {
-        x = sx ? -D.nan : D.nan;
-        return ExceptionFlags.invalidOperation;
-    }
-
-    if (isNaN(x))
-    {
-        x = sx ? -D.nan : D.nan;
-        return ExceptionFlags.none;
-    }
-
-    if (isInfinity(x) || y == 0)
-    {
-        x = sx ? -D.nan : D.nan;
-        return ExceptionFlags.invalidOperation;
-    }
-    DataType!D cx;
-    int ex, ey;
-
-    x.unpack(cx, ex);
-
-    static if (D.sizeof >= T.sizeof)
-    {
-        alias cxx = cx;
-        DataType!D cyy = Unsigned!T(sy ? -y : y);
-        DataType!D cmax = D.COEF_MAX;
-    }
-    else
-    {
-        Unsigned!T cxx = cx;
-        Unsigned!T cyy = sy ? -y : y;
-        Unsigned!T cmax = D.COEF_MAX;
-    }
-
-    auto flags = coefficientMod(cxx, ex, sx, cyy, ey, sy, mode);
-    flags |= coefficientAdjust(cxx, ex, cmax, sx, mode);
-    return x.adjustedPack(cvt!(DataType!D)(cxx), ex, sx, precision, mode, flags);
-
-}
-
+@safe pure nothrow @nogc
 ExceptionFlags decimalMod(T, D)(auto const ref T x, auto const ref D y, out D z, const int precision, const RoundingMode mode)
 if (isDecimal!D && isIntegral!T)
 {
+
+    alias U = CommonStorage!(D, T);
+    alias X = DataType!D;
+
+    U cy; int ey; bool sy;
+
+    int ex = 0;
     static if (isUnsigned!T)
+    {
         bool sx = false;
+        U cx = x;
+    }
     else
+    {
         bool sx = x < 0;
-    bool sy = cast(bool)signbit(y);
-    
+        U cx = cast(Unsigned!T)(sx ? -x : x);
+    } 
 
-    if (isSignaling(y))
+    final switch (fastDecode(y, cy, ey, sy))
     {
-        z = sy ? -D.nan : D.nan;
-        return ExceptionFlags.invalidOperation;
+        case FastClass.finite:
+            if (x == 0)
+            {
+                z = D.zero;
+                return ExceptionFlags.none;
+            }
+            auto flags = coefficientMod(cx, ex, sx, cy, 0, sy, mode);
+            flags |= coefficientAdjust(cx, ex, cvt!U(X.max), sx, RoundingMode.implicit);
+            return z.adjustedPack(cvt!X(cx), ex, sx, precision, mode, flags);
+        case FastClass.zero:
+            z = sy ? -D.nan : D.nan;
+            return ExceptionFlags.invalidOperation;
+        case FastClass.infinite:
+            return z.packIntegral(x, precision, mode);
+        case FastClass.quietNaN:
+            z = sy ? -D.nan : D.nan;
+            return ExceptionFlags.none;
+        case FastClass.signalingNaN:
+            z = sy ? -D.nan : D.nan;
+            return ExceptionFlags.invalidOperation;
     }
-
-    if (isNaN(y))
-    {
-        z = sy ? -D.nan : D.nan;
-        return ExceptionFlags.none;
-    }
-
-    if (isZero(y))
-    {
-        z = sy ? -D.nan : D.nan;
-        return ExceptionFlags.invalidOperation;
-    }
-
-    if (isInfinity(y))
-        return ExceptionFlags.none;
-
-    DataType!D cy;
-    int ex, ey;
-
-    y.unpack(cy, ey);
-
-    static if (D.sizeof >= T.sizeof)
-    {
-        alias cyy = cy;
-        DataType!D cxx = Unsigned!T(sx ? -x : x);
-        alias cmax = D.COEF_MAX;
-    }
-    else
-    {
-        Unsigned!T cyy = cy;
-        Unsigned!T cxx = sx ? -x : x;
-        Unsigned!T cmax = D.COEF_MAX;
-    }
-
-    auto flags = coefficientMod(cxx, ex, sx, cyy, ey, sy, mode);
-    flags |= coefficientAdjust(cxx, ex, cmax, sx, mode);
-    return z.adjustedPack(cvt!(DataType!D)(cxx), ex, sx, precision, mode, flags);
 
 }
 
+@safe pure nothrow @nogc
 ExceptionFlags decimalMod(D, F)(ref D x, auto const ref F y, const int precision, const RoundingMode mode)
 if (isDecimal!D && isFloatingPoint!F)
 {
-    bool sx = cast(bool)signbit(x);
-    bool sy = cast(bool)signbit(y);
+    alias T = CommonStorage!(D, F);
+    alias X = DataType!D;
 
-    if (isSignaling(x))
+    T cx, cy; int ex, ey; bool sx, sy;
+
+    immutable fx = fastDecode(x, cx, ex, sx);
+    immutable fy = fastDecode(y, cy, ey, sy);
+
+    if (fx == FastClass.signalingNaN)
     {
-        x = sx ? -D.nan : D.nan;
+        unsignalize(x);
         return ExceptionFlags.invalidOperation;
     }
 
-    if (isNaN(x))
-    {
-        x = sx ? -D.nan : D.nan;
+    if (fx == FastClass.quietNaN)
         return ExceptionFlags.none;
-    }
 
-    if (isNaN(y))
+    if (fy == FastClass.quietNaN)
     {
         x = sy ? -D.nan : D.nan;
         return ExceptionFlags.none;
     }
 
-    if (isInfinity(x) || y == 0.0)
+    if (fx == FastClass.infinite || fy == FastClass.zero)
     {
         x = sx ? -D.nan : D.nan;
         return ExceptionFlags.invalidOperation;
     }
 
-    if (isInfinity(y))
+    if (fx == FastClass.zero)
         return ExceptionFlags.none;
 
-    real f;
-    auto flags = decimalToFloat(x, f, mode);
-    f %= y;
-    flags |= x.packFloatingPoint(f, precision, mode);
-    return flags;
+    if (fy == FastClass.infinite)
+        return ExceptionFlags.none;
+
+    auto flags = coefficientMod(cx, ex, sx, cy, ey, sy, mode);
+    flags |= coefficientAdjust(cx, ex, cvt!T(X.max), sx, RoundingMode.implicit);
+    return x.adjustedPack(cvt!X(cx), ex, sx, precision, mode, flags);
 }
 
+@safe pure nothrow @nogc
 ExceptionFlags decimalMod(F, D)(auto const ref F x, auto const ref D y, out D z, const int precision, const RoundingMode mode)
 if (isDecimal!D && isFloatingPoint!F)
 {
-    bool sx = cast(bool)signbit(x);
-    bool sy = cast(bool)signbit(y);
+    alias T = CommonStorage!(D, F);
+    alias X = DataType!D;
 
-    if (isSignaling(y))
+    T cx, cy; int ex, ey; bool sx, sy;
+
+    immutable fx = fastDecode(x, cx, ex, sx);
+    immutable fy = fastDecode(y, cy, ey, sy);
+
+    if (fy == FastClass.signalingNaN)
     {
         z = sy ? -D.nan : D.nan;
         return ExceptionFlags.invalidOperation;
     }
 
-    if (isNaN(x))
+    if (fx == FastClass.quietNaN)
     {
         z = sx ? -D.nan : D.nan;
         return ExceptionFlags.none;
     }
 
-    if (isNaN(y))
+    if (fy == FastClass.quietNaN)
     {
         z = sy ? -D.nan : D.nan;
         return ExceptionFlags.none;
     }
 
-    if (isInfinity(x) || isZero(y))
+    if (fx == FastClass.infinite || fy == FastClass.zero)
     {
         z = sx ? -D.nan : D.nan;
         return ExceptionFlags.invalidOperation;
     }
 
-    if (isInfinity(y))
+    if (fy == FastClass.infinite)
         return ExceptionFlags.none;
 
-    auto flags = z.packFloatingPoint(x, 0, mode);
-    return flags | decimalMod(z, y, precision, mode);
+    auto flags = coefficientMod(cx, ex, sx, cy, ey, sy, mode);
+    flags |= coefficientAdjust(cx, ex, cvt!T(X.max), sx, RoundingMode.implicit);
+    return z.adjustedPack(cvt!X(cx), ex, sx, precision, mode, flags);
 
 }
 
+@safe pure nothrow @nogc
 int decimalCmp(D1, D2)(auto const ref D1 x, auto const ref D2 y)
 if (isDecimal!(D1, D2))
 {
     alias D = CommonDecimal!(D1, D2);
     DataType!D cx, cy; int ex, ey; bool sx, sy;
-    auto fx = fastDecode(x, cx, ex, sx);
-    auto fy = fastDecode(y, cy, ey, sy);
+    immutable fx = fastDecode(x, cx, ex, sx);
+    immutable fy = fastDecode(y, cy, ey, sy);
 
     if (fx == FastClass.quietNaN || fx == FastClass.signalingNaN ||
         fy == FastClass.quietNaN || fy == FastClass.signalingNaN)
@@ -9321,19 +9568,31 @@ if (isDecimal!(D1, D2))
     return coefficientCmp(cx, ex, sx, cy, ey, sy);
 }
 
+@safe pure nothrow @nogc
 int decimalCmp(D, T)(auto const ref D x, auto const ref T y)
 if (isDecimal!D && isIntegral!T)
 {
     
-    if (isNaN(x))
-        return -2;
-    bool sx = cast(bool)signbit(x);
-    static if (isUnsigned!T)
-        enum sy = false;
-    else
-        bool sy = y < 0;
+    alias U = CommonStorage!(D, T);
+    U cx; int ex; bool sx;
 
-    if (isZero(x))
+    immutable fx = fastDecode(x, cx, ex, sx);
+
+    if (fx == FastClass.quietNaN || fx == FastClass.signalingNaN)
+        return -2;
+
+    static if (isUnsigned!T)
+    {
+        enum bool sy = false;
+        U cy = y;
+    }
+    else
+    {
+        immutable bool sy = y < 0;
+        U cy = cast(Unsigned!T)(sy ? -y : y);
+    } 
+
+    if (fx == FastClass.zero)
     {
         if (y == 0)
             return 0;
@@ -9346,26 +9605,10 @@ if (isDecimal!D && isIntegral!T)
     if (sx != sy)
         return sx ? -1 : 1;
 
-    if (isInfinity(x))
+    if (fx == FastClass.infinite)
         return sx ? -1 : 1;
 
-    DataType!D cx;
-    int ex, ey;
-
-    x.unpack(cx, ex);
-
-    static if (D.sizeof >= T.sizeof)
-    {
-        alias cxx = cx;
-        DataType!D cyy = cast(Unsigned!T)(sy ? -y : y);
-    }
-    else
-    {
-        Unsigned!T cxx = cx;
-        Unsigned!T cyy = sy ? -y : y;
-    }
-
-    return coefficientCmp(cxx, ex, sx, cyy, ey, sy);
+    return coefficientCmp(cx, ex, sx, cy, 0, sy);
 
 }
 
@@ -12773,7 +13016,7 @@ ExceptionFlags coefficientRound(T)(ref T cx, ref int ex, const bool sx, const Ro
 @safe pure nothrow @nogc
 ExceptionFlags coefficientMod(T)(ref T cx, ref int ex, ref bool sx, const T cy, const int ey, const bool sy, const RoundingMode mode)
 {
-    if (!cx)
+    if (!cy)
         return ExceptionFlags.invalidOperation;
     Unqual!T rcx = cx;
     int rex = ex;
