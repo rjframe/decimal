@@ -1603,6 +1603,45 @@ unittest
         }
     }
 
+    //expected constants
+    foreach (D; DecimalTypes)
+    {
+        static assert (is(typeof(D.init) == D));
+        static assert (is(typeof(D.nan) == D));
+        static assert (is(typeof(D.infinity) == D));
+        static assert (is(typeof(D.max) == D));
+        static assert (is(typeof(D.min_normal) == D));
+        static assert (is(typeof(D.epsilon) == D));
+        static assert (is(typeof(D.dig) == int));
+        static assert (is(typeof(D.mant_dig) == int));
+        static assert (is(typeof(D.min_10_exp) == int));
+        static assert (is(typeof(D.max_10_exp) == int));
+        static assert (is(typeof(D.min_exp) == int));
+        static assert (is(typeof(D.max_exp) == int));
+
+        static assert (is(typeof(D.E) == D));
+        static assert (is(typeof(D.PI) == D));
+        static assert (is(typeof(D.PI_2) == D));
+        static assert (is(typeof(D.PI_4) == D));
+        static assert (is(typeof(D.M_1_PI) == D));
+        static assert (is(typeof(D.M_2_PI) == D));
+        static assert (is(typeof(D.M_2_SQRTPI) == D));
+        static assert (is(typeof(D.LN10) == D));
+        static assert (is(typeof(D.LN2) == D));
+        static assert (is(typeof(D.LOG2) == D));
+        static assert (is(typeof(D.LOG2E) == D));
+        static assert (is(typeof(D.LOG2T) == D));
+        static assert (is(typeof(D.LOG10E) == D));
+        static assert (is(typeof(D.SQRT2) == D));
+        static assert (is(typeof(D.SQRT1_2) == D));
+    }
+
+    //expected members
+    foreach (D; DecimalTypes)
+    {
+        static assert (is(typeof(D.init.toHash()) == size_t));
+        static assert (is(typeof(D.init.toString()) == string));
+    }
 
 
 }
