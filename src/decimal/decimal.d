@@ -6670,9 +6670,6 @@ mixin template ExceptionConstructors()
 /* ****************************************************************************************************************** */
 
 
-
-
-
 //sinks %a
 void sinkHexadecimal(C, T)(auto const ref FormatSpec!C spec, scope void delegate(const(C)[]) sink, 
                            auto const ref T coefficient, const int exponent, const bool signed) 
@@ -8351,7 +8348,6 @@ if (isDecimal!(D1, D2))
         return ExceptionFlags.none;
     }
 
-
     if (fx == FastClass.infinite)
     {
         if (fy == FastClass.zero)
@@ -8564,133 +8560,97 @@ if (isDecimal!(D1, D2))
 ExceptionFlags decimalDiv(D, T)(ref D x, auto const ref T y, const int precision, const RoundingMode mode)
 if (isDecimal!D && isIntegral!T)
 {
-    bool sx = cast(bool)signbit(x);
-    static if (isUnsigned!T)
-        enum sy = false;
-    else
-        bool sy = y < 0;
-
-    if (isSignaling(x))
-    {
-        x = sx ^ sy ? -D.nan : D.nan;
-        return ExceptionFlags.invalidOperation;
-    }
-
-    if (isNaN(x))
-    {
-        x = sx ^ sy ? -D.nan : D.nan;
-        return ExceptionFlags.none;
-    }
-
-    if (isInfinity(x))
-    {
-        if (!y)
-        {
-            x = sx ^ sy ? -D.nan : D.nan;
-            return ExceptionFlags.invalidOperation | ExceptionFlags.divisionByZero;
-        }
-        x = sx ^ sy ? -D.infinity : D.infinity;
-        return ExceptionFlags.none;
-    }
-
-    if (isZero(x))
-    {
-        x = sx ^ sy ? -D.zero : D.zero;
-        return ExceptionFlags.none;
-    }
-
-    if (!y)
-    {
-        x = sx ^ sy ? -D.infinity : D.infinity;
-        return ExceptionFlags.divisionByZero;
-    }
-
-
-    DataType!D cx;
-    int ex;
-
-    x.unpack(cx, ex);
+    alias DT = DataType!D;
 
     static if (D.sizeof >= T.sizeof)
+        alias U = DT;
+    else
+        alias U = Unsigned!(Unqual!T);
+    
+    U cx; int ex; bool sx;
+
+    static if (isUnsigned!T)
     {
-        DataType!D cy = Unsigned!T(sy ? -y : y);
-        alias cxx = cx;
-        enum cmax = D.COEF_MAX;
+        enum bool sy = false;
+        U cy = y;
     }
     else
     {
-        Unsigned!T cy = sy ? -y : y;
-        Unsigned!T cxx = cx;
-        Unsigned!T cmax = D.COEF_MAX;
-    }
+        immutable bool sy = y < 0;
+        U cy = cast(Unsigned!T)(sy ? -y : y);
+    } 
 
-    auto flags = coefficientDiv(cxx, ex, sx, cy, 0, sy, mode);
-    flags |= coefficientAdjust(cxx, ex, cmax, sx, mode);
-    return x.adjustedPack(cvt!(DataType!D)(cxx), ex, sx, precision, mode, flags);
+    switch (fastDecode(x, cx, ex, sx))
+    {
+        case FastClass.signalingNaN:
+            return ExceptionFlags.invalidOperation;
+        case FastClass.quietNaN:
+            return ExceptionFlags.none;
+        case FastClass.infinite:
+            if (!y)
+            {
+                x = sx ^ sy ? -D.nan : D.nan;
+                return ExceptionFlags.invalidOperation | ExceptionFlags.divisionByZero;
+            }
+            return ExceptionFlags.none;
+        case FastClass.zero:
+            x = sx ^ sy ? -D.zero : D.zero;
+            return ExceptionFlags.none;
+        default:
+            if (!y)
+            {
+                x = sx ^ sy ? -D.infinity : D.infinity;
+                return ExceptionFlags.divisionByZero;
+            }
+            auto flags = coefficientDiv(cx, ex, sx, cy, 0, sy, RoundingMode.implicit);
+            flags |= coefficientAdjust(cx, ex, cvt!U(DT.max), sx, RoundingMode.implicit);
+            return x.adjustedPack(cvt!DT(cx), ex, sx, precision, mode, flags);
+    }
 }
 
 ExceptionFlags decimalDiv(T, D)(auto const ref T x, auto const ref D y, out D z, const int precision, const RoundingMode mode)
 if (isDecimal!D && isIntegral!T)
 {
-    bool sy = cast(bool)signbit(y);
-    static if (isUnsigned!T)
-        bool sx = false;
-    else
-        bool sx = x < 0;
-
-    if (isSignaling(y))
-    {
-        z = sx ^ sy ? -D.nan : D.nan;
-        return ExceptionFlags.invalidOperation;
-    }
-
-    if (isNaN(y))
-    {
-        z = sx ^ sy ? -D.nan : D.nan;
-        return ExceptionFlags.none;
-    }
-
-    if (isInfinity(y))
-    {
-        z = sx ^ sy ? -D.infinity : D.infinity;
-        return ExceptionFlags.none;
-    }
-
-    if (x == 0)
-    {
-        z = sx ^ sy ? -D.zero : D.zero;
-        return ExceptionFlags.none;
-    }
-
-    if (isZero(y))
-    {
-        z = sx ^ sy ? -D.infinity : D.infinity;
-        return ExceptionFlags.divisionByZero;
-    }
-
-
-
-    DataType!D cy;
-    int ex, ey;
-
-    y.unpack(cy, ey);
+    alias DT = DataType!D;
 
     static if (D.sizeof >= T.sizeof)
+        alias U = DT;
+    else
+        alias U = Unsigned!(Unqual!T);
+
+    U cy; int ey; bool sy;
+
+    int ex = 0;
+    static if (isUnsigned!T)
     {
-        DataType!D cx = Unsigned!T(sx ? -x : x);
-        alias cyy = cy;
-        enum cmax = D.COEF_MAX;
+        bool sx = false;
+        U cx = x;
     }
     else
     {
-        Unsigned!T cx = sx ? -x : x;
-        Unsigned!T cyy = cy;
-        Unsigned!T cmax = D.COEF_MAX;
-    }
+        bool sx = x < 0;
+        U cx = cast(Unsigned!T)(sx ? -x : x);
+    } 
 
-    auto flags = coefficientDiv(cx, ex, sx, cyy, ey, sy, mode);
-    flags |= coefficientAdjust(cx, ex, cmax, sx, mode);
-    return z.adjustedPack(cvt!(DataType!D)(cx), ex, sx, precision, mode, flags);
+    switch (fastDecode(y, cy, ey, sy))
+    {
+        case FastClass.signalingNaN:
+            z = sx ^ sy ? -D.snan : D.snan;
+            return ExceptionFlags.invalidOperation;
+        case FastClass.quietNaN:
+            z = sx ^ sy ? -D.nan : D.nan;
+            return ExceptionFlags.none;
+        case FastClass.infinite:
+            z = y;
+            return ExceptionFlags.none;
+        case FastClass.zero:
+            z = sx ^ sy ? -D.infinity : D.infinity;
+            return ExceptionFlags.divisionByZero;
+        default:
+            auto flags = coefficientDiv(cx, ex, sx, cy, 0, sy, RoundingMode.implicit);
+            flags |= coefficientAdjust(cx, ex, cvt!U(DT.max), sx, RoundingMode.implicit);
+            return z.adjustedPack(cvt!DT(cx), ex, sx, precision, mode, flags);
+    }
 }
 
 ExceptionFlags decimalDiv(D, F)(ref D x, auto const ref F y, const int precision, const RoundingMode mode)
@@ -8700,10 +8660,7 @@ if (isDecimal!D && isFloatingPoint!F)
     bool sy = cast(bool)signbit(y);
 
     if (isSignaling(x))
-    {
-        x = sx ^ sy ? -D.nan : D.nan;
         return ExceptionFlags.invalidOperation;
-    }
 
     if (isNaN(x) || isNaN(y))
     {
@@ -9454,6 +9411,7 @@ if (isDecimal!(D1, D2))
 int decimalCmp(D, T)(auto const ref D x, auto const ref T y)
 if (isDecimal!D && isIntegral!T)
 {
+    
     if (isNaN(x))
         return -2;
     bool sx = cast(bool)signbit(x);
@@ -10307,9 +10265,6 @@ if (isDecimal!D)
     return flags | decimalExp(x, precision, mode);
 }
 
-
-
-
 ExceptionFlags decimalExp2m1(D)(ref D x, const int precision, const RoundingMode mode)
 if (isDecimal!D)
 {
@@ -10528,7 +10483,6 @@ if (isDecimal!D && isIntegral!T)
     auto flags = decimalDiv(y, n, 0, mode);
     return flags | decimalPow(x, y, precision, mode);
 }
-
 
 ExceptionFlags decimalSin(D)(ref D x, const int precision, const RoundingMode mode)
 if (isDecimal!D)
@@ -12150,7 +12104,7 @@ if (isDecimal!(D1, D2) && is(D: CommonDecimal!(D1, D2)))
 }
 
 /* ****************************************************************************************************************** */
-/* COEFFICCIENT ARITHMETIC                                                                                            */       
+/* COEFFICIENT ARITHMETIC                                                                                            */       
 /* ****************************************************************************************************************** */
 //divPow10          - inexact
 //mulPow10          - overflow
@@ -12166,11 +12120,9 @@ if (isDecimal!(D1, D2) && is(D: CommonDecimal!(D1, D2)))
 //coefficientEqu    - none
 //coefficientSqr    - inexact, overflow, underflow
 
-
-
-
 //divides coefficient by 10^power
 //inexact
+@safe pure nothrow @nogc
 ExceptionFlags divpow10(T)(ref T coefficient, const int power, const bool isNegative, const RoundingMode mode)
 if (isAnyUnsigned!T)
 in
@@ -12306,6 +12258,7 @@ unittest
 
 //multiplies coefficient by 10^^power, returns possible overflow
 //overflow
+@safe pure nothrow @nogc
 ExceptionFlags mulpow10(T)(ref T coefficient, const int power)
 if (isAnyUnsigned!T)
 in 
@@ -12325,6 +12278,7 @@ body
 
 //adjusts coefficient to fit minExponent <= exponent <= maxExponent and coefficient <= maxCoefficient
 //inexact, overflow, underflow
+@safe pure nothrow @nogc
 ExceptionFlags coefficientAdjust(T)(ref T coefficient, ref int exponent, const int minExponent, const int maxExponent, 
                                     const T maxCoefficient, const bool isNegative, const RoundingMode mode)
 if (isAnyUnsigned!T)
@@ -12412,6 +12366,7 @@ body
 
 //adjusts coefficient to fit minExponent <= exponent <= maxExponent
 //inexact, overflow, underflow
+@safe pure nothrow @nogc
 ExceptionFlags coefficientAdjust(T)(ref T coefficient, ref int exponent, const int minExponent, const int maxExponent, 
                                     const bool isNegative, const RoundingMode mode)
 if (isAnyUnsigned!T)
@@ -12426,6 +12381,7 @@ body
 
 //adjusts coefficient to fit coefficient in maxCoefficient
 //inexact, overflow, underflow
+@safe pure nothrow @nogc
 ExceptionFlags coefficientAdjust(T)(ref T coefficient, ref int exponent, const T maxCoefficient, 
                                     const bool isNegative, const RoundingMode mode)
 if (isAnyUnsigned!T)
@@ -12441,6 +12397,7 @@ body
 
 //adjusts coefficient to fit minExponent <= exponent <= maxExponent and to fit precision
 //inexact, overflow, underflow
+@safe pure nothrow @nogc
 ExceptionFlags coefficientAdjust(T)(ref T coefficient, ref int exponent, const int minExponent, const int maxExponent, 
                                   const int precision, const bool isNegative, const RoundingMode mode)
 if (isAnyUnsigned!T)
@@ -13431,6 +13388,7 @@ ExceptionFlags coefficientAtanh(T)(ref T cx, ref int ex, ref bool sx)
 }
 
 //caps angle to -2π ... +2π
+@safe pure nothrow @nogc
 ExceptionFlags coefficientCapAngle(T)(ref T cx, ref int ex, ref bool sx)
 {
     if (coefficientCmp(cx, ex, Constants!T.c2π, Constants!T.e2π) > 0)
@@ -13448,6 +13406,7 @@ ExceptionFlags coefficientCapAngle(T)(ref T cx, ref int ex, ref bool sx)
 }
 
 //caps angle to -π/2  .. +π/2 
+@safe pure nothrow @nogc
 ExceptionFlags coefficientCapAngle(T)(ref T cx, ref int ex, ref bool sx, out int quadrant)
 {
     quadrant = 1;
@@ -13467,6 +13426,7 @@ ExceptionFlags coefficientCapAngle(T)(ref T cx, ref int ex, ref bool sx, out int
     return flags;
 }
 
+@safe pure nothrow @nogc
 ExceptionFlags coefficientSinQ(T)(ref T cx, ref int ex, ref bool sx)
 {
     //taylor series: sin(x) = x - x^3/3! + x^5/5! - x^7/7! ...
@@ -13508,6 +13468,7 @@ unittest
     //writefln("%35.34f", decimal128(1.1));
 }
 
+@safe pure nothrow @nogc
 ExceptionFlags coefficientCosQ(T)(ref T cx, ref int ex, ref bool sx)
 {
     //taylor series: cos(x) = 1 - x^2/2! + x^4/4! - x^6/6! ...
@@ -13539,6 +13500,7 @@ ExceptionFlags coefficientCosQ(T)(ref T cx, ref int ex, ref bool sx)
     return ExceptionFlags.inexact;
 }
 
+@safe pure nothrow @nogc
 ExceptionFlags coefficientSinCosQ(T)(const T cx, const int ex, const bool sx,
                                      out T csin, out int esin, out bool ssin,
                                      out T ccos, out int ecos, out bool scos)
@@ -13567,7 +13529,7 @@ ExceptionFlags coefficientSinCosQ(T)(const T cx, const int ex, const bool sx,
     return ExceptionFlags.inexact;
 }
 
-
+@safe pure nothrow @nogc
 ExceptionFlags coefficientCapAtan(T)(ref T cx, ref int ex, ref bool sx, out T reductions)
 {
     //half angle formula: atan(x/2) = 2 * atan(x/(1 + sqrt(1 +x^^2))))
@@ -13588,6 +13550,7 @@ ExceptionFlags coefficientCapAtan(T)(ref T cx, ref int ex, ref bool sx, out T re
     return ExceptionFlags.inexact;
 }
 
+@safe pure nothrow @nogc
 ExceptionFlags coefficientAtan(T)(ref T cx, ref int ex, bool sx)
 {
     //taylor series:

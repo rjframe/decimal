@@ -204,7 +204,7 @@ int main(string[] argv)
     //writefln("%35.34f", decimal64(5.7));
     //writefln("%35.34f", decimal128(5.7));
 
-    //unity!decimal64;
+    unity!decimal64;
 
     //decimal32 d;
     //if (d < 0)
