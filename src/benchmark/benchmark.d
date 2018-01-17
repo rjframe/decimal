@@ -1,9 +1,11 @@
 import std.stdio;
+import std.math;
 import decimal;
 import std.random;
 import std.traits;
-import std.math;
 import std.typetuple;
+import std.conv;
+import std.datetime.stopwatch : benchmark, Duration;
 
 D rnd(D)()
 if (isDecimal!D)
@@ -29,214 +31,262 @@ if (isFloatingPoint!F)
     return result;
 }
 
-enum samples = 1000;
-
-float[samples] float1;
-float[samples] float2;
-float[samples] float3;
-
-double[samples] double1;
-double[samples] double2;
-double[samples] double3;
-
-real[samples] real1;
-real[samples] real2;
-real[samples] real3;
-
-
-decimal32[samples] d32_1;
-decimal32[samples] d32_2;
-decimal32[samples] d32_3;
-
-decimal64[samples] d64_1;
-decimal64[samples] d64_2;
-decimal64[samples] d64_3;
-
-decimal128[samples] d128_1;
-decimal128[samples] d128_2;
-decimal128[samples] d128_3;
-
-
-template arr1(T)
+T rnd(T)()
+if (isIntegral!T)
 {
-    static if (is(T: float))
-        alias arr1 = float1;
-    else static if (is(T: double))
-        alias arr1 = double1;
-    else static if (is(T: real))
-        alias arr1 = real1;
-    else static if (is(T: decimal32))
-        alias arr1 = d32_1;
+    return uniform!"[]"(T.min, T.max);
+}
+
+string prettyName(T)()
+{
+    static if (is(T: decimal32))
+        return "decimal32";
     else static if (is(T: decimal64))
-        alias arr1 = d64_1;
+        return "decimal64";
     else static if (is(T: decimal128))
-        alias arr1 = d128_1;
-    else
-        static assert(0);
+        return "decimal128";
+    else return T.stringof;
 }
 
-template arr2(T)
+alias BinaryFloats = TypeTuple!(float, double, real);
+alias DecimalFloats = TypeTuple!(decimal32, decimal64, decimal128);
+alias AllFloats = TypeTuple!(DecimalFloats, BinaryFloats);
+
+alias Integrals = TypeTuple!(byte, short, int, long, ubyte, ushort, uint, ulong);
+
+string arraystr(T, int a)()
 {
-    static if (is(T: float))
-        alias arr2 = float2;
-    else static if (is(T: double))
-        alias arr2 = double2;
-    else static if (is(T: real))
-        alias arr2 = real2;
-    else static if (is(T: decimal32))
-        alias arr2 = d32_2;
-    else static if (is(T: decimal64))
-        alias arr2 = d64_2;
-    else static if (is(T: decimal128))
-        alias arr2 = d128_2;
-    else
-        static assert(0);
+    return prettyName!T ~ "_" ~ to!string(a);
 }
 
-template arr3(T)
+enum samples = 100;
+
+static foreach(T; AllFloats)
 {
-    static if (is(T: float))
-        alias arr3 = float3;
-    else static if (is(T: double))
-        alias arr3 = double3;
-    else static if (is(T: real))
-        alias arr3 = real3;
-    else static if (is(T: decimal32))
-        alias arr3 = d32_3;
-    else static if (is(T: decimal64))
-        alias arr3 = d64_3;
-    else static if (is(T: decimal128))
-        alias arr3 = d128_3;
-    else
-        static assert(0);
+    mixin(prettyName!T ~ "[samples] " ~ arraystr!(T, 1) ~ ";");
+    mixin(prettyName!T ~ "[samples] " ~ arraystr!(T, 2) ~ ";");
+    mixin(prettyName!T ~ "[samples] " ~ arraystr!(T, 3) ~ ";");
 }
 
-void randomize(T)(T[] a)
+mixin(prettyName!bool ~ "[samples] " ~ arraystr!(bool, 1) ~ ";");
+
+static foreach(T; Integrals)
 {
-    for (size_t i = 0; i < samples; ++i)
-        a[i] = rnd!T;
+    mixin(prettyName!T ~ "[samples] " ~ arraystr!(T, 1) ~ ";");
 }
 
-import std.stdio;
-import decimal;
-import std.math;
-import std.range;
-
-void dump(double angle)
+template arr(T, int a)
 {
-    writefln("sin(%+2.1f): %+18.17f %+8.7f %+17.16f %+35.34f", angle,
-             sin(angle), 
-             sin(decimal32(angle)), 
-             sin(decimal64(angle)), 
-             sin(decimal128(angle)));
-    writefln("cos(%+2.1f): %+18.17f %+8.7f %+17.16f %+35.34f", angle,
-             cos(angle), 
-             cos(decimal32(angle)), 
-             cos(decimal64(angle)), 
-             cos(decimal128(angle)));
-    writefln("tan(%+2.1f): %+18.17f %+8.7f %+17.16f %+35.34f", angle,
-             tan(angle), 
-             tan(decimal32(angle)), 
-             tan(decimal64(angle)), 
-             tan(decimal128(angle)));
+    mixin("alias arr = " ~ arraystr!(T, a) ~ ";");
 }
 
-immutable size_t N = 100;
 
-void unity (T) ()
+void bench1(R, I, string func)()
 {
-    writeln ("\n=== ", T.stringof, " ===\n");
-    immutable one = T (1);
-    immutable two = T (2);
-    immutable π = atan (one) * 4;
-    writefln!"π = <%30.24f>" (π);
+    for (int i = 0; i < samples; ++i)
+        mixin(arraystr!(R, 1)() ~ "[i] = " ~ func ~ "(" ~ arraystr!(I, 2)() ~ "[i]);");
+}
 
-    foreach (i; iota(N + 1)) {
-        auto φ = two * π * i / N;
-        auto sinφ = sin (φ);
-        auto cosφ = cos (φ);
-        auto unity = sinφ * sinφ + cosφ * cosφ;
-        auto δ = one - unity;
-        writeln ("φ = <", φ, ">, δ = <", δ, ">");
+void benchbinop(R, I, string op)()
+{
+    for (int i = 0; i < samples; ++i)
+        mixin(arraystr!(R, 1)() ~ "[i] = " ~ arraystr!(I, 2)() ~ "[i] " ~ op ~ arraystr!(I, 3)() ~ "[i];");
+}
+
+void benchconstructor(R, I)()
+{
+    for (int i = 0; i < samples; ++i)
+        mixin(arraystr!(R, 1)() ~ "[i] = " ~ R.stringof ~ "(" ~ arraystr!(I, 1)() ~ "[i]);");
+}
+
+auto benchx1(R, string func)()
+{
+    randomize!(decimal32, 2)();
+    randomize!(decimal64, 2)();
+    randomize!(decimal128, 2)();
+    randomize!(float, 2)();
+    randomize!(double, 2)();
+    randomize!(real, 2)();
+
+    static if (is(R == void))
+    {
+        return benchmark!(bench1!(decimal32, decimal32, func), 
+                          bench1!(decimal64, decimal64, func),
+                          bench1!(decimal128, decimal128, func),
+                          bench1!(float, float, func),
+                          bench1!(double, double, func),
+                          bench1!(real, real, func))(10);
     }
+    else
+    {
+
+        return benchmark!(bench1!(R, decimal32, func), 
+                            bench1!(R, decimal64, func),
+                            bench1!(R, decimal128, func),
+                            bench1!(R, float, func),
+                            bench1!(R, double, func),
+                            bench1!(R, real, func))(10);
+    }    
 }
 
+auto benchxconstructor(I)()
+{
+    randomize!(I, 1)();
+
+    return benchmark!(benchconstructor!(decimal32, I), 
+                      benchconstructor!(decimal64, I), 
+                      benchconstructor!(decimal128, I), 
+                      benchconstructor!(float, I), 
+                      benchconstructor!(double, I),
+                      benchconstructor!(real, I))(10);
+  
+}
+
+
+auto benchxbinop(R, string op)()
+{
+    randomize!(decimal32, 2)();
+    randomize!(decimal64, 2)();
+    randomize!(decimal128, 2)();
+    randomize!(float, 2)();
+    randomize!(double, 2)();
+    randomize!(real, 2)();
+
+    randomize!(decimal32, 3)();
+    randomize!(decimal64, 3)();
+    randomize!(decimal128, 3)();
+    randomize!(float, 3)();
+    randomize!(double, 3)();
+    randomize!(real, 3)();
+
+    static if (is(R == void))
+    {
+        return benchmark!(benchbinop!(decimal32, decimal32, op), 
+                          benchbinop!(decimal64, decimal64, op),
+                          benchbinop!(decimal128, decimal128, op),
+                          benchbinop!(float, float, op),
+                          benchbinop!(double, double, op),
+                          benchbinop!(real, real, op))(10);
+    }
+    else
+    {
+
+        return benchmark!(benchbinop!(R, decimal32, op), 
+                          benchbinop!(R, decimal64, op),
+                          benchbinop!(R, decimal128, op),
+                          benchbinop!(R, float, op),
+                          benchbinop!(R, double, op),
+                          benchbinop!(R, real, op))(10);
+    }
+
+
+}
+
+void randomize(T, int a)()
+{
+    for (int i = 0; i < samples; ++i)
+        mixin(arraystr!(T, a)() ~ "[i] = rnd!T();");    
+}
+
+void dumpHeader(string title)
+{
+    writef("%-17s", title);
+    foreach(T; AllFloats)
+        writef("%17s", prettyName!T);
+    writeln();
+}
+
+void dumpResults(string title, Duration[] results)
+{
+    auto min = results[0].total!"hnsecs";
+    foreach (r; results)
+        if (r.total!"hnsecs" < min)
+            min = r.total!"hnsecs";
+
+    writef("%-17s", title);
+
+    for (int i = 0; i < results.length; ++i)
+        writef("%17.2f", results[i].total!"hnsecs" / cast(double)min);
+
+    writeln();
+}
 
 int main(string[] argv)
 {
+    dumpHeader("Non-computational");
 
-    //real r;
-    //for (r = 1; r < 6; r += .1L) {
-    //    decimal128 d = r;
-    //    auto dsin = sin (d);
-    //    auto rsin = sin (r);
-    //    auto delta = dsin - rsin;
-    //    writefln ("%9.2f %30.24f %30.24f %12.4g", r, rsin, dsin, delta);
-    //}
+    //dumpResults("fabs", benchx1!(void, "fabs"));
+    //dumpResults("negate", benchx1!(void, "-"));
+   // dumpResults("isNaN", benchx1!(bool, "isNaN"));
+//    dumpResults("isFinite", benchx1!(bool, "isFinite"));
+    //dumpResults("isInfinity", benchx1!(bool, "isInfinity"));
+    //dumpResults("isNormal", benchx1!(bool, "isNormal"));
+    //dumpResults("isSubnormal", benchx1!(bool, "isSubnormal"));
+    //dumpResults("increment", benchx1!(void, "++"));
+    //dumpResults("decrement", benchx1!(void, "--"));
+    //dumpResults("sgn", benchx1!(void, "sgn"));
 
-    //real r;
-    //for (r = 1; r < 6; r += .1L) {
-    //    decimal128 d = r;
-    //    auto dsin = sin (d);
-    //    auto rsin = sin (r);
-    //    auto delta = dsin - rsin;
-    //    writefln ("%9.2f %+30.24f %+35.34f %+12.4g", r, rsin, dsin, delta);
-    //}
-    //
-    //writefln("%35.34f", sin(decimal128(1)));
-    //writefln("%35.34f", sin(decimal64(1)));
-    //writefln("%35.34f", sin(decimal32(1)));
-    //writefln("%35.34f", sin(cast(real)1.0));
-    //writefln("%35.34f", sin(cast(double)1.0));
-    //writefln("%35.34f", sin(cast(float)1.0));
+    writeln();
+    dumpHeader("Basic operations");
+    dumpResults("comparison", benchxbinop!(bool, "<"));
+    dumpResults("equality", benchxbinop!(bool, "=="));
+    dumpResults("increment", benchx1!(void, "++"));
+    dumpResults("decrement", benchx1!(void, "--"));
+    dumpResults("addition", benchxbinop!(void, "+"));
+    dumpResults("substraction", benchxbinop!(void, "-"));
+    dumpResults("multiplication", benchxbinop!(void, "*"));
+    dumpResults("division", benchxbinop!(void, "/"));
+    dumpResults("modulo", benchxbinop!(void, "%"));
 
-    //writefln("%35.34f", sin(decimal32("5.7")));
-    //writefln("%35.34f", sin(decimal64("5.7")));
-    //writefln("%35.34f", sin(decimal128("5.7")));
-    //
-    //
-    //writefln("%35.34f", sin(decimal32(5.7)));
-    //writefln("%35.34f", sin(decimal64(5.7)));
-    //writefln("%35.34f", sin(decimal128(5.7)));
-    //
-    //
-    //writefln("%35.34f", decimal32(5.7));
-    //writefln("%35.34f", decimal64(5.7));
-    //writefln("%35.34f", decimal128(5.7));
+    writeln();
+    dumpHeader("Constructors");
+    dumpResults("from int", benchxconstructor!int);
+    dumpResults("from uint", benchxconstructor!uint);
+    dumpResults("from long", benchxconstructor!long);
+    dumpResults("from ulong", benchxconstructor!ulong);
 
-    unity!decimal64;
 
-    //decimal32 d;
-    //if (d < 0)
-    //    writeln ("< 0");
-    //else
-    //    writeln ("not < 0");
+    writeln();
+    dumpHeader("Rounding");
+    dumpResults("ceil", benchx1!(void, "ceil"));
+    dumpResults("floor", benchx1!(void, "floor"));
+    dumpResults("round", benchx1!(void, "round"));
+    dumpResults("trunc", benchx1!(void, "trunc"));
+    dumpResults("rint", benchx1!(void, "rint"));
+    //dumpResults("nearbyint", benchx1!(void, "nearbyint"));
+    dumpResults("lrint", benchx1!(long, "lrint"));
+    //dumpResults("rndtonl", benchx1!(void, "rndtonl"));
 
-    //decimal32 d = "1";
-    //auto p = 4 * d;
-    //auto q = d * 4;
-    //writeln (typeof(p).stringof);
-    //writeln (typeof(q).stringof);
+    writeln();
+    dumpHeader("Trigonometry");
+    dumpResults("sin", benchx1!(void, "sin"));
+    dumpResults("cos", benchx1!(void, "cos"));
+    dumpResults("tan", benchx1!(void, "tan"));
+    dumpResults("asin", benchx1!(void, "asin"));
+    dumpResults("acos", benchx1!(void, "acos"));
+    //dumpResults("atan", benchx1!(void, "atan"));
+    dumpResults("sinh", benchx1!(void, "sinh"));
+    dumpResults("cosh", benchx1!(void, "cosh"));
+    dumpResults("tanh", benchx1!(void, "tanh"));
+    //dumpResults("asinh", benchx1!(void, "asinh"));
+    //dumpResults("acosh", benchx1!(void, "acosh"));
+    //dumpResults("atanh", benchx1!(void, "atanh"));
 
-    real r;
-    for (r = 1; r < 6; r += .1L) {
-        decimal128 d = r;
-        auto dsin = sin (d);
-        auto rsin = sin (r);
-        real delta = cast(real) dsin;
-        delta -= rsin;
-        writefln ("%9.2f %30.24f %30.24f %12.4g", r, rsin, dsin, delta);
-    }
+    writeln();
+    dumpHeader("Exponentiation");
+    dumpResults("exp", benchx1!(void, "exp"));
+    dumpResults("exp2", benchx1!(void, "exp2"));
+    dumpResults("expm1", benchx1!(void, "expm1"));
+    dumpResults("log", benchx1!(void, "log"));
+    dumpResults("log2", benchx1!(void, "log2"));
+    //dumpResults("log10", benchx1!(void, "log10"));
+    dumpResults("ilogb", benchx1!(int, "ilogb"));
+    dumpResults("sqrt", benchx1!(void, "sqrt"));
 
-    decimal32 a = "-0.279415498198925875720000";
-    decimal32 b = cast(real)-0.279415498198925875720000;
-    writefln("%+35.34f %+35.34f", a, b);
-
-    decimal32 c = cast(real)a;
-    writefln("%+35.34f %+35.34f", c, a);
-
-    writeln(real.sizeof);
-
+    writeln();
+    dumpHeader("Operations");
+    dumpResults("nextDown", benchx1!(void, "nextDown"));
+    dumpResults("nextUp", benchx1!(void, "nextUp"));
     getchar();
     return 0;
 }

@@ -21,7 +21,7 @@ $(DIVC quickindex,
  $(BOOKTABLE ,
   $(TR $(TH Category) $(TH Members) )
     $(TR $(TDNW Classics) $(TD
-        $(MYREF abs) $(MYREF copysign) 
+        $(MYREF copysign) $(MYREF fabs)
         $(MYREF fmod) $(MYREF fma) $(MYREF getNaNPayload)  
         $(MYREF modf) $(MYREF NaN) 
         $(MYREF nextDown)  $(MYREF nextUp) $(MYREF remainder) $(MYREF sgn) 
@@ -276,6 +276,7 @@ public import std.traits: isIntegral, isFloatingPoint, isSomeChar, isSomeString;
 public import std.format: FormatSpec, FormatException;
 public import std.range.primitives: isInputRange, ElementType;
 
+
 version(Windows)
 {
     public import core.sys.windows.wtypes: DECIMAL;
@@ -319,6 +320,7 @@ private import std.traits: Unqual, isUnsigned, Unsigned, isSigned;
 private import core.checkedint: adds, subs;
 private import std.math: isNaN, isInfinity, signbit, ieeeFlags, FloatingPointControl, resetIeeeFlags;
 private import std.format: singleSpec;
+
 
 
 
@@ -1027,11 +1029,15 @@ public:
 
     ///ditto
     @IEEECompliant("negate", 23)
+    pragma(inline, true);
     @safe pure nothrow @nogc
     auto opUnary(string op: "-")() const
     {
         D result = this;
-        result.data ^= MASK_SGN;
+        static if (is(D: decimal128))
+            result.data.hi ^= D.MASK_SGN.hi;
+        else
+            result.data ^= D.MASK_SGN;
         return result;
     }
 
@@ -1181,6 +1187,7 @@ public:
     @IEEECompliant("powr", 42)
     @IEEECompliant("remainder", 25)
     @IEEECompliant("substraction", 21)
+    pragma(inline, true);
     auto opBinary(string op, T)(auto const ref T value) const
     if (op == "+" || op == "-" || op == "*" || op == "/" || op == "%" || op == "^^")
     {
@@ -2273,25 +2280,7 @@ public:
     enum is754version2008 = true;
 }
 
-/**
-Calculates |x|.
-This operation is silent, no error flags are set and no exceptions are thrown.
-*/
-@IEEECompliant("abs", 23)
-D abs(D)(auto const ref D x)
-if (isDecimal!D)
-{
-    D result = x;
-    result.data &= ~D.MASK_SGN;
-    return result;
-}
 
-///
-unittest
-{
-    assert(abs(-decimal32.max) == decimal32.max);
-    assert(abs(decimal64.infinity) == decimal64.infinity);
-}
 /**
 Calculates the arc cosine of x, returning a value ranging from 0 to π.
 Exceptions:
@@ -2848,10 +2837,9 @@ $(BOOKTABLE,
 )
 */
 D ceil(D)(auto const ref D x)
+if (isDecimal!D)
 {
-    auto result = canonical(x);
-    if (isNaN(x) || isInfinity(x) || isZero(x))
-        return result;
+    Unqual!D result = x;
     decimalRound(result, 0, RoundingMode.towardPositive);
     return result;
 }
@@ -3611,6 +3599,30 @@ if (isDecimal!D)
 }
 
 /**
+Calculates |x|.
+This operation is silent, no error flags are set and no exceptions are thrown.
+*/
+@IEEECompliant("abs", 23)
+pragma(inline, true);
+D fabs(D)(auto const ref D x)
+if (isDecimal!D)
+{
+    D result = x;
+    static if (is(D: decimal128))
+        result.data.hi &= ~D.MASK_SGN.hi;
+    else
+        result.data &= ~D.MASK_SGN;
+    return result;
+}
+
+///
+unittest
+{
+    assert(fabs(-decimal32.max) == decimal32.max);
+    assert(fabs(decimal64.infinity) == decimal64.infinity);
+}
+
+/**
 Returns the value of x rounded downward to the previous integer (toward negative infinity).
 This operation is silent, doesn't throw any exception.
 Special_values:
@@ -3622,10 +3634,9 @@ $(BOOKTABLE,
 )
 */
 D floor(D)(auto const ref D x)
+if (isDecimal!D)
 {
-    auto result = canonical(x);
-    if (isNaN(x) || isInfinity(x) || isZero(x))
-        return result;
+    Unqual!D result = x;
     decimalRound(result, 0, RoundingMode.towardNegative);
     return result;
 }
@@ -3913,7 +3924,7 @@ D frexp(D)(auto const ref D x, out int y)
     if (isZero(x))
     {
         y = 0;
-        return canonical(value);
+        return value;
     }
 
     Unqual!D result;
@@ -4100,8 +4111,7 @@ Returns:
     true if x is finite, false otherwise (NaN or infinity) 
 */
 @IEEECompliant("isFinite", 25)
-bool isFinite(D)(auto const ref D x)
-if (isDecimal!D)
+bool isFinite(D: Decimal!bits, int bits)(auto const ref D x)
 {
     return (x.data & D.MASK_INF) != D.MASK_INF;
 }
@@ -4884,8 +4894,10 @@ $(BOOKTABLE,
 )
 */
 long lrint(D)(auto const ref D x, const RoundingMode mode)
+if (isDecimal!D)
 {
     long result;
+    ExceptionFlags flags;
     if (isNaN(x))
         flags = ExceptionFlags.invalidOperation;
     else if (isInfinity(x))
@@ -4905,6 +4917,7 @@ long lrint(D)(auto const ref D x, const RoundingMode mode)
 
 ///ditto
 long lrint(D)(auto const ref D x)
+if (isDecimal!D)
 {
     return lrint(x, __ctfe ? RoundingMode.implicit : DecimalControl.rounding);
 }
@@ -4971,12 +4984,11 @@ if (isDecimal!D)
     }
     else if (isZero(x))
     {
-        y = canonical(x);
-        return canonical(x);
+        y = x;
     }
     else if (isInfinity(x))
     {
-        y = canonical(x);
+        y = x;
         return signbit(x) ? -D.zero : D.zero;
     }
     else
@@ -5404,7 +5416,7 @@ $(BOOKTABLE,
 D rint(D)(auto const ref D x, const RoundingMode mode)
 if (isDecimal!D)
 {
-    Unqual!D result = canonical(x);
+    Unqual!D result = x;
     auto flags = decimalRound(result, __ctfe ? D.PRECISION : DecimalControl.precision, mode);
     flags &= ExceptionFlags.invalidOperation | ExceptionFlags.inexact;
     DecimalControl.raiseFlags(flags);
@@ -5453,8 +5465,10 @@ $(BOOKTABLE,
 )
 */
 D rndtonl(D)(auto const ref D x, const RoundingMode mode)
+if (isDecimal!D)
 {
-    Unqual!D result = canonical(x);
+    Unqual!D result = x;
+    ExceptionFlags flags;
     long l;
     if (isNaN(x))
     {
@@ -5465,7 +5479,7 @@ D rndtonl(D)(auto const ref D x, const RoundingMode mode)
         flags = ExceptionFlags.overflow;
     else 
     {
-        flags = decimalToUnsigned(x, l, mode);
+        flags = decimalToSigned(x, l, mode);
         result.packIntegral(l, 0, mode);
     }
     DecimalControl.raiseFlags(flags);
@@ -5475,6 +5489,7 @@ D rndtonl(D)(auto const ref D x, const RoundingMode mode)
 ///ditto
 @safe
 D rndtonl(D)(auto const ref D x)
+if (isDecimal!D)
 {
     return rndtonl(x, __ctfe ? RoundingMode.tiesToAway : DecimalControl.rounding);
 }
@@ -5533,11 +5548,10 @@ $(BOOKTABLE,
 )
 */
 D round(D)(auto const ref D x)
+if (isDecimal!D)
 {
-    auto result = canonical(x);
-    if (isNaN(x) || isInfinity(x) || isZero(x))
-        return result;
-    decimalRound(result, RoundingMode.tiesToAway);
+    Unqual!D result = x;
+    decimalRound(result, 0, RoundingMode.tiesToAway);
     return result;
 }
 
@@ -5744,7 +5758,6 @@ if (isDecimal!D)
     return result;
 }
 
-
 /**
 Determines if x is negative
 This operation is silent, no error flags are set and no exceptions are thrown.
@@ -5754,13 +5767,14 @@ Returns:
     -1.0 if x is negative, 0.0 if x is zero, 1.0 if x is positive
 */
 @safe pure nothrow @nogc
-D sgn(D)(auto const ref D x)
-if (isDecimal!D)
+D sgn(D: Decimal!bits, int bits)(auto const ref D x)
 {
     if (isZero(x))
         return D.zero;
     return (x.data & D.MASK_SGN) ? D.minusOne : D.one;
 }
+
+
 
 ///
 unittest
@@ -6542,7 +6556,7 @@ DECIMAL toMsDecimal(D)(auto const ref D x)
 
     enum cmax = uint128(cast(ulong)(uint.max), ulong.max);
 
-    flags = adjustCoefficient(cxx, ex, -28, 0, cmax, sx, 
+    flags = coefficientAdjust(cxx, ex, -28, 0, cmax, sx, 
                                 __ctfe ? RoundingMode.implicit : DecimalControl.rounding);
 
     if (flags & ExceptionFlags.overflow)
@@ -6619,7 +6633,7 @@ if (isDecimal!(D1, D2))
 bool totalOrderAbs(D1, D2)(auto const ref D1 x, auto const ref D2 y)
 if (isDecimal!(D1, D2))
 {
-    return cmp(abs(x), abs(y)) < 0;
+    return cmp(fabs(x), fabs(y)) < 0;
 }
 
 ///
@@ -6644,11 +6658,10 @@ $(TR $(TD ±∞) $(TD ±∞))
 */
 @safe pure nothrow @nogc
 D trunc(D)(auto const ref D x)
+if (isDecimal!D)
 {
-    auto result = canonical(x);
-    if (isNaN(x) || isInfinity(x) || isZero(x))
-        return result;
-    decimalRound(result, RoundingMode.towardZero);
+    Unqual!D result = x;
+    decimalRound(result, 0, RoundingMode.towardZero);
     return result;
 }
 
@@ -8181,13 +8194,13 @@ if (isDecimal!D)
                 if (cx == 1U)
                 {
                     cx = 10U;
-                    --exponent;
+                    --ex;
                 }
                 --cx;
             }
             else
                 ++cx;
-            return x.adjustedPack(cx, ex, sx, precision, mode, ExceptionFlags.none);
+            return x.adjustedPack(cx, ex, sx, 0, RoundingMode.implicit, ExceptionFlags.none);
         case FastClass.zero:
             x.pack(DataType!D(1U), D.EXP_MIN, false);
             return ExceptionFlags.none;
@@ -8216,13 +8229,13 @@ if (isDecimal!D)
                 if (cx == 1U)
                 {
                     cx = 10U;
-                    --exponent;
+                    --ex;
                 }
                 --cx;
             }
             else
-                ++coefficient;
-            return x.adjustedPack(cx, ex, sx, precision, mode, ExceptionFlags.none);
+                ++cx;
+            return x.adjustedPack(cx, ex, sx, 0, RoundingMode.implicit, ExceptionFlags.none);
         case FastClass.zero:
             x.pack(DataType!D(1U), D.EXP_MIN, true);
             return ExceptionFlags.none;
@@ -8551,7 +8564,8 @@ if (isDecimal!D)
         case FastClass.finite:
             if (!n)
                 return ExceptionFlags.none;
-            auto remainder = cappedAdd(x, n) - n;
+            auto remainder = cappedAdd(ex, n) - n;
+            ExceptionFlags flags;
             if (remainder)
             {
                 if (remainder < 0)
@@ -10006,98 +10020,99 @@ if (isDecimal!(D1, D2, D3) && is(D : CommonDecimal!(D1, D2, D3)))
 ExceptionFlags decimalPow(D, T)(ref D x, const T n, const int precision, const RoundingMode mode)
 if (isDecimal!D & isIntegral!T)
 {
-    if (isSignaling(x))
-    {
-        x = D.nan;
-        return ExceptionFlags.invalidOperation;
-    }
+    DataType!D cx; int ex; bool sx;
 
-    if (!n)
+    final switch (fastDecode(x, cx, ex, sx))
     {
-        x = D.one;
-        return ExceptionFlags.none;
-    }
-
-    if (isNaN(x))
-        return ExceptionFlags.none;
-
-    if (isInfinity(x))
-    {
-        x = !signbit(x) || (n & 1) ? D.infinity : -D.infinity;
-    }
-
-    if (isZero(x))
-    {
-        if (n & 1) //odd
-        {
-            if (n < 0)
+        case FastClass.finite:
+            if (!n)
             {
-                x = signbit(x) ? -D.infinity : D.infinity;
-                return ExceptionFlags.divisionByZero;
+                x = D.one;
+                return ExceptionFalgs.none;
+            }
+
+            DataType!D cv; int ev; bool sv;
+            ExceptionFlags flags;
+            static if (isSigned!T)
+            {
+                Unsigned!T m = n < 0 ? -n : n;
+                if (n < 0)
+                {
+                    cv = 1U;
+                    ev = 0;
+                    sv = false;
+                    flags = coefficientDiv(cv, ev, sv, cx, ex, sx, RoundingMode.implicit);
+                }
+                else
+                {
+                    cv = cx;
+                    ev = ex;
+                    sv = sx;
+                }
             }
             else
             {
-                x = canonical(x);
-                return ExceptionFlags.none;
+                Unqual!T m = n;
+                cv = cx;
+                ev = ex;
+                sv = sx;
             }
-        }
-        else //even
-        {
-            if (n < 0)
+
+            cx = 1U;
+            ex = 0;
+            sx = false;
+
+            ExceptionFlags sqrFlags;
+            while (m)
             {
-                x = D.infinity;
-                return ExceptionFlags.divisionByZero;
+                if (m & 1)
+                {
+                    flags |= sqrFlags | coefficientMul(cx, ex, sx, cv, ev, sv, RoundingMode.implicit);
+                    sqrFlags = ExceptionFlags.none;
+                    if (flags & (ExceptionFlags.overflow | ExceptionFlags.underflow))
+                        break;
+                }
+                m >>>= 1;
+                sqrFlags |= coefficientSqr(cv, ev, RoundingMode.implicit);
+                sv = false;
             }
+
+            return x.adjustedPack(cx, ex, sx, precision, mode, flags);
+        case FastClass.zero:
+            if (!n)
+                x = D.one;
             else
             {
-                x = D.zero;
-                return ExceptionFlags.none;
+                if (n & 1) //odd
+                    return n < 0 ? ExceptionFlags.divisionByZero : ExceptionFlags.none;
+                else //even
+                {
+                    if (n < 0)
+                        return ExceptionFlags.divisionByZero;
+                    else
+                    {
+                        x = D.zero;
+                        return ExceptionFlags.none;
+                    }
+                }
             }
-        }
+            return ExceptionFlags.none;
+        case FastClass.infinity:
+            if (!n)
+                x = D.one;
+            else
+                x = !sx || (n & 1) ? D.infinity : -D.infinity;
+            return ExceptionFlags.none;
+        case FastClass.quietNaN:
+            if (!n)
+                x = D.one;
+            return ExceptionFlags.none;
+        case FastClass.signalingNaN:
+            unsignalize(x);
+            return ExceptionFlags.invalidOperation;
     }
 
-     if (n == 1)
-        return ExceptionFlags.none;
-
-
-    ExceptionFlags flags;
-    Unqual!D v;
-
-    static if (isSigned!T)
-    {
-        Unsigned!T m = n < 0 ? -n : n;
-        
-
-        if (n < 0)
-            flags = decimalDiv(1U, x, v, 0, mode);
-        else
-            v = x;
-    }
-    else
-    {
-        Unqual!T m = n;
-        v = x;
-    }
-   
-    
-
-    x = 1U;
-
-    ExceptionFlags sqrFlags;
-
-    while (m)
-    {
-        if (m & 1)
-        {
-            flags |= sqrFlags | decimalMul(x, v, 0, mode);
-            sqrFlags = ExceptionFlags.none; 
-        }
-        m >>>= 1;
-        sqrFlags |= decimalSqr(v, 0, mode);
-    }
-
-    return flags | decimalAdjust(x, precision, mode);
-
+ 
 }
 
 ExceptionFlags decimalPow(D1, D2)(ref D1 x, auto const ref D2 y, const int precision, const RoundingMode mode)
@@ -10442,7 +10457,7 @@ if (isDecimal!D)
     coefficientShrink(c, e);
 
     Unqual!D y = e;
-    flags = decimalMul(y, D.LN10);
+    auto flags = decimalMul(y, D.LN10, 0, RoundingMode.implicit);
     x = c;
     flags |= decimalLog(x, 0, mode);
     return flags | decimalAdd(x, y, precision, mode);
@@ -10566,10 +10581,7 @@ if (isDecimal!D && isIntegral!T)
                 return ExceptionFlags.divisionByZero;
             }
             else
-            {
-                x = canonical(x);
                 return ExceptionFlags.none;
-            }
         }
         else //even
         {
@@ -10802,7 +10814,7 @@ if (isDecimal!D)
     }
 
     bool sx = cast(bool)signbit(x);
-    x = abs(x);
+    x = fabs(x);
 
     if (decimalEqu(x, D.SQRT3))
     {
@@ -10885,7 +10897,7 @@ ExceptionFlags decimalAtan2(D1, D2, D3)(auto const ref D1 y, auto const ref D2 x
     z = y;
     D xx = x;
     auto flags = decimalDiv(z, xx, 0, mode);
-    z = abs(z);
+    z = fabs(z);
     flags |= decimalAtan(z, 0, mode);
     
     if (signbit(x))
@@ -11246,7 +11258,7 @@ ExceptionFlags decimalAsinh(D)(ref D x, const int precision, const RoundingMode 
     }
 
     bool sx = cast(bool)signbit(x);
-    x = abs(x);
+    x = fabs(x);
 
     ExceptionFlags flags;
     if (isGreater(x, asinhmax))
@@ -12621,7 +12633,6 @@ void coefficientExpand(T)(ref T cx, ref int ex)
         if (pow)
         {
             cx *= pow10!T[pow];
-            target -= pow;
         }
     }
 }
@@ -13192,13 +13203,38 @@ ExceptionFlags coefficientSqrt(T)(ref T cx, ref int ex)
     }
 
     immutable Unqual!T cn = cx;
-    immutable int en = ex;
+    int en = ex;
     bool sx;
     Unqual!T cy;
     int ey;
     bool sy;
 
-    coefficientMul(cx, ex, sx, Constants!T.chalf, Constants!T.ehalf, false, RoundingMode.implicit);
+
+    //reduce
+    //sqrt(x) = sqrt(a * 10^2n) = sqrt(a) * 10^n
+    //approximation , a = [1 .. 100) -> sqrt(x) = 2 * 10^n, if cx < 10
+    //                                          = 6 * 10^n, if cx >= 10
+
+   
+    //let's make sure a = [1 .. 100)
+    
+    int n = prec(cx) + ex - 1;
+    if (n & 1)
+    {
+        cx = 2U;
+        ex = -1;
+        ++n;
+    }
+    else
+    {
+        cx = 6U;
+        ex = -1;
+    }
+
+    en -= n + 1;
+    
+
+    //coefficientMul(cx, ex, sx, Constants!T.chalf, Constants!T.ehalf, false, RoundingMode.implicit);
     do
     {
         cy = cx;
@@ -13216,9 +13252,10 @@ ExceptionFlags coefficientSqrt(T)(ref T cx, ref int ex)
 
     if (!cx)
         return ExceptionFlags.underflow;
-    coefficientMul(cy, ey, sy, cx, ex, false, RoundingMode.implicit);
-    return coefficientEqu(cy, ey, false, cn, en, false) ?
-        ExceptionFlags.none : ExceptionFlags.inexact;
+
+    ex += (n + 1) / 2;
+
+    return ExceptionFlags.inexact;
 }
 
 //inexact, underflow

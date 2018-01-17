@@ -8,10 +8,16 @@ EndProject
 Project("{002A2DE9-8BB6-484D-9802-7E4AD4084715}") = "doc", "doc.visualdproj", "{FF683499-13E8-4E30-953F-413CCEAC7088}"
 EndProject
 Project("{002A2DE9-8BB6-484D-9802-7E4AD4084715}") = "benchmark", "benchmark.visualdproj", "{E5A705DA-6321-487D-89FB-D7E091274D51}"
+	ProjectSection(ProjectDependencies) = postProject
+		{44578C97-710B-400B-BCB7-307537FCD525} = {44578C97-710B-400B-BCB7-307537FCD525}
+	EndProjectSection
 EndProject
 Project("{002A2DE9-8BB6-484D-9802-7E4AD4084715}") = "betterc", "betterc.visualdproj", "{9F34490F-E9C8-4F27-A934-E8331E3C4EAE}"
 EndProject
 Project("{002A2DE9-8BB6-484D-9802-7E4AD4084715}") = "test", "test.visualdproj", "{A43397B8-A296-44B5-AAEF-00C66798664C}"
+	ProjectSection(ProjectDependencies) = postProject
+		{44578C97-710B-400B-BCB7-307537FCD525} = {44578C97-710B-400B-BCB7-307537FCD525}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -116,7 +116,7 @@ Decimal data types are best used in financial applications because arithmetic op
 
 <script type="text/javascript">inhibitQuickIndex = 1;</script>
 <div class="quickindex"> <table class="book"><caption></caption>  <tr><th scope="col">Category</th> <th scope="col">Members</th> </tr>
-    <tr><td class="donthyphenate nobr">Classics</td> <td>        <a href="#.abs"><em class="tt">abs</em></a>&nbsp; <a href="#.copysign"><em class="tt">copysign</em></a>&nbsp;
+    <tr><td class="donthyphenate nobr">Classics</td> <td>        <a href="#.copysign"><em class="tt">copysign</em></a>&nbsp; <a href="#.fabs"><em class="tt">fabs</em></a>&nbsp;
         <a href="#.fmod"><em class="tt">fmod</em></a>&nbsp; <a href="#.fma"><em class="tt">fma</em></a>&nbsp; <a href="#.getNaNPayload"><em class="tt">getNaNPayload</em></a>&nbsp;
         <a href="#.modf"><em class="tt">modf</em></a>&nbsp; <a href="#.NaN"><em class="tt">NaN</em></a>&nbsp;
         <a href="#.nextDown"><em class="tt">nextDown</em></a>&nbsp;  <a href="#.nextUp"><em class="tt">nextUp</em></a>&nbsp; <a href="#.remainder"><em class="tt">remainder</em></a>&nbsp; <a href="#.sgn"><em class="tt">sgn</em></a>&nbsp;
@@ -469,7 +469,6 @@ to decimal128 data type; for decimal64 and decimal32, they are rounded away from
 
 </dd>
 <dt><em class="big"><span class="def-anchor" id=".Decimal.opUnary"></span><div class="quickindex" id="quickindex.Decimal.opUnary"></div>const pure nothrow @nogc @safe auto <span class="def-anchor" id="opUnary"></span><code class="ddoc_psymbol">opUnary</code>(string op : "+")();
-<br>const pure nothrow @nogc @safe auto <span class="def-anchor" id="opUnary"></span><code class="ddoc_psymbol">opUnary</code>(string op : "-")();
 </em></dt>
 <dd>Implementation of +/- unary operators. These operations are silent, no exceptions are thrown<br><br>
 
@@ -494,6 +493,8 @@ to decimal128 data type; for decimal64 and decimal32, they are rounded away from
 
 </dd>
 <dt><em class="big"><span class="def-anchor" id=".Decimal.opCmp"></span><div class="quickindex" id="quickindex.Decimal.opCmp"></div>const float <span class="def-anchor" id="opCmp"></span><code class="ddoc_psymbol">opCmp</code>(T)(auto ref const T <code class="ddoc_param">value</code>);
+<br><span class="def-anchor" id=".Decimal.opBinaryRight"></span><div class="quickindex" id="quickindex.Decimal.opBinaryRight"></div>const auto <span class="def-anchor" id="opBinaryRight"></span><code class="ddoc_psymbol">opBinaryRight</code>(string op, T)(auto ref const T <code class="ddoc_param">value</code>) if (op == "+" || op == "-" || op == "*" || op == "/" || op == "%" || op == "^^");
+<br><span class="def-anchor" id=".Decimal.opOpAssign"></span><div class="quickindex" id="quickindex.Decimal.opOpAssign"></div>auto <span class="def-anchor" id="opOpAssign"></span><code class="ddoc_psymbol">opOpAssign</code>(string op, T)(auto ref const T <code class="ddoc_param">value</code>) if (op == "+" || op == "-" || op == "*" || op == "/" || op == "%" || op == "^^");
 </em></dt>
 <dd>Implementation of comparison operator.
     Supported types : decimal, floating point, integral, char
@@ -502,50 +503,6 @@ to decimal128 data type; for decimal64 and decimal32, they are rounded away from
             <tr><td>any </td> <td>NaN  </td> <td>NaN   </td>    <td>✓     </td></tr>
             <tr><td>any </td> <td>any  </td> <td>±1.0, 0.0</td> <td>       </td></tr>
         </table><br><br>
-
-</dd>
-<dt><em class="big"><span class="def-anchor" id=".Decimal.opBinary"></span><div class="quickindex" id="quickindex.Decimal.opBinary"></div>const auto <span class="def-anchor" id="opBinary"></span><code class="ddoc_psymbol">opBinary</code>(string op, T)(auto ref const T <code class="ddoc_param">value</code>) if (op == "+" || op == "-" || op == "*" || op == "/" || op == "%" || op == "^^");
-<br><span class="def-anchor" id=".Decimal.opBinaryRight"></span><div class="quickindex" id="quickindex.Decimal.opBinaryRight"></div>const auto <span class="def-anchor" id="opBinaryRight"></span><code class="ddoc_psymbol">opBinaryRight</code>(string op, T)(auto ref const T <code class="ddoc_param">value</code>) if (op == "+" || op == "-" || op == "*" || op == "/" || op == "%" || op == "^^");
-<br><span class="def-anchor" id=".Decimal.opOpAssign"></span><div class="quickindex" id="quickindex.Decimal.opOpAssign"></div>auto <span class="def-anchor" id="opOpAssign"></span><code class="ddoc_psymbol">opOpAssign</code>(string op, T)(auto ref const T <code class="ddoc_param">value</code>) if (op == "+" || op == "-" || op == "*" || op == "/" || op == "%" || op == "^^");
-</em></dt>
-<dd>Implementation of binary and assignment operators (+, -, *, /, %, ^^).
-<br><br>
-<b>Returns:</b><br>
-        the widest decimal <code class="ddoc_param">value</code> as result of the operation
-<br><br><b>Supported types</b><br><br>
-decimal, floating point, integral, char
-<br><br>
-<b>Exceptions</b><br><br>
-<table class="book"><caption></caption>        <tr><th scope="col">Left</th> <th scope="col">Op</th> <th scope="col">Right</th> <th scope="col">Result</th> <th scope="col">Invalid</th> <th scope="col">Div0</th> <th scope="col">Overflow</th> <th scope="col">Underflow</th> <th scope="col">Inexact</th></tr>
-        <tr><td>NaN</td> <td>any</td> <td>any</td> <td>NaN</td>      <td>✓     </td> <td>    </td> <td>        </td> <td>        </td>  <td>       </td></tr>
-        <tr><td>any</td> <td>any</td> <td>NaN</td> <td>NaN</td>      <td>✓     </td> <td>    </td> <td>        </td> <td>        </td>  <td>       </td></tr>
-        <tr><td>+∞</td> <td>+</td> <td>-∞</td> <td>NaN</td>          <td>✓     </td> <td>    </td> <td>        </td> <td>        </td>  <td>       </td></tr>
-        <tr><td>+∞</td> <td>+</td> <td>any</td> <td>+∞</td>          <td>       </td> <td>    </td> <td>        </td> <td>        </td>  <td>       </td></tr>
-        <tr><td>any</td> <td>+</td> <td>+∞</td> <td>+∞</td>          <td>       </td> <td>    </td> <td>        </td> <td>        </td>  <td>       </td></tr>
-        <tr><td>-∞</td> <td>+</td> <td>+∞</td> <td>NaN</td>          <td>✓     </td> <td>    </td> <td>        </td> <td>        </td>  <td>       </td></tr>
-        <tr><td>-∞</td> <td>+</td> <td>any</td> <td>-∞</td>          <td>       </td> <td>    </td> <td>        </td> <td>        </td>  <td>       </td></tr>
-        <tr><td>any</td> <td>+</td> <td>-∞</td> <td>-∞</td>          <td>       </td> <td>    </td> <td>        </td> <td>        </td>  <td>       </td></tr>
-        <tr><td>any</td> <td>+</td> <td>any</td> <td>any</td>        <td>       </td> <td>    </td> <td>✓      </td> <td>✓      </td>  <td>✓     </td></tr>
-        <tr><td>+∞</td> <td>-</td> <td>+∞</td> <td>NaN</td>          <td>✓     </td> <td>    </td> <td>        </td> <td>        </td>  <td>       </td></tr>
-        <tr><td>+∞</td> <td>-</td> <td>any</td> <td>+∞</td>          <td>       </td> <td>    </td> <td>        </td> <td>        </td>  <td>       </td></tr>
-        <tr><td>any</td> <td>-</td> <td>+∞</td> <td>-∞</td>          <td>       </td> <td>    </td> <td>        </td> <td>        </td>  <td>       </td></tr>
-        <tr><td>-∞</td> <td>-</td> <td>-∞</td> <td>NaN</td>          <td>✓     </td> <td>    </td> <td>        </td> <td>        </td>  <td>       </td></tr>
-        <tr><td>-∞</td> <td>-</td> <td>any</td> <td>-∞</td>          <td>       </td> <td>    </td> <td>        </td> <td>        </td>  <td>       </td></tr>
-        <tr><td>any</td> <td>-</td> <td>-∞</td> <td>-∞</td>          <td>       </td> <td>    </td> <td>        </td> <td>        </td>  <td>       </td></tr>
-        <tr><td>any</td> <td>-</td> <td>any</td> <td>any</td>        <td>       </td> <td>    </td> <td>✓      </td> <td>✓      </td>  <td>✓     </td></tr>
-        <tr><td>±∞</td> <td>*</td> <td>0.0</td> <td>NaN</td>         <td>✓     </td> <td>    </td> <td>        </td> <td>        </td>  <td>       </td></tr>
-        <tr><td>±∞</td> <td>*</td> <td>any</td> <td>±∞</td>          <td>       </td> <td>    </td> <td>        </td> <td>        </td>  <td>       </td></tr>
-        <tr><td>any</td> <td>*</td> <td>any</td> <td>any</td>        <td>       </td> <td>    </td> <td>        </td> <td>        </td>  <td>       </td></tr>
-        <tr><td>±∞</td> <td>/</td> <td>±∞</td> <td>NaN</td>          <td>✓     </td> <td>    </td> <td>        </td> <td>        </td>  <td>       </td></tr>
-        <tr><td>0.0</td> <td>/</td> <td>0.0</td> <td>NaN</td>        <td>✓     </td> <td>    </td> <td>        </td> <td>        </td>  <td>       </td></tr>
-        <tr><td>±∞</td> <td>/</td> <td>any</td> <td>±∞</td>          <td>       </td> <td>    </td> <td>        </td> <td>        </td>  <td>       </td></tr>
-        <tr><td>any</td> <td>/</td> <td>0.0</td> <td>±∞</td>         <td>       </td> <td>✓  </td> <td>        </td> <td>        </td>  <td>       </td></tr>
-        <tr><td>any</td> <td>/</td> <td>any</td> <td>any</td>        <td>       </td> <td>    </td> <td>✓      </td> <td>✓      </td>  <td>✓     </td></tr>
-        <tr><td>±∞</td> <td>%</td> <td>any</td> <td>NaN</td>         <td>✓     </td> <td>    </td> <td>        </td> <td>        </td>  <td>       </td></tr>
-        <tr><td>any</td> <td>%</td> <td>±∞</td> <td>NaN</td>         <td>✓     </td> <td>    </td> <td>        </td> <td>        </td>  <td>       </td></tr>
-        <tr><td>any</td> <td>%</td> <td>0.0</td> <td>NaN</td>        <td>✓     </td> <td>    </td> <td>        </td> <td>        </td>  <td>       </td></tr>
-        <tr><td>any</td> <td>%</td> <td>any</td> <td>any</td>        <td>       </td> <td>    </td> <td>✓      </td> <td>✓      </td>  <td>✓     </td></tr>
-    </table><br><br>
 
 </dd>
 <dt><em class="big"><span class="def-anchor" id=".Decimal.toString"></span><div class="quickindex" id="quickindex.Decimal.toString"></div>const void <span class="def-anchor" id="toString"></span><code class="ddoc_psymbol">toString</code>(C)(scope void delegate(const(C)[]) <code class="ddoc_param">sink</code>, FormatSpec!C <code class="ddoc_param">fmt</code>) if (isSomeChar!C);
@@ -917,16 +874,6 @@ decimal32 e = uninitialized + 5.0;
 </dd>
 </dl>
 </dd>
-<dt><em class="big"><span class="def-anchor" id=".abs"></span><div class="quickindex" id="quickindex.abs"></div>D <span class="def-anchor" id="abs"></span><code class="ddoc_psymbol">abs</code>(D)(auto ref const D <code class="ddoc_param">x</code>) if (isDecimal!D);
-</em></dt>
-<dd>Calculates |<code class="ddoc_param">x</code>|.
-This operation is silent, no error flags are set and no exceptions are thrown.<br><br>
-<b>Examples:</b><br>
-        <pre class="d_code"><span class="d_keyword">assert</span>(<span class="d_psymbol">abs</span>(-decimal32.max) == decimal32.max);
-<span class="d_keyword">assert</span>(<span class="d_psymbol">abs</span>(decimal64.infinity) == decimal64.infinity);
-</pre>
-<br><br>
-</dd>
 <dt><em class="big"><span class="def-anchor" id=".acos"></span><div class="quickindex" id="quickindex.acos"></div>D <span class="def-anchor" id="acos"></span><code class="ddoc_psymbol">acos</code>(D)(auto ref const D <code class="ddoc_param">x</code>) if (isDecimal!D);
 </em></dt>
 <dd>Calculates the arc cosine of <code class="ddoc_param">x</code>, returning a value ranging from 0 to π.
@@ -1198,7 +1145,7 @@ decimal32 <span class="d_param">x</span> = 0;
 </pre>
 <br><br>
 </dd>
-<dt><em class="big"><span class="def-anchor" id=".ceil"></span><div class="quickindex" id="quickindex.ceil"></div>D <span class="def-anchor" id="ceil"></span><code class="ddoc_psymbol">ceil</code>(D)(auto ref const D <code class="ddoc_param">x</code>);
+<dt><em class="big"><span class="def-anchor" id=".ceil"></span><div class="quickindex" id="quickindex.ceil"></div>D <span class="def-anchor" id="ceil"></span><code class="ddoc_psymbol">ceil</code>(D)(auto ref const D <code class="ddoc_param">x</code>) if (isDecimal!D);
 </em></dt>
 <dd>Returns the value of <code class="ddoc_param">x</code> rounded upward to the next integer (toward positive infinity).
 This operation is silent, doesn't throw any exception.
@@ -1591,7 +1538,7 @@ If <code class="ddoc_param">x</code> and <code class="ddoc_param">y</code> array
 </table><br><br>
 
 </dd>
-<dt><em class="big"><span class="def-anchor" id=".floor"></span><div class="quickindex" id="quickindex.floor"></div>D <span class="def-anchor" id="floor"></span><code class="ddoc_psymbol">floor</code>(D)(auto ref const D <code class="ddoc_param">x</code>);
+<dt><em class="big"><span class="def-anchor" id=".floor"></span><div class="quickindex" id="quickindex.floor"></div>D <span class="def-anchor" id="floor"></span><code class="ddoc_psymbol">floor</code>(D)(auto ref const D <code class="ddoc_param">x</code>) if (isDecimal!D);
 </em></dt>
 <dd>Returns the value of <code class="ddoc_param">x</code> rounded downward to the previous integer (toward negative infinity).
 This operation is silent, doesn't throw any exception.
@@ -1892,7 +1839,7 @@ This operation is silent, no error flags are set and no exceptions are thrown.
 </pre>
 <br><br>
 </dd>
-<dt><em class="big"><span class="def-anchor" id=".isFinite"></span><div class="quickindex" id="quickindex.isFinite"></div>bool <span class="def-anchor" id="isFinite"></span><code class="ddoc_psymbol">isFinite</code>(D)(auto ref const D <code class="ddoc_param">x</code>) if (isDecimal!D);
+<dt><em class="big"><span class="def-anchor" id=".isFinite"></span><div class="quickindex" id="quickindex.isFinite"></div>bool <span class="def-anchor" id="isFinite"></span><code class="ddoc_psymbol">isFinite</code>(D : Decimal!bits, int bits)(auto ref const D <code class="ddoc_param">x</code>);
 </em></dt>
 <dd>Determines if <code class="ddoc_param">x</code> is a finite value.
 This operation is silent, no error flags are set and no exceptions are thrown.
@@ -2270,8 +2217,8 @@ This operation is silent, doesn't throw any exception.
 </table><br><br>
 
 </dd>
-<dt><em class="big"><span class="def-anchor" id=".lrint"></span><div class="quickindex" id="quickindex.lrint"></div>long <span class="def-anchor" id="lrint"></span><code class="ddoc_psymbol">lrint</code>(D)(auto ref const D <code class="ddoc_param">x</code>, const RoundingMode <code class="ddoc_param">mode</code>);
-<br>long <span class="def-anchor" id="lrint"></span><code class="ddoc_psymbol">lrint</code>(D)(auto ref const D <code class="ddoc_param">x</code>);
+<dt><em class="big"><span class="def-anchor" id=".lrint"></span><div class="quickindex" id="quickindex.lrint"></div>long <span class="def-anchor" id="lrint"></span><code class="ddoc_psymbol">lrint</code>(D)(auto ref const D <code class="ddoc_param">x</code>, const RoundingMode <code class="ddoc_param">mode</code>) if (isDecimal!D);
+<br>long <span class="def-anchor" id="lrint"></span><code class="ddoc_psymbol">lrint</code>(D)(auto ref const D <code class="ddoc_param">x</code>) if (isDecimal!D);
 </em></dt>
 <dd>Returns the value of <code class="ddoc_param">x</code> rounded using the specified rounding mode.
 If no rounding mode is specified the default context rounding mode is used instead.
@@ -2588,8 +2535,8 @@ DecimalControl.resetFlags(ExceptionFlags.inexact);
 </pre>
 <br><br>
 </dd>
-<dt><em class="big"><span class="def-anchor" id=".rndtonl"></span><div class="quickindex" id="quickindex.rndtonl"></div>D <span class="def-anchor" id="rndtonl"></span><code class="ddoc_psymbol">rndtonl</code>(D)(auto ref const D <code class="ddoc_param">x</code>, const RoundingMode <code class="ddoc_param">mode</code>);
-<br>@safe D <span class="def-anchor" id="rndtonl"></span><code class="ddoc_psymbol">rndtonl</code>(D)(auto ref const D <code class="ddoc_param">x</code>);
+<dt><em class="big"><span class="def-anchor" id=".rndtonl"></span><div class="quickindex" id="quickindex.rndtonl"></div>D <span class="def-anchor" id="rndtonl"></span><code class="ddoc_psymbol">rndtonl</code>(D)(auto ref const D <code class="ddoc_param">x</code>, const RoundingMode <code class="ddoc_param">mode</code>) if (isDecimal!D);
+<br>@safe D <span class="def-anchor" id="rndtonl"></span><code class="ddoc_psymbol">rndtonl</code>(D)(auto ref const D <code class="ddoc_param">x</code>) if (isDecimal!D);
 </em></dt>
 <dd>Returns the value of <code class="ddoc_param">x</code> rounded using the specified rounding mode.
 If no rounding mode is specified the default context rounding mode is used instead.
@@ -2641,7 +2588,7 @@ If the value doesn't fit in a long data type <a href="#.OverflowException"><em c
 </table><br><br>
 
 </dd>
-<dt><em class="big"><span class="def-anchor" id=".round"></span><div class="quickindex" id="quickindex.round"></div>D <span class="def-anchor" id="round"></span><code class="ddoc_psymbol">round</code>(D)(auto ref const D <code class="ddoc_param">x</code>);
+<dt><em class="big"><span class="def-anchor" id=".round"></span><div class="quickindex" id="quickindex.round"></div>D <span class="def-anchor" id="round"></span><code class="ddoc_psymbol">round</code>(D)(auto ref const D <code class="ddoc_param">x</code>) if (isDecimal!D);
 </em></dt>
 <dd>Returns the value of <code class="ddoc_param">x</code> rounded away from zero.
 This operation is silent, doesn't throw any exception.
@@ -2782,7 +2729,7 @@ To avoid overflow, an additional <code class="ddoc_param">scale</code> is provid
          <td>result is inexact</td></tr>
 </table><br><br>
 </dd>
-<dt><em class="big"><span class="def-anchor" id=".sgn"></span><div class="quickindex" id="quickindex.sgn"></div>pure nothrow @nogc @safe D <span class="def-anchor" id="sgn"></span><code class="ddoc_psymbol">sgn</code>(D)(auto ref const D <code class="ddoc_param">x</code>) if (isDecimal!D);
+<dt><em class="big"><span class="def-anchor" id=".sgn"></span><div class="quickindex" id="quickindex.sgn"></div>pure nothrow @nogc @safe D <span class="def-anchor" id="sgn"></span><code class="ddoc_psymbol">sgn</code>(D : Decimal!bits, int bits)(auto ref const D <code class="ddoc_param">x</code>);
 </em></dt>
 <dd>Determines if <code class="ddoc_param">x</code> is negative
 This operation is silent, no error flags are set and no exceptions are thrown.
@@ -3146,7 +3093,7 @@ The Microsoft decimal data type is stored as a 96 bit integral
 </pre>
 <br><br>
 </dd>
-<dt><em class="big"><span class="def-anchor" id=".trunc"></span><div class="quickindex" id="quickindex.trunc"></div>pure nothrow @nogc @safe D <span class="def-anchor" id="trunc"></span><code class="ddoc_psymbol">trunc</code>(D)(auto ref const D <code class="ddoc_param">x</code>);
+<dt><em class="big"><span class="def-anchor" id=".trunc"></span><div class="quickindex" id="quickindex.trunc"></div>pure nothrow @nogc @safe D <span class="def-anchor" id="trunc"></span><code class="ddoc_psymbol">trunc</code>(D)(auto ref const D <code class="ddoc_param">x</code>) if (isDecimal!D);
 </em></dt>
 <dd>Returns the value of <code class="ddoc_param">x</code> rounded up or down, depending on sign (toward zero).
 This operation is silent, doesn't throw any exception.
@@ -3179,7 +3126,7 @@ This operation is silent, doesn't throw any exception.
 </dl>
 
         <div class="smallprint" id="copyright">Copyright &copy; 1999-2018 by the <a href="https://dlang.org/foundation.html">D Language Foundation</a> | Page generated by
-<a href="https://dlang.org/spec/ddoc.html">Ddoc</a> on Sun Jan 14 00:48:53 2018
+<a href="https://dlang.org/spec/ddoc.html">Ddoc</a> on Wed Jan 17 02:10:19 2018
 </div>
     </div>
 </div>
