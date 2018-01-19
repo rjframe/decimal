@@ -52,7 +52,7 @@
   <otherDMD>0</otherDMD>
   <cccmd>$(CC) -c</cccmd>
   <ccTransOpt>1</ccTransOpt>
-  <addDepImp>1</addDepImp>
+  <addDepImp>0</addDepImp>
   <program>$(DMDInstallDir)windows\bin\dmd.exe</program>
   <imppath />
   <fileImppath />
@@ -159,7 +159,7 @@
   <otherDMD>0</otherDMD>
   <cccmd>$(CC) -c</cccmd>
   <ccTransOpt>1</ccTransOpt>
-  <addDepImp>1</addDepImp>
+  <addDepImp>0</addDepImp>
   <program>$(DMDInstallDir)windows\bin\dmd.exe</program>
   <imppath />
   <fileImppath />
@@ -266,7 +266,7 @@
   <otherDMD>0</otherDMD>
   <cccmd>$(CC) -c</cccmd>
   <ccTransOpt>1</ccTransOpt>
-  <addDepImp>1</addDepImp>
+  <addDepImp>0</addDepImp>
   <program>$(DMDInstallDir)windows\bin\dmd.exe</program>
   <imppath />
   <fileImppath />
@@ -373,7 +373,7 @@
   <otherDMD>0</otherDMD>
   <cccmd>$(CC) -c</cccmd>
   <ccTransOpt>1</ccTransOpt>
-  <addDepImp>1</addDepImp>
+  <addDepImp>0</addDepImp>
   <program>$(DMDInstallDir)windows\bin\dmd.exe</program>
   <imppath />
   <fileImppath />
@@ -429,6 +429,12 @@
   <filesToClean>*.obj;*.cmd;*.build;*.json;*.dep;*.tlog</filesToClean>
  </Config>
  <Folder name="test">
+  <File path="decimal\decimal.d" />
+  <File path="decimal\floats.d" />
+  <File path="decimal\integrals.d" />
+  <File path="decimal\package.d" />
+  <File path="decimal\ranges.d" />
+  <File path="decimal\sinks.d" />
   <File path="test\test.d" />
  </Folder>
 </DProject>

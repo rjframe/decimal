@@ -59,7 +59,7 @@ string arraystr(T, int a)()
     return prettyName!T ~ "_" ~ to!string(a);
 }
 
-enum samples = 100;
+enum samples = 1000;
 
 static foreach(T; AllFloats)
 {
@@ -238,55 +238,55 @@ int main(string[] argv)
     dumpResults("division", benchxbinop!(void, "/"));
     dumpResults("modulo", benchxbinop!(void, "%"));
 
-    writeln();
-    dumpHeader("Constructors");
-    dumpResults("from int", benchxconstructor!int);
-    dumpResults("from uint", benchxconstructor!uint);
-    dumpResults("from long", benchxconstructor!long);
-    dumpResults("from ulong", benchxconstructor!ulong);
-
-
-    writeln();
-    dumpHeader("Rounding");
-    dumpResults("ceil", benchx1!(void, "ceil"));
-    dumpResults("floor", benchx1!(void, "floor"));
-    dumpResults("round", benchx1!(void, "round"));
-    dumpResults("trunc", benchx1!(void, "trunc"));
-    dumpResults("rint", benchx1!(void, "rint"));
-    //dumpResults("nearbyint", benchx1!(void, "nearbyint"));
-    dumpResults("lrint", benchx1!(long, "lrint"));
-    //dumpResults("rndtonl", benchx1!(void, "rndtonl"));
-
-    writeln();
-    dumpHeader("Trigonometry");
-    dumpResults("sin", benchx1!(void, "sin"));
-    dumpResults("cos", benchx1!(void, "cos"));
-    dumpResults("tan", benchx1!(void, "tan"));
-    dumpResults("asin", benchx1!(void, "asin"));
-    dumpResults("acos", benchx1!(void, "acos"));
-    //dumpResults("atan", benchx1!(void, "atan"));
-    dumpResults("sinh", benchx1!(void, "sinh"));
-    dumpResults("cosh", benchx1!(void, "cosh"));
-    dumpResults("tanh", benchx1!(void, "tanh"));
-    //dumpResults("asinh", benchx1!(void, "asinh"));
-    //dumpResults("acosh", benchx1!(void, "acosh"));
-    //dumpResults("atanh", benchx1!(void, "atanh"));
-
-    writeln();
-    dumpHeader("Exponentiation");
-    dumpResults("exp", benchx1!(void, "exp"));
-    dumpResults("exp2", benchx1!(void, "exp2"));
-    dumpResults("expm1", benchx1!(void, "expm1"));
-    dumpResults("log", benchx1!(void, "log"));
-    dumpResults("log2", benchx1!(void, "log2"));
-    //dumpResults("log10", benchx1!(void, "log10"));
-    dumpResults("ilogb", benchx1!(int, "ilogb"));
-    dumpResults("sqrt", benchx1!(void, "sqrt"));
-
-    writeln();
-    dumpHeader("Operations");
-    dumpResults("nextDown", benchx1!(void, "nextDown"));
-    dumpResults("nextUp", benchx1!(void, "nextUp"));
+    //writeln();
+    //dumpHeader("Constructors");
+    //dumpResults("from int", benchxconstructor!int);
+    //dumpResults("from uint", benchxconstructor!uint);
+    //dumpResults("from long", benchxconstructor!long);
+    //dumpResults("from ulong", benchxconstructor!ulong);
+    //
+    //
+    //writeln();
+    //dumpHeader("Rounding");
+    //dumpResults("ceil", benchx1!(void, "ceil"));
+    //dumpResults("floor", benchx1!(void, "floor"));
+    //dumpResults("round", benchx1!(void, "round"));
+    //dumpResults("trunc", benchx1!(void, "trunc"));
+    //dumpResults("rint", benchx1!(void, "rint"));
+    ////dumpResults("nearbyint", benchx1!(void, "nearbyint"));
+    //dumpResults("lrint", benchx1!(long, "lrint"));
+    ////dumpResults("rndtonl", benchx1!(void, "rndtonl"));
+    //
+    //writeln();
+    //dumpHeader("Trigonometry");
+    //dumpResults("sin", benchx1!(void, "sin"));
+    //dumpResults("cos", benchx1!(void, "cos"));
+    //dumpResults("tan", benchx1!(void, "tan"));
+    //dumpResults("asin", benchx1!(void, "asin"));
+    //dumpResults("acos", benchx1!(void, "acos"));
+    ////dumpResults("atan", benchx1!(void, "atan"));
+    //dumpResults("sinh", benchx1!(void, "sinh"));
+    //dumpResults("cosh", benchx1!(void, "cosh"));
+    //dumpResults("tanh", benchx1!(void, "tanh"));
+    ////dumpResults("asinh", benchx1!(void, "asinh"));
+    ////dumpResults("acosh", benchx1!(void, "acosh"));
+    ////dumpResults("atanh", benchx1!(void, "atanh"));
+    //
+    //writeln();
+    //dumpHeader("Exponentiation");
+    //dumpResults("exp", benchx1!(void, "exp"));
+    //dumpResults("exp2", benchx1!(void, "exp2"));
+    //dumpResults("expm1", benchx1!(void, "expm1"));
+    //dumpResults("log", benchx1!(void, "log"));
+    //dumpResults("log2", benchx1!(void, "log2"));
+    ////dumpResults("log10", benchx1!(void, "log10"));
+    //dumpResults("ilogb", benchx1!(int, "ilogb"));
+    //dumpResults("sqrt", benchx1!(void, "sqrt"));
+    //
+    //writeln();
+    //dumpHeader("Operations");
+    //dumpResults("nextDown", benchx1!(void, "nextDown"));
+    //dumpResults("nextUp", benchx1!(void, "nextUp"));
     getchar();
     return 0;
 }

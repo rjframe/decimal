@@ -1,7 +1,7 @@
 module decimal.integrals;
 
 private import core.bitop : bsr, bsf;
-private import std.traits: isUnsigned, isSomeChar, Unqual, CommonType;
+private import std.traits: isUnsigned, isSigned, isSomeChar, Unqual, CommonType, Unsigned, Signed;
 private import core.checkedint: addu, subu, mulu, adds, subs;
 
 package:
@@ -1667,6 +1667,82 @@ if (isAnyUnsigned!T && isAnyUnsigned!U)
     else
         return value;
 }
+
+auto sign(S, U)(const U u, const bool isNegative)
+if (isUnsigned!U && isSigned!S)
+{
+    static if (is(U: ubyte) || is(U: ushort))
+        return isNegative ? cast(S)-cast(int)u : cast(S)u;
+    else
+        return isNegative ? cast(S)-u : cast(S)u;
+}
+
+auto sign(S, U)(const U u, const bool isNegative)
+if (isCustomUnsigned!U && isSigned!S)
+{
+     return isNegative ? cast(S)-cast(ulong)u : cast(S)cast(ulong)u;
+}
+
+auto unsign(U, S)(const S s, out bool isNegative)
+if (isUnsigned!U && isSigned!S)
+{
+    isNegative = s < 0;
+    static if (is(S: byte) || is(S: short))
+        return isNegative ? cast(U)-cast(int)s : cast(U)s;
+    else
+        return isNegative ? cast(U)-s: cast(U)s;
+}
+
+auto unsign(U, V)(const V v, out bool isNegative)
+if (isUnsigned!U && isUnsigned!V)
+{
+    isNegative = false;
+    return cast(U)v;
+}
+
+auto unsign(U, V)(const V v, out bool isNegative)
+if (isCustomUnsigned!U && isUnsigned!V)
+{
+    isNegative = false;
+    return U(v);
+}
+
+auto unsign(U, S)(const S s)
+if (isUnsigned!U && isSigned!S)
+{
+    static if (is(S: byte) || is(S: short))
+        return s < 0 ? cast(U)-cast(int)s : cast(U)s;
+    else
+        return s < 0 ? cast(U)-s: cast(U)s;
+}
+
+
+
+auto unsign(U, S)(const S s, out bool isNegative)
+if (isCustomUnsigned!U && isSigned!S)
+{
+    isNegative = s < 0;
+    static if (is(S: byte) || is(S: short))
+        return isNegative ? U(cast(uint)-cast(int)s) : U(cast(uint)s);
+    else static if (is(S: int))
+        return isNegative ? U(cast(ulong)(-cast(long)s)) : U(cast(uint)s);
+    else
+        return isNegative ? U(cast(ulong)-s) : U(cast(ulong)s);
+}
+
+auto unsign(U, S)(const S s)
+if (isCustomUnsigned!U && isSigned!S)
+{
+    static if (is(S: byte) || is(S: short))
+        return s < 0 ? U(cast(uint)-cast(int)s) : U(cast(uint)s);
+    else static if (is(S: int))
+        return s < 0 ? U(cast(ulong)(-cast(long)s)) : U(cast(uint)s);
+    else
+        return s < 0 ? U(cast(ulong)-s) : U(cast(ulong)s);
+}
+
+
+
 
 
 

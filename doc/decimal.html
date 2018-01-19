@@ -469,6 +469,7 @@ to decimal128 data type; for decimal64 and decimal32, they are rounded away from
 
 </dd>
 <dt><em class="big"><span class="def-anchor" id=".Decimal.opUnary"></span><div class="quickindex" id="quickindex.Decimal.opUnary"></div>const pure nothrow @nogc @safe auto <span class="def-anchor" id="opUnary"></span><code class="ddoc_psymbol">opUnary</code>(string op : "+")();
+<br>const pure nothrow @nogc @safe auto <span class="def-anchor" id="opUnary"></span><code class="ddoc_psymbol">opUnary</code>(string op : "-")();
 </em></dt>
 <dd>Implementation of +/- unary operators. These operations are silent, no exceptions are thrown<br><br>
 
@@ -493,8 +494,6 @@ to decimal128 data type; for decimal64 and decimal32, they are rounded away from
 
 </dd>
 <dt><em class="big"><span class="def-anchor" id=".Decimal.opCmp"></span><div class="quickindex" id="quickindex.Decimal.opCmp"></div>const float <span class="def-anchor" id="opCmp"></span><code class="ddoc_psymbol">opCmp</code>(T)(auto ref const T <code class="ddoc_param">value</code>);
-<br><span class="def-anchor" id=".Decimal.opBinaryRight"></span><div class="quickindex" id="quickindex.Decimal.opBinaryRight"></div>const auto <span class="def-anchor" id="opBinaryRight"></span><code class="ddoc_psymbol">opBinaryRight</code>(string op, T)(auto ref const T <code class="ddoc_param">value</code>) if (op == "+" || op == "-" || op == "*" || op == "/" || op == "%" || op == "^^");
-<br><span class="def-anchor" id=".Decimal.opOpAssign"></span><div class="quickindex" id="quickindex.Decimal.opOpAssign"></div>auto <span class="def-anchor" id="opOpAssign"></span><code class="ddoc_psymbol">opOpAssign</code>(string op, T)(auto ref const T <code class="ddoc_param">value</code>) if (op == "+" || op == "-" || op == "*" || op == "/" || op == "%" || op == "^^");
 </em></dt>
 <dd>Implementation of comparison operator.
     Supported types : decimal, floating point, integral, char
@@ -503,6 +502,50 @@ to decimal128 data type; for decimal64 and decimal32, they are rounded away from
             <tr><td>any </td> <td>NaN  </td> <td>NaN   </td>    <td>✓     </td></tr>
             <tr><td>any </td> <td>any  </td> <td>±1.0, 0.0</td> <td>       </td></tr>
         </table><br><br>
+
+</dd>
+<dt><em class="big"><span class="def-anchor" id=".Decimal.opBinary"></span><div class="quickindex" id="quickindex.Decimal.opBinary"></div>const auto <span class="def-anchor" id="opBinary"></span><code class="ddoc_psymbol">opBinary</code>(string op, T)(auto ref const T <code class="ddoc_param">value</code>) if (op == "+" || op == "-" || op == "*" || op == "/" || op == "%" || op == "^^");
+<br><span class="def-anchor" id=".Decimal.opBinaryRight"></span><div class="quickindex" id="quickindex.Decimal.opBinaryRight"></div>const auto <span class="def-anchor" id="opBinaryRight"></span><code class="ddoc_psymbol">opBinaryRight</code>(string op, T)(auto ref const T <code class="ddoc_param">value</code>) if (op == "+" || op == "-" || op == "*" || op == "/" || op == "%" || op == "^^");
+<br><span class="def-anchor" id=".Decimal.opOpAssign"></span><div class="quickindex" id="quickindex.Decimal.opOpAssign"></div>auto <span class="def-anchor" id="opOpAssign"></span><code class="ddoc_psymbol">opOpAssign</code>(string op, T)(auto ref const T <code class="ddoc_param">value</code>) if (op == "+" || op == "-" || op == "*" || op == "/" || op == "%" || op == "^^");
+</em></dt>
+<dd>Implementation of binary and assignment operators (+, -, *, /, %, ^^).
+<br><br>
+<b>Returns:</b><br>
+        the widest decimal <code class="ddoc_param">value</code> as result of the operation
+<br><br><b>Supported types</b><br><br>
+decimal, floating point, integral, char
+<br><br>
+<b>Exceptions</b><br><br>
+<table class="book"><caption></caption>        <tr><th scope="col">Left</th> <th scope="col">Op</th> <th scope="col">Right</th> <th scope="col">Result</th> <th scope="col">Invalid</th> <th scope="col">Div0</th> <th scope="col">Overflow</th> <th scope="col">Underflow</th> <th scope="col">Inexact</th></tr>
+        <tr><td>NaN</td> <td>any</td> <td>any</td> <td>NaN</td>      <td>✓     </td> <td>    </td> <td>        </td> <td>        </td>  <td>       </td></tr>
+        <tr><td>any</td> <td>any</td> <td>NaN</td> <td>NaN</td>      <td>✓     </td> <td>    </td> <td>        </td> <td>        </td>  <td>       </td></tr>
+        <tr><td>+∞</td> <td>+</td> <td>-∞</td> <td>NaN</td>          <td>✓     </td> <td>    </td> <td>        </td> <td>        </td>  <td>       </td></tr>
+        <tr><td>+∞</td> <td>+</td> <td>any</td> <td>+∞</td>          <td>       </td> <td>    </td> <td>        </td> <td>        </td>  <td>       </td></tr>
+        <tr><td>any</td> <td>+</td> <td>+∞</td> <td>+∞</td>          <td>       </td> <td>    </td> <td>        </td> <td>        </td>  <td>       </td></tr>
+        <tr><td>-∞</td> <td>+</td> <td>+∞</td> <td>NaN</td>          <td>✓     </td> <td>    </td> <td>        </td> <td>        </td>  <td>       </td></tr>
+        <tr><td>-∞</td> <td>+</td> <td>any</td> <td>-∞</td>          <td>       </td> <td>    </td> <td>        </td> <td>        </td>  <td>       </td></tr>
+        <tr><td>any</td> <td>+</td> <td>-∞</td> <td>-∞</td>          <td>       </td> <td>    </td> <td>        </td> <td>        </td>  <td>       </td></tr>
+        <tr><td>any</td> <td>+</td> <td>any</td> <td>any</td>        <td>       </td> <td>    </td> <td>✓      </td> <td>✓      </td>  <td>✓     </td></tr>
+        <tr><td>+∞</td> <td>-</td> <td>+∞</td> <td>NaN</td>          <td>✓     </td> <td>    </td> <td>        </td> <td>        </td>  <td>       </td></tr>
+        <tr><td>+∞</td> <td>-</td> <td>any</td> <td>+∞</td>          <td>       </td> <td>    </td> <td>        </td> <td>        </td>  <td>       </td></tr>
+        <tr><td>any</td> <td>-</td> <td>+∞</td> <td>-∞</td>          <td>       </td> <td>    </td> <td>        </td> <td>        </td>  <td>       </td></tr>
+        <tr><td>-∞</td> <td>-</td> <td>-∞</td> <td>NaN</td>          <td>✓     </td> <td>    </td> <td>        </td> <td>        </td>  <td>       </td></tr>
+        <tr><td>-∞</td> <td>-</td> <td>any</td> <td>-∞</td>          <td>       </td> <td>    </td> <td>        </td> <td>        </td>  <td>       </td></tr>
+        <tr><td>any</td> <td>-</td> <td>-∞</td> <td>-∞</td>          <td>       </td> <td>    </td> <td>        </td> <td>        </td>  <td>       </td></tr>
+        <tr><td>any</td> <td>-</td> <td>any</td> <td>any</td>        <td>       </td> <td>    </td> <td>✓      </td> <td>✓      </td>  <td>✓     </td></tr>
+        <tr><td>±∞</td> <td>*</td> <td>0.0</td> <td>NaN</td>         <td>✓     </td> <td>    </td> <td>        </td> <td>        </td>  <td>       </td></tr>
+        <tr><td>±∞</td> <td>*</td> <td>any</td> <td>±∞</td>          <td>       </td> <td>    </td> <td>        </td> <td>        </td>  <td>       </td></tr>
+        <tr><td>any</td> <td>*</td> <td>any</td> <td>any</td>        <td>       </td> <td>    </td> <td>        </td> <td>        </td>  <td>       </td></tr>
+        <tr><td>±∞</td> <td>/</td> <td>±∞</td> <td>NaN</td>          <td>✓     </td> <td>    </td> <td>        </td> <td>        </td>  <td>       </td></tr>
+        <tr><td>0.0</td> <td>/</td> <td>0.0</td> <td>NaN</td>        <td>✓     </td> <td>    </td> <td>        </td> <td>        </td>  <td>       </td></tr>
+        <tr><td>±∞</td> <td>/</td> <td>any</td> <td>±∞</td>          <td>       </td> <td>    </td> <td>        </td> <td>        </td>  <td>       </td></tr>
+        <tr><td>any</td> <td>/</td> <td>0.0</td> <td>±∞</td>         <td>       </td> <td>✓  </td> <td>        </td> <td>        </td>  <td>       </td></tr>
+        <tr><td>any</td> <td>/</td> <td>any</td> <td>any</td>        <td>       </td> <td>    </td> <td>✓      </td> <td>✓      </td>  <td>✓     </td></tr>
+        <tr><td>±∞</td> <td>%</td> <td>any</td> <td>NaN</td>         <td>✓     </td> <td>    </td> <td>        </td> <td>        </td>  <td>       </td></tr>
+        <tr><td>any</td> <td>%</td> <td>±∞</td> <td>NaN</td>         <td>✓     </td> <td>    </td> <td>        </td> <td>        </td>  <td>       </td></tr>
+        <tr><td>any</td> <td>%</td> <td>0.0</td> <td>NaN</td>        <td>✓     </td> <td>    </td> <td>        </td> <td>        </td>  <td>       </td></tr>
+        <tr><td>any</td> <td>%</td> <td>any</td> <td>any</td>        <td>       </td> <td>    </td> <td>✓      </td> <td>✓      </td>  <td>✓     </td></tr>
+    </table><br><br>
 
 </dd>
 <dt><em class="big"><span class="def-anchor" id=".Decimal.toString"></span><div class="quickindex" id="quickindex.Decimal.toString"></div>const void <span class="def-anchor" id="toString"></span><code class="ddoc_psymbol">toString</code>(C)(scope void delegate(const(C)[]) <code class="ddoc_param">sink</code>, FormatSpec!C <code class="ddoc_param">fmt</code>) if (isSomeChar!C);
@@ -1537,6 +1580,16 @@ If <code class="ddoc_param">x</code> and <code class="ddoc_param">y</code> array
     <tr><td>+∞</td> <td>+∞</td></tr>
 </table><br><br>
 
+</dd>
+<dt><em class="big"><span class="def-anchor" id=".fabs"></span><div class="quickindex" id="quickindex.fabs"></div>D <span class="def-anchor" id="fabs"></span><code class="ddoc_psymbol">fabs</code>(D)(auto ref const D <code class="ddoc_param">x</code>) if (isDecimal!D);
+</em></dt>
+<dd>Calculates |<code class="ddoc_param">x</code>|.
+This operation is silent, no error flags are set and no exceptions are thrown.<br><br>
+<b>Examples:</b><br>
+        <pre class="d_code"><span class="d_keyword">assert</span>(<span class="d_psymbol">fabs</span>(-decimal32.max) == decimal32.max);
+<span class="d_keyword">assert</span>(<span class="d_psymbol">fabs</span>(decimal64.infinity) == decimal64.infinity);
+</pre>
+<br><br>
 </dd>
 <dt><em class="big"><span class="def-anchor" id=".floor"></span><div class="quickindex" id="quickindex.floor"></div>D <span class="def-anchor" id="floor"></span><code class="ddoc_psymbol">floor</code>(D)(auto ref const D <code class="ddoc_param">x</code>) if (isDecimal!D);
 </em></dt>
@@ -3126,7 +3179,7 @@ This operation is silent, doesn't throw any exception.
 </dl>
 
         <div class="smallprint" id="copyright">Copyright &copy; 1999-2018 by the <a href="https://dlang.org/foundation.html">D Language Foundation</a> | Page generated by
-<a href="https://dlang.org/spec/ddoc.html">Ddoc</a> on Wed Jan 17 02:10:19 2018
+<a href="https://dlang.org/spec/ddoc.html">Ddoc</a> on Wed Jan 17 12:05:04 2018
 </div>
     </div>
 </div>
