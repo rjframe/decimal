@@ -100,15 +100,30 @@ if (isSomeChar!C)
 }
 
 //sinks +/-(s)nan;
-void sinkNaN(C)(auto const ref FormatSpec!C spec, scope void delegate(const(C)[]) sink, const bool signed, 
-                const bool signaling) 
+void sinkNaN(C, T)(auto const ref FormatSpec!C spec, scope void delegate(const(C)[]) sink, const bool signed, 
+                const bool signaling, T payload, bool hex) 
 if (isSomeChar!C)
 {
+    C[40] buffer;
     FormatSpec!C nanspec = spec;
     nanspec.flZero = false;
     nanspec.flHash = false;
-
-    int w = signaling ? 4 : 3;                      
+    ptrdiff_t digits;
+    if (payload)
+    {
+        if (hex)
+            digits = dumpUnsignedHex(buffer, payload, nanspec.spec < 'Z');
+        else
+            digits = dumpUnsigned(buffer, payload);            
+    }
+    int w = signaling ? 4 : 3;     
+    if (payload)
+    {
+        if (hex)
+            w += digits + 4;
+        else
+            w += digits + 2;
+    }
     if (nanspec.flPlus || nanspec.flSpace || signed)  
         ++w;
     int pad = nanspec.width - w;
@@ -117,6 +132,17 @@ if (isSomeChar!C)
     if (signaling)
         sink(nanspec.spec < 'Z' ? "S" : "s");   
     sink(nanspec.spec < 'Z' ? "NAN" : "nan");  
+    if (payload)
+    {
+        sink("[");
+        if (hex)
+        {
+            sink("0");
+            sink(nanspec.spec < 'Z' ? "X" : "x");  
+        }
+        sink(buffer[$ - digits .. $ - 1]);
+        sink("]");
+    }
     sinkPadRight(sink, pad);
 }
 

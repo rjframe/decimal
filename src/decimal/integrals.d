@@ -1673,8 +1673,35 @@ if (isUnsigned!U && isSigned!S)
 {
     static if (is(U: ubyte) || is(U: ushort))
         return isNegative ? cast(S)-cast(int)u : cast(S)u;
+    else static if (is(S: byte) || is(S: short))
+        return isNegative ? cast(S)-cast(int)u : cast(S)u;
     else
-        return isNegative ? cast(S)-u : cast(S)u;
+        return isNegative ? -cast(S)u : cast(S)u;
+}
+
+unittest
+{
+    static assert (sign!byte(ubyte(128), true) == byte.min);
+    static assert (sign!byte(ushort(128), true) == byte.min);
+    static assert (sign!byte(uint(128), true) == byte.min);
+    static assert (sign!byte(ulong(128), true) == byte.min);
+
+    static assert (sign!short(ubyte(128), true) == byte.min);
+    static assert (sign!short(ushort(32768), true) == short.min);
+    static assert (sign!short(uint(32768), true) == short.min);
+    static assert (sign!short(ulong(32768), true) == short.min);
+
+
+    static assert (sign!int(ubyte(128), true) == byte.min);
+    static assert (sign!int(ushort(32768), true) == short.min);
+    static assert (sign!int(uint(2147483648), true) == int.min);
+    static assert (sign!int(ulong(2147483648), true) == int.min);
+    
+    static assert (sign!long(ubyte(128), true) == byte.min);
+    static assert (sign!long(ushort(32768), true) == short.min);
+    static assert (sign!long(uint(2147483648), true) == int.min);
+    static assert (sign!long(ulong(9223372036854775808UL), true) == long.min);
+
 }
 
 auto sign(S, U)(const U u, const bool isNegative)
@@ -1689,8 +1716,36 @@ if (isUnsigned!U && isSigned!S)
     isNegative = s < 0;
     static if (is(S: byte) || is(S: short))
         return isNegative ? cast(U)-cast(int)s : cast(U)s;
+    else static if (is(U: ubyte) || is(U: ushort))
+        return isNegative ? cast(U)-cast(int)s : cast(U)s;
     else
-        return isNegative ? cast(U)-s: cast(U)s;
+        return isNegative? -cast(U)s: cast(U)s;
+}
+
+unittest
+{
+
+    static assert (unsign!ubyte(byte.min) == 128);
+    static assert (unsign!ubyte(short(-128)) == 128);
+    static assert (unsign!ubyte(int(-128)) == 128);
+    static assert (unsign!ubyte(long(-128)) == 128);
+
+    static assert (unsign!ushort(byte.min) == 128);
+    static assert (unsign!ushort(short.min) == 32768);
+    static assert (unsign!ushort(int(short.min)) == 32768);
+    static assert (unsign!ushort(long(short.min)) == 32768);
+
+    static assert (unsign!uint(byte.min) == 128);
+    static assert (unsign!uint(short.min) == 32768);
+    static assert (unsign!uint(int.min) == 2147483648);
+    static assert (unsign!uint(long(int.min)) == 2147483648);
+
+    static assert (unsign!ulong(byte.min) == 128);
+    static assert (unsign!ulong(short.min) == 32768);
+    static assert (unsign!ulong(int.min) == 2147483648);
+    static assert (unsign!ulong(long.min) == 9223372036854775808UL);
+
+
 }
 
 auto unsign(U, V)(const V v, out bool isNegative)
@@ -1712,8 +1767,10 @@ if (isUnsigned!U && isSigned!S)
 {
     static if (is(S: byte) || is(S: short))
         return s < 0 ? cast(U)-cast(int)s : cast(U)s;
+    else static if (is(U: ubyte) || is(U: ushort))
+        return s < 0 ? cast(U)-cast(int)s : cast(U)s;
     else
-        return s < 0 ? cast(U)-s: cast(U)s;
+        return s < 0 ? -cast(U)s: cast(U)s;
 }
 
 
@@ -2229,3 +2286,59 @@ template maxmul10(T)
         static assert(0);
 }
 
+
+
+//true on inexact
+bool sqrt(U)(ref U x)
+if (isAnyUnsigned!U)
+{
+    // Newton-Raphson: x = (x + n/x) / 2;
+    //x 
+    if (x <= 1U)
+        return false;
+    immutable n = x;
+    Unqual!U y;
+    //1 ..          99   1 x 10^0 .. 99 x 10^0         1 .. 2  //0 - 10^0  <10^1      2 x 10^0, 6x10^0
+    //100 ..      9999   1 x 10^2 ...99.99 x 10^2      3 .. 4  //2  -10^1  <10^3      2 x 10^1, 6x10^1
+    //10000 ..  999999   1.x 10^4 ...99999.99 x 10^4   5 .. 6  //4  -10^2  <10^5      2 x 10^2, 6x10^2
+    auto p = prec(x);
+    int power = p & 1 ? p - 1 : p - 2;     
+
+    if (power >= pow10!U.length - 1 || x >= pow10!U[power + 1])
+        x = pow10!U[power >> 1] * 6U;
+    else
+        x = pow10!U[power >> 1] << 1;  //* 2U;   
+
+    do
+    {
+        y = x;
+        x = (x + n / x) >> 1;
+    } 
+    while (x != y);
+    return x * x != n;
+}
+
+//true on inexact
+bool cbrt(U)(ref U x)
+if (isAnyUnsigned!U)
+{
+    // Newton-Raphson: x = (2x + N/x2)/3
+    if (x <= 1U)
+        return false;
+    immutable n = x;
+    Unqual!U y;
+    //1 ..          99   1 x 10^0 .. 99 x 10^0         1 .. 2  //0 - 10^0  <10^1      2 x 10^0, 6x10^0
+    //100 ..      9999   1 x 10^2 ...99.99 x 10^2      3 .. 4  //2  -10^1  <10^3      2 x 10^1, 6x10^1
+    //10000 ..  999999   1.x 10^4 ...99999.99 x 10^4   5 .. 6  //4  -10^2  <10^5      2 x 10^2, 6x10^2
+    
+    x /= 3U;
+    if (!x)
+        return true;
+    do
+    {
+        y = x;
+        x = ((x << 1) + n / (x * x)) / 3U;
+    } 
+    while (x != y && x);
+    return x * x * x != n;
+}

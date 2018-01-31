@@ -13,7 +13,7 @@ if (isDecimal!D)
     D result = D(rndGen.front - rndGen.min) / (rndGen.max - rndGen.min);
     rndGen.popFront();
     auto exponent = uniform(D.min_10_exp, D.max_10_exp - 1);
-    result = ldexp(result, exponent);
+    result = decimal.scalbn(result, exponent);
     if (uniform(0, 2) == 1)
         result = -result;
     return result;
@@ -25,7 +25,7 @@ if (isFloatingPoint!F)
     F result = F(rndGen.front - rndGen.min) / (rndGen.max - rndGen.min);
     rndGen.popFront();
     auto exponent = uniform(F.min_exp, F.max_exp - 1);
-    result = ldexp(result, exponent);
+    result = std.math.ldexp(result, exponent);
     if (uniform(0, 2) == 1)
         result = -result;
     return result;
@@ -115,7 +115,7 @@ auto benchx1(R, string func)()
                           bench1!(decimal128, decimal128, func),
                           bench1!(float, float, func),
                           bench1!(double, double, func),
-                          bench1!(real, real, func))(10);
+                          bench1!(real, real, func))(5);
     }
     else
     {
@@ -125,7 +125,7 @@ auto benchx1(R, string func)()
                             bench1!(R, decimal128, func),
                             bench1!(R, float, func),
                             bench1!(R, double, func),
-                            bench1!(R, real, func))(10);
+                            bench1!(R, real, func))(5);
     }    
 }
 
@@ -138,7 +138,7 @@ auto benchxconstructor(I)()
                       benchconstructor!(decimal128, I), 
                       benchconstructor!(float, I), 
                       benchconstructor!(double, I),
-                      benchconstructor!(real, I))(10);
+                      benchconstructor!(real, I))(5);
   
 }
 
@@ -166,7 +166,7 @@ auto benchxbinop(R, string op)()
                           benchbinop!(decimal128, decimal128, op),
                           benchbinop!(float, float, op),
                           benchbinop!(double, double, op),
-                          benchbinop!(real, real, op))(10);
+                          benchbinop!(real, real, op))(5);
     }
     else
     {
@@ -176,7 +176,7 @@ auto benchxbinop(R, string op)()
                           benchbinop!(R, decimal128, op),
                           benchbinop!(R, float, op),
                           benchbinop!(R, double, op),
-                          benchbinop!(R, real, op))(10);
+                          benchbinop!(R, real, op))(5);
     }
 
 
@@ -216,14 +216,12 @@ int main(string[] argv)
     dumpHeader("Non-computational");
 
     //dumpResults("fabs", benchx1!(void, "fabs"));
-    //dumpResults("negate", benchx1!(void, "-"));
-   // dumpResults("isNaN", benchx1!(bool, "isNaN"));
-//    dumpResults("isFinite", benchx1!(bool, "isFinite"));
+    dumpResults("negate", benchx1!(void, "-"));
+    //dumpResults("isNaN", benchx1!(bool, "isNaN"));
+    //dumpResults("isFinite", benchx1!(bool, "isFinite"));
     //dumpResults("isInfinity", benchx1!(bool, "isInfinity"));
     //dumpResults("isNormal", benchx1!(bool, "isNormal"));
     //dumpResults("isSubnormal", benchx1!(bool, "isSubnormal"));
-    //dumpResults("increment", benchx1!(void, "++"));
-    //dumpResults("decrement", benchx1!(void, "--"));
     //dumpResults("sgn", benchx1!(void, "sgn"));
 
     writeln();
@@ -238,25 +236,25 @@ int main(string[] argv)
     dumpResults("division", benchxbinop!(void, "/"));
     dumpResults("modulo", benchxbinop!(void, "%"));
 
-    //writeln();
-    //dumpHeader("Constructors");
-    //dumpResults("from int", benchxconstructor!int);
-    //dumpResults("from uint", benchxconstructor!uint);
-    //dumpResults("from long", benchxconstructor!long);
-    //dumpResults("from ulong", benchxconstructor!ulong);
-    //
-    //
-    //writeln();
-    //dumpHeader("Rounding");
-    //dumpResults("ceil", benchx1!(void, "ceil"));
-    //dumpResults("floor", benchx1!(void, "floor"));
-    //dumpResults("round", benchx1!(void, "round"));
-    //dumpResults("trunc", benchx1!(void, "trunc"));
+    writeln();
+    dumpHeader("Constructors");
+    dumpResults("from int", benchxconstructor!int);
+    dumpResults("from uint", benchxconstructor!uint);
+    dumpResults("from long", benchxconstructor!long);
+    dumpResults("from ulong", benchxconstructor!ulong);
+
+
+    writeln();
+    dumpHeader("Rounding");
+    dumpResults("ceil", benchx1!(void, "ceil"));
+    dumpResults("floor", benchx1!(void, "floor"));
+    dumpResults("round", benchx1!(void, "round"));
+    dumpResults("trunc", benchx1!(void, "trunc"));
     //dumpResults("rint", benchx1!(void, "rint"));
-    ////dumpResults("nearbyint", benchx1!(void, "nearbyint"));
-    //dumpResults("lrint", benchx1!(long, "lrint"));
-    ////dumpResults("rndtonl", benchx1!(void, "rndtonl"));
-    //
+    //dumpResults("nearbyint", benchx1!(void, "nearbyint"));
+    dumpResults("lrint", benchx1!(long, "lrint"));
+    //dumpResults("rndtonl", benchx1!(void, "rndtonl"));
+
     //writeln();
     //dumpHeader("Trigonometry");
     //dumpResults("sin", benchx1!(void, "sin"));
@@ -264,7 +262,7 @@ int main(string[] argv)
     //dumpResults("tan", benchx1!(void, "tan"));
     //dumpResults("asin", benchx1!(void, "asin"));
     //dumpResults("acos", benchx1!(void, "acos"));
-    ////dumpResults("atan", benchx1!(void, "atan"));
+    //dumpResults("atan", benchx1!(void, "atan"));
     //dumpResults("sinh", benchx1!(void, "sinh"));
     //dumpResults("cosh", benchx1!(void, "cosh"));
     //dumpResults("tanh", benchx1!(void, "tanh"));
@@ -272,8 +270,8 @@ int main(string[] argv)
     ////dumpResults("acosh", benchx1!(void, "acosh"));
     ////dumpResults("atanh", benchx1!(void, "atanh"));
     //
-    //writeln();
-    //dumpHeader("Exponentiation");
+    writeln();
+    dumpHeader("Exponentiation");
     //dumpResults("exp", benchx1!(void, "exp"));
     //dumpResults("exp2", benchx1!(void, "exp2"));
     //dumpResults("expm1", benchx1!(void, "expm1"));
@@ -281,7 +279,8 @@ int main(string[] argv)
     //dumpResults("log2", benchx1!(void, "log2"));
     ////dumpResults("log10", benchx1!(void, "log10"));
     //dumpResults("ilogb", benchx1!(int, "ilogb"));
-    //dumpResults("sqrt", benchx1!(void, "sqrt"));
+    dumpResults("sqrt", benchx1!(void, "sqrt"));
+    dumpResults("cbrt", benchx1!(void, "cbrt"));
     //
     //writeln();
     //dumpHeader("Operations");

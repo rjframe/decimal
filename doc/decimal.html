@@ -98,7 +98,7 @@
         <h1><span class="d_inlinecode donthyphenate notranslate">decimal.decimal</span></h1>
         <div class="quickindex" id="quickindex"></div>
         IEEE 754-2008 implementation of decimal floating point data types.
-Decimal values are represented in memory using a coefficient and a 10-base exponent.
+Decimal values are represented in memory using an <b>integral coefficient</b> and a <b>10-based exponent</b>.
 Implementation is based on
 <a href="https://en.wikipedia.org/wiki/Binary_Integer_Decimal">binary integer decimal encoding</a>, supported by Intel.
 <br><br>
@@ -116,18 +116,20 @@ Decimal data types are best used in financial applications because arithmetic op
 
 <script type="text/javascript">inhibitQuickIndex = 1;</script>
 <div class="quickindex"> <table class="book"><caption></caption>  <tr><th scope="col">Category</th> <th scope="col">Members</th> </tr>
-    <tr><td class="donthyphenate nobr">Classics</td> <td>        <a href="#.copysign"><em class="tt">copysign</em></a>&nbsp; <a href="#.fabs"><em class="tt">fabs</em></a>&nbsp;
+    <tr><td class="donthyphenate nobr">Classics</td> <td>        <a href="#.copysign"><em class="tt">copysign</em></a>&nbsp; <a href="#.fabs"><em class="tt">fabs</em></a>&nbsp; <a href="#.fdim"><em class="tt">fdim</em></a>&nbsp;
         <a href="#.fmod"><em class="tt">fmod</em></a>&nbsp; <a href="#.fma"><em class="tt">fma</em></a>&nbsp; <a href="#.getNaNPayload"><em class="tt">getNaNPayload</em></a>&nbsp;
         <a href="#.modf"><em class="tt">modf</em></a>&nbsp; <a href="#.NaN"><em class="tt">NaN</em></a>&nbsp;
-        <a href="#.nextDown"><em class="tt">nextDown</em></a>&nbsp;  <a href="#.nextUp"><em class="tt">nextUp</em></a>&nbsp; <a href="#.remainder"><em class="tt">remainder</em></a>&nbsp; <a href="#.sgn"><em class="tt">sgn</em></a>&nbsp;
+        <a href="#.nextAfter"><em class="tt">nextAfter</em></a>&nbsp;
+        <a href="#.nextDown"><em class="tt">nextDown</em></a>&nbsp; <a href="#.nextToward"><em class="tt">nextToward</em></a>&nbsp;  <a href="#.nextUp"><em class="tt">nextUp</em></a>&nbsp; <a href="#.remainder"><em class="tt">remainder</em></a>&nbsp; <a href="#.sgn"><em class="tt">sgn</em></a>&nbsp;
     </td></tr>
-    <tr><td class="donthyphenate nobr">Comparison</td> <td>        <a href="#.cmp"><em class="tt">cmp</em></a>&nbsp;
+    <tr><td class="donthyphenate nobr">Comparison</td> <td>        <a href="#.approxEqual"><em class="tt">approxEqual</em></a>&nbsp;
+        <a href="#.cmp"><em class="tt">cmp</em></a>&nbsp;
         <a href="#.fmax"><em class="tt">fmax</em></a>&nbsp; <a href="#.fmaxAbs"><em class="tt">fmaxAbs</em></a>&nbsp; <a href="#.fmin"><em class="tt">fmin</em></a>&nbsp; <a href="#.fminAbs"><em class="tt">fminAbs</em></a>&nbsp;
         <a href="#.isEqual"><em class="tt">isEqual</em></a>&nbsp; <a href="#.isGreater"><em class="tt">isGreater</em></a>&nbsp; <a href="#.isGreaterOrEqual"><em class="tt">isGreaterOrEqual</em></a>&nbsp; <a href="#.isGreaterOrUnordered"><em class="tt">isGreaterOrUnordered</em></a>&nbsp;
         <a href="#.isIdentical"><em class="tt">isIdentical</em></a>&nbsp;
         <a href="#.isLess"><em class="tt">isLess</em></a>&nbsp; <a href="#.isLessOrEqual"><em class="tt">isLessOrEqual</em></a>&nbsp; <a href="#.isLessOrUnordered"><em class="tt">isLessOrUnordered</em></a>&nbsp;
-        <a href="#.isLessOrGreater"><em class="tt">isLessOrGreater</em></a>&nbsp;
         <a href="#.isNotEqual"><em class="tt">isNotEqual</em></a>&nbsp;
+        <a href="#.isUnordered"><em class="tt">isUnordered</em></a>&nbsp;
         <a href="#.sameQuantum"><em class="tt">sameQuantum</em></a>&nbsp;
         <a href="#.totalOrder"><em class="tt">totalOrder</em></a>&nbsp; <a href="#.totalOrderAbs"><em class="tt">totalOrderAbs</em></a>&nbsp;
     </td></tr>
@@ -145,7 +147,7 @@ Decimal data types are best used in financial applications because arithmetic op
     <tr><td class="donthyphenate nobr">Exponentiations &amp; logarithms</td> <td>        <a href="#.cbrt"><em class="tt">cbrt</em></a>&nbsp; <a href="#.compound"><em class="tt">compound</em></a>&nbsp;
         <a href="#.exp"><em class="tt">exp</em></a>&nbsp; <a href="#.exp10"><em class="tt">exp10</em></a>&nbsp; <a href="#.exp10m1"><em class="tt">exp10m1</em></a>&nbsp; <a href="#.exp2"><em class="tt">exp2</em></a>&nbsp; <a href="#.exp2m1"><em class="tt">exp2m1</em></a>&nbsp; <a href="#.expm1"><em class="tt">expm1</em></a>&nbsp; <a href="#.frexp"><em class="tt">frexp</em></a>&nbsp;
         <a href="#.ilogb"><em class="tt">ilogb</em></a>&nbsp; <a href="#.ldexp"><em class="tt">ldexp</em></a>&nbsp; <a href="#.log"><em class="tt">log</em></a>&nbsp; <a href="#.log10"><em class="tt">log10</em></a>&nbsp; <a href="#.log10p1"><em class="tt">log10p1</em></a>&nbsp; <a href="#.log2"><em class="tt">log2</em></a>&nbsp; <a href="#.log2p1"><em class="tt">log2p1</em></a>&nbsp;
-        <a href="#.logp1"><em class="tt">logp1</em></a>&nbsp; <a href="#.nextPow10"><em class="tt">nextPow10</em></a>&nbsp; <a href="#.pow"><em class="tt">pow</em></a>&nbsp; <a href="#.root"><em class="tt">root</em></a>&nbsp;
+        <a href="#.logp1"><em class="tt">logp1</em></a>&nbsp; <a href="#.nextPow10"><em class="tt">nextPow10</em></a>&nbsp; <a href="#.pow"><em class="tt">pow</em></a>&nbsp; <a href="#.quantexp"><em class="tt">quantexp</em></a>&nbsp; <a href="#.root"><em class="tt">root</em></a>&nbsp;
         <a href="#.rsqrt"><em class="tt">rsqrt</em></a>&nbsp; <a href="#.scalbn"><em class="tt">scalbn</em></a>&nbsp; <a href="#.sqrt"><em class="tt">sqrt</em></a>&nbsp;
         <a href="#.truncPow10"><em class="tt">truncPow10</em></a>&nbsp;
     </td></tr>
@@ -177,28 +179,28 @@ Decimal data types are best used in financial applications because arithmetic op
 <b>Context</b><br><br>
 All arithmetic operations are performed using a <em class="u">thread local context</em>. The context is setting various
 environment options:
-<ul> <li><b>precision</b> - number of digits used. Each decimal data type has a default precision and all the calculations are
-                  performed using this precision. Setting the precision to a custom value will affect
+<ul> <li><b>precision</b> - number of digits used. Each decimal data type has a default precision and all the calculations
+                  are performed using this precision. Setting the precision to a custom value will affect
                   any subsequent operation and all the calculations will be performed using the specified
                   number of digits. See <a href="#.Precision"><em class="tt">Precision</em></a>&nbsp; for details;</li>
- <li><b>rounding</b>  - rounding method used to adjust operation results. If a result will have more digits than the current
-                  context precision, it will be rounded using the specified method. For available rounding modes,
-                  see <a href="#.RoundingMode"><em class="tt">RoundingMode</em></a>&nbsp; for details;</li>
- <li><b>flags</b>     - error flags. Every decimal operation may signal an error. The context will gather these errors for
-                  later introspection. See <a href="#.ExceptionFlags"><em class="tt">ExceptionFlags</em></a>&nbsp; for details;</li>
+ <li><b>rounding</b>  - rounding method used to adjust operation results. If a result will have more digits than the
+                  current context precision, it will be rounded using the specified method. For available rounding
+                  modes, see <a href="#.RoundingMode"><em class="tt">RoundingMode</em></a>&nbsp;;</li>
+ <li><b>flags</b>     - error flags. Every decimal operation may signal an error. The context will gather these errors
+                  for later introspection. See <a href="#.ExceptionFlags"><em class="tt">ExceptionFlags</em></a>&nbsp; for details;</li>
  <li><b>traps</b>     - exception traps. Any error flag which is set may trigger a <a href="#.DecimalException"><em class="tt">DecimalException</em></a>&nbsp; if
                   the corresponding trap is installed. See <a href="#.ExceptionFlags"><em class="tt">ExceptionFlags</em></a>&nbsp; for details;</li>
 </ul>
 
 <br><br>
 <b>Operators</b><br><br>
-All floating point operators are implemented. Binary operators accept as right side argument any decimal, integral or
-floating point type.
+All floating point operators are implemented. Binary operators accept as left or right side argument any decimal,
+integral, character or binary floating point value.
 
 <br><br>
 <b>Initialization</b><br><br>
 Creating decimal floating point values can be done in several ways:
-<ul> <li>by assigning a binary floating point, integral, char, bool, string or character range value:
+<ul> <li>by assigning a binary floating point, integral, char, bool, string or character range (including strings) value:
 <pre class="d_code">decimal32 d = 123;
 decimal64 e = 12.34;
 decimal128 f = <span class="d_string">"24.9"</span>;
@@ -207,7 +209,7 @@ decimal32 h = <span class="d_keyword">true</span>;
 </pre>
 </li>
  <li>by using one of the available contructors.
-   Suported type are floating point, integrals, chars, bool, strings or character ranges:
+   Suported type are binary floating point, integrals, chars, bool, strings or character ranges:
 <pre class="d_code"><span class="d_keyword">auto</span> d = decimal32(7500);
 <span class="d_keyword">auto</span> e = decimal64(52.16);
 <span class="d_keyword">auto</span> f - decimal128(<span class="d_string">"199.4E-12"</span>);
@@ -230,9 +232,9 @@ context will throw exceptions for errors considered severe (<a href="#.InvalidOp
 <a href="#.DivisionByZeroException"><em class="tt">DivisionByZeroException</em></a>&nbsp; or <a href="#.OverflowException"><em class="tt">OverflowException</em></a>&nbsp;).
 Any other error is considered silent and the context will only
 set corresponding error flags (<a href="#.ExceptionFlags.inexact"><em class="tt">ExceptionFlags.inexact</em></a>&nbsp; or <a href="#.ExceptionFlags.underflow"><em class="tt">ExceptionFlags.underflow</em></a>&nbsp;)<br/>
-Most of the operations will throw <a href="#.InvalidOperationException"><em class="tt">InvalidOperationException</em></a>&nbsp; if a signaling NaN is encountered,
-if not stated otherwise in the documentation. This is to avoid usage of unitialized variables
-(decimal values are always initialized to signaling NaN)
+Most of the operations will throw <a href="#.InvalidOperationException"><em class="tt">InvalidOperationException</em></a>&nbsp; if a <b>signaling NaN</b> is encountered,
+if not stated otherwise in the documentation. This behaviour is intended in order to avoid usage of unitialized variables
+(decimal values being by default always initialized to <b>signaling NaN</b>)
 <pre class="d_code"><span class="d_comment">//these will throw:
 </span><span class="d_keyword">auto</span> a = decimal32() + 12;    <span class="d_comment">//InvalidOperationException
 </span><span class="d_keyword">auto</span> b = decimal32.min / 0;   <span class="d_comment">//DivisionByZeroException
@@ -264,7 +266,8 @@ DecimalControl.enableExceptions(ExceptionFlags.inexact)
 </span>}
 </pre>
   <li>Checking for errors</li>
-<pre class="d_code">DecimalControl.resetFlags();
+<pre class="d_code">DecimalControl.disableExceptions(ExceptionFlags.divisionByZero)
+DecimalControl.resetFlags();
 <span class="d_keyword">auto</span> a = decimal32.min / 0;
 <span class="d_keyword">if</span> (DecimalControl.divisionByZero)
 {
@@ -274,13 +277,37 @@ DecimalControl.enableExceptions(ExceptionFlags.inexact)
 </ul>
 
 <br><br>
+<b>Exceptions and results</b><br><br>
+Values returned after an exception is thrown or after an error flag is set, depend on the current <a href="#.RoundingMode"><em class="tt">RoundingMode</em></a>&nbsp;.
+<div class="blankline"></div>
+
+<table class="book"><caption></caption>  <tr><th scope="col">Exception</th> <th scope="col">tiesToEven</th> <th scope="col">tiesToAway</th> <th scope="col">towardPositive</th> <th scope="col">towardNegative</th> <th scope="col">towardZero</th></tr>
+  <tr><td><a href="#.OverflowException"><em class="tt">OverflowException</em></a>&nbsp;</td>  <td>+∞</td> <td>+∞</td> <td>+∞</td> <td><b>+max</b></td> <td><b>+max</b></td> </tr>
+  <tr><td><a href="#.OverflowException"><em class="tt">OverflowException</em></a>&nbsp;</td>  <td>-∞</td> <td>-∞</td> <td><b>-max</b></td> <td>-∞</td> <td><b>-max</b></td> </tr>
+  <tr><td><a href="#.UnderflowException"><em class="tt">UnderflowException</em></a>&nbsp;</td> <td>±0.0</td> <td>±0.0</td> <td><b>+min_normal * epsilon</b></td> <td><b>-min_normal * epsilon</b></td> <td>±0.0</td> </tr>
+  <tr><td><a href="#.DivisionByZeroException"><em class="tt">DivisionByZeroException</em></a>&nbsp;</td> <td>±∞</td> <td>±∞</td> <td>±∞</td> <td>±∞</td> <td>±∞</td> </tr>
+  <tr><td><a href="#.InvalidOperationException"><em class="tt">InvalidOperationException</em></a>&nbsp;</td> <td><b>NaN</b></td> <td><b>NaN</b></td> <td><b>NaN</b></td> <td><b>NaN</b></td> <td><b>NaN</b></td> </tr>
+ </table>
+<div class="blankline"></div>
+
+<a href="#.InexactException"><em class="tt">InexactException</em></a>&nbsp; does not have a specific value associated.
+<div class="blankline"></div>
+
+The subnormal exception is not implemented because it is not part of the IEEE-754-2008 standard.
+If an operation results in a subnormal value (absolute value is smaller than <b>min_normal</b>),
+<a href="#.UnderflowException"><em class="tt">UnderflowException</em></a>&nbsp; is always thrown or <a href="#.ExceptionFlag.underflow"><em class="tt">ExceptionFlag.underflow</em></a>&nbsp; is always set. It's better to avoid
+subnormal values when performing calculations, the results of the operations involving such values are not exact.
+<div class="blankline"></div>
+
+
+<br><br>
 <b>Properties</b><br><br>
 The following properties are defined for each decimal type:
 <div class="blankline"></div>
 
 <table class="book"><caption></caption> <tr><th scope="col">Constant</th> <th scope="col">Name</th> <th scope="col">decimal32</th> <th scope="col">decimal64</th> <th scope="col">decimal128</th></tr>
- <tr><td><span class="d_inlinecode donthyphenate notranslate">init</span></td> <td>initial value</td> <td>signaling NaN</td> <td>signaling NaN</td> <td>signaling NaN</td></tr>
- <tr><td><span class="d_inlinecode donthyphenate notranslate">nan</span></td> <td>Not a Number</td> <td>NaN</td> <td>NaN</td> <td>NaN</td></tr>
+ <tr><td><span class="d_inlinecode donthyphenate notranslate">init</span></td> <td>initial value</td> <td><b>signaling NaN</b></td> <td><b>signaling NaN</b></td> <td><b>signaling NaN</b></td></tr>
+ <tr><td><span class="d_inlinecode donthyphenate notranslate">nan</span></td> <td>Not a Number</td> <td><b>NaN</b></td> <td><b>NaN</b></td> <td><b>NaN</b></td></tr>
  <tr><td><span class="d_inlinecode donthyphenate notranslate">infinity</span></td> <td>positive infinity</td> <td>+∞</td> <td>+∞</td> <td>+∞</td></tr>
  <tr><td><span class="d_inlinecode donthyphenate notranslate">dig</span></td> <td>precision</td> <td>7</td> <td>16</td> <td>34</td></tr>
  <tr><td><span class="d_inlinecode donthyphenate notranslate">epsilon</span></td> <td>smallest increment to the value 1</td> <td>10<sup>-6</sup></td> <td>10<sup>-15</sup></td> <td>10<sup>-33</sup></td></tr>
@@ -297,7 +324,7 @@ The following properties are defined for each decimal type:
 
 <br><br>
 <b>Useful constants</b><br><br>
-There are common constants defined for each type. Values below have 34 digits of precision corresponding
+There are common constants defined for each type. Values int the tablebelow have 34 digits of precision corresponding
 to decimal128 data type; for decimal64 and decimal32, they are rounded away from 0 according to their respecive precision.
 <pre class="d_code"><span class="d_keyword">auto</span> a = decimal32.PI;
 <span class="d_keyword">auto</span> b = decimal64.LN2;
@@ -322,24 +349,67 @@ to decimal128 data type; for decimal64 and decimal32, they are rounded away from
  <tr><td><span class="d_inlinecode donthyphenate notranslate">LOG10E</span></td> <td>log<sub>10</sub>e</td> <td>0.4342944819032518276511289189166051</td></tr>
  <tr><td><span class="d_inlinecode donthyphenate notranslate">LN2</span></td> <td>log<sub>e</sub>2</td> <td>0.6931471805599453094172321214581766</td></tr>
 </table>
+
+<br><br>
+<b>Interaction with binary floating point</b><br><br>
+Even all decimal operations allows the usage of binary floating point values, such mixing must be avoided;
+Internally, binary floating point values are converted to decimal counterparts before any operation:
+<pre class="d_code"><span class="d_keyword">float</span> f = 1.1;
+decimal32 d = <span class="d_string">"2.5"</span>;
+decimal32 e = d + f;
+<span class="d_comment">//behind the scene this is roughly equivalent with e = d + decimal32(f);
+</span></pre>
 <div class="blankline"></div>
 
+It is impossible to represent binary floating point values in full decimal precision.
+By default, <b>float</b> values are converted using 9 digits of precision, <b>double</b> values using 17 digits of precision and <b>real</b> values using 21 digits of precision;
+<pre class="d_code"><span class="d_keyword">float</span> f = 1.1; <span class="d_comment">//internal representation is 1.10000002384185791015625;
+</span>decimal32 d1 = d;  <span class="d_comment">//1.100000, 9 digits from float, but decimal32 has a 7 digits precision
+</span>decimal64 d2 = d;  <span class="d_comment">//1.10000002000000, 9 digits from float
+</span>decimal128 d3 = d; <span class="d_comment">//1.10000002000000000000000000000000, 9 digits from float;
+</span></pre>
 <div class="blankline"></div>
 
+An exact conversion is possible only if the binary floating point value is an exact power of 2
+and fits in the destination type precision or if it's a power of 5.
+<pre class="d_code"><span class="d_keyword">float</span> f = 4.0;   <span class="d_comment">//internally represented as 1.0 * 2^^2
+</span>decimal32 d = f; <span class="d_comment">//internally represented as 0.4 * 10^^1
+</span>
+<span class="d_keyword">float</span> f = 25.0;  <span class="d_comment">//internally represented as 1.5625 * 2^^4
+</span>decimal32 d = f; <span class="d_comment">//internally represented as 0.25 * 10^^2
+</span>
+<span class="d_keyword">float</span> f = 2147483648; <span class="d_comment">//internally represented as 1.0 * 2^^31
+</span>decimal32 d = f;      <span class="d_comment">//inexact, internally represented as 0.2147484 * 10^^7
+</span></pre>
+<div class="blankline"></div>
+
+Binary floating point conversion is dependent on the <a href="#.RoundingMode"><em class="tt">RoundingMode</em></a>&nbsp;:
+<pre class="d_code"><span class="d_keyword">double</span> d = 2.7; <span class="d_comment">//internal representation is 2.7000000476837158203125;
+</span>DecimalControl.rounding = RoundingMode.tiesToAway;
+decimal64 d1 = d;  <span class="d_comment">//d1 will be 2.700000047683716;
+</span>DecimalControl.rounding = RoundingMode.towardZero;
+decimal64 d2 = d;  <span class="d_comment">//d2 will be 2.700000047683715;
+</span></pre>
+<div class="blankline"></div>
+
+Only Intel 80-bit <b>reals</b> are supported. Any other <b>real</b> type is cast to <b>double</b> before any conversion.
 
 <br><br>
 <b>Special remarks</b><br><br>
-<ul> <li>Avoid mixing binary floating point values with <span class="def-anchor" id="decimal"></span><code class="ddoc_psymbol">decimal</code> values, binary foating point values cannot exactly represent 10-based exponents;</li>
+<ul> <li>As stated above, avoid mixing binary floating point values with decimal values, binary foating point values cannot exactly represent 10-based exponents;</li>
  <li>There are many representations for the same number (IEEE calls them cohorts). Comparing bit by bit two decimal values is error prone;</li>
  <li>The comparison operator will return float.nan for an unordered result; There is no operator overloading for unordered comparisons;</li>
- <li>Hexadecimal notation allows to define uncanonical coefficients (&gt; 10 <sup>precision</sup> - 1). According to IEEE standard, these values are considered equal to 0;</li>
+ <li>Hexadecimal notation allows to define uncanonical coefficients (&gt; 10 <sup><b>dig</b></sup> - 1). According to IEEE standard, these values are considered equal to 0;</li>
+ <li>All operations are available at compile time; Avoid exponential or trigonometry functions in CTFE, using them will significantly increase the compile time;</li>
+ <li>Under CTFE, operations are performed in full precision, values are rounded to nearest. <a href="#.InexactException"><em class="tt">InexactException</em></a>&nbsp; and <a href="#.UnderflowException"><em class="tt">UnderflowException</em></a>&nbsp; are never thrown during CTFE;</li>
 </ul>
 
 <br><br>
 <b>Performance tips</b><br><br>
-<ul> <li>When performing decimal calculations, avoid binary floating point; conversion for base-2 from/to base-10 is costly;</li>
+<ul> <li>When performing decimal calculations, avoid binary floating point;
+      conversion base-2 from/to base-10 is costly and error prone, especially if the exponents are very big or very small;</li>
  <li>Avoid custom precisions; rounding is expensive since most of the time will involve a division operation;</li>
- <li>Use decimal128 only if you truly need 34 digits of precision. decimal64 and decimal32 arithmetic is much faster;</li>
+ <li>Use <a href="#.decimal128"><em class="tt">decimal128</em></a>&nbsp; only if you truly need 34 digits of precision. <a href="#.decimal64"><em class="tt">decimal64</em></a>&nbsp; and <a href="#.decimal32"><em class="tt">decimal32</em></a>&nbsp; arithmetic is much faster;</li>
  <li>Avoid traps and check yourself for flags; throwing and catching exceptions is expensive;</li>
  <li>Contrary to usual approach, multiplication/division by 10 for decimal values is faster than multiplication/division by 2;</li>
 </ul>
@@ -423,15 +493,15 @@ to decimal128 data type; for decimal64 and decimal32, they are rounded away from
 <pre class="d_code"><span class="d_keyword">auto</span> d1 = decimal32(<span class="d_string">"123_456_789_123_456_789_123_456_789_123"</span>); <span class="d_comment">//30 digits
 </span><span class="d_comment">//internal representation will be 1.234568 x 10^^30
 </span></pre>
-            <li>NaN payloads can be defined betwen optional brackets ([], (), {}, &lt;&gt;).
+            <li><b>NaN</b> payloads can be defined betwen optional brackets ([], (), {}, &lt;&gt;).
             The payload is unsigned and is accepted in decimal or hexadecimal format;</li>
         </ul>
 <pre class="d_code"><span class="d_keyword">auto</span> d = decimal32(<span class="d_string">"10"</span>);              <span class="d_comment">//integral
 </span><span class="d_keyword">auto</span> e = decimal64(<span class="d_string">"125.43"</span>)           <span class="d_comment">//floating point
 </span><span class="d_keyword">auto</span> f = decimal128(<span class="d_string">"123.456E-32"</span>);    <span class="d_comment">//scientific
 </span><span class="d_keyword">auto</span> g = decimal32(<span class="d_string">"0xABCDEp+21"</span>);     <span class="d_comment">//hexadecimal 0xABCD * 10^^21
-</span><span class="d_keyword">auto</span> h = decimal64(<span class="d_string">"NaN1234"</span>);         <span class="d_comment">//NaN with 1234 payload
-</span><span class="d_keyword">auto</span> i = decimal128(<span class="d_string">"sNaN&lt;0xABCD&gt;"</span>)    <span class="d_comment">//signaling NaN with a 0xABCD payload
+</span><span class="d_keyword">auto</span> h = decimal64(<span class="d_string">"NaN1234"</span>);         <span class="d_comment">//$(B NaN) with 1234 payload
+</span><span class="d_keyword">auto</span> i = decimal128(<span class="d_string">"sNaN&lt;0xABCD&gt;"</span>)    <span class="d_comment">//signaling $(B NaN) with a 0xABCD payload
 </span><span class="d_keyword">auto</span> j = decimal32(<span class="d_string">"inf"</span>);             <span class="d_comment">//infinity
 </span></pre>
 <br><br>
@@ -481,7 +551,7 @@ to decimal128 data type; for decimal64 and decimal32, they are rounded away from
 <br><br>
 <b>Exceptions</b><br><br>
 <table class="book"><caption></caption>            <tr><th scope="col">Value</th> <th scope="col">++/-- </th> <th scope="col">Invalid</th> <th scope="col">Overflow</th> <th scope="col">Inexact</th></tr>
-            <tr><td>NaN  </td> <td>NaN   </td> <td>✓     </td> <td>        </td> <td>       </td></tr>
+            <tr><td><b>NaN</b>  </td> <td><b>NaN</b>   </td> <td>✓     </td> <td>        </td> <td>       </td></tr>
             <tr><td>±∞   </td> <td>±∞    </td> <td>       </td> <td>        </td> <td>       </td></tr>
             <tr><td>any  </td> <td>any   </td> <td>       </td> <td>✓      </td> <td>✓     </td></tr>
         </table><br><br>
@@ -498,8 +568,8 @@ to decimal128 data type; for decimal64 and decimal32, they are rounded away from
 <dd>Implementation of comparison operator.
     Supported types : decimal, floating point, integral, char
     <table class="book"><caption></caption>            <tr><th scope="col">this</th> <th scope="col">Value</th> <th scope="col">Result</th>    <th scope="col">Invalid</th></tr>
-            <tr><td>NaN </td> <td>any  </td> <td>NaN   </td>    <td>✓     </td></tr>
-            <tr><td>any </td> <td>NaN  </td> <td>NaN   </td>    <td>✓     </td></tr>
+            <tr><td><b>NaN</b> </td> <td>any  </td> <td><b>NaN</b>   </td>    <td>✓     </td></tr>
+            <tr><td>any </td> <td><b>NaN</b>  </td> <td><b>NaN</b>   </td>    <td>✓     </td></tr>
             <tr><td>any </td> <td>any  </td> <td>±1.0, 0.0</td> <td>       </td></tr>
         </table><br><br>
 
@@ -517,33 +587,33 @@ decimal, floating point, integral, char
 <br><br>
 <b>Exceptions</b><br><br>
 <table class="book"><caption></caption>        <tr><th scope="col">Left</th> <th scope="col">Op</th> <th scope="col">Right</th> <th scope="col">Result</th> <th scope="col">Invalid</th> <th scope="col">Div0</th> <th scope="col">Overflow</th> <th scope="col">Underflow</th> <th scope="col">Inexact</th></tr>
-        <tr><td>NaN</td> <td>any</td> <td>any</td> <td>NaN</td>      <td>✓     </td> <td>    </td> <td>        </td> <td>        </td>  <td>       </td></tr>
-        <tr><td>any</td> <td>any</td> <td>NaN</td> <td>NaN</td>      <td>✓     </td> <td>    </td> <td>        </td> <td>        </td>  <td>       </td></tr>
-        <tr><td>+∞</td> <td>+</td> <td>-∞</td> <td>NaN</td>          <td>✓     </td> <td>    </td> <td>        </td> <td>        </td>  <td>       </td></tr>
+        <tr><td><b>NaN</b></td> <td>any</td> <td>any</td> <td><b>NaN</b></td>      <td>✓     </td> <td>    </td> <td>        </td> <td>        </td>  <td>       </td></tr>
+        <tr><td>any</td> <td>any</td> <td><b>NaN</b></td> <td><b>NaN</b></td>      <td>✓     </td> <td>    </td> <td>        </td> <td>        </td>  <td>       </td></tr>
+        <tr><td>+∞</td> <td>+</td> <td>-∞</td> <td><b>NaN</b></td>          <td>✓     </td> <td>    </td> <td>        </td> <td>        </td>  <td>       </td></tr>
         <tr><td>+∞</td> <td>+</td> <td>any</td> <td>+∞</td>          <td>       </td> <td>    </td> <td>        </td> <td>        </td>  <td>       </td></tr>
         <tr><td>any</td> <td>+</td> <td>+∞</td> <td>+∞</td>          <td>       </td> <td>    </td> <td>        </td> <td>        </td>  <td>       </td></tr>
-        <tr><td>-∞</td> <td>+</td> <td>+∞</td> <td>NaN</td>          <td>✓     </td> <td>    </td> <td>        </td> <td>        </td>  <td>       </td></tr>
+        <tr><td>-∞</td> <td>+</td> <td>+∞</td> <td><b>NaN</b></td>          <td>✓     </td> <td>    </td> <td>        </td> <td>        </td>  <td>       </td></tr>
         <tr><td>-∞</td> <td>+</td> <td>any</td> <td>-∞</td>          <td>       </td> <td>    </td> <td>        </td> <td>        </td>  <td>       </td></tr>
         <tr><td>any</td> <td>+</td> <td>-∞</td> <td>-∞</td>          <td>       </td> <td>    </td> <td>        </td> <td>        </td>  <td>       </td></tr>
         <tr><td>any</td> <td>+</td> <td>any</td> <td>any</td>        <td>       </td> <td>    </td> <td>✓      </td> <td>✓      </td>  <td>✓     </td></tr>
-        <tr><td>+∞</td> <td>-</td> <td>+∞</td> <td>NaN</td>          <td>✓     </td> <td>    </td> <td>        </td> <td>        </td>  <td>       </td></tr>
+        <tr><td>+∞</td> <td>-</td> <td>+∞</td> <td><b>NaN</b></td>          <td>✓     </td> <td>    </td> <td>        </td> <td>        </td>  <td>       </td></tr>
         <tr><td>+∞</td> <td>-</td> <td>any</td> <td>+∞</td>          <td>       </td> <td>    </td> <td>        </td> <td>        </td>  <td>       </td></tr>
         <tr><td>any</td> <td>-</td> <td>+∞</td> <td>-∞</td>          <td>       </td> <td>    </td> <td>        </td> <td>        </td>  <td>       </td></tr>
-        <tr><td>-∞</td> <td>-</td> <td>-∞</td> <td>NaN</td>          <td>✓     </td> <td>    </td> <td>        </td> <td>        </td>  <td>       </td></tr>
+        <tr><td>-∞</td> <td>-</td> <td>-∞</td> <td><b>NaN</b></td>          <td>✓     </td> <td>    </td> <td>        </td> <td>        </td>  <td>       </td></tr>
         <tr><td>-∞</td> <td>-</td> <td>any</td> <td>-∞</td>          <td>       </td> <td>    </td> <td>        </td> <td>        </td>  <td>       </td></tr>
         <tr><td>any</td> <td>-</td> <td>-∞</td> <td>-∞</td>          <td>       </td> <td>    </td> <td>        </td> <td>        </td>  <td>       </td></tr>
         <tr><td>any</td> <td>-</td> <td>any</td> <td>any</td>        <td>       </td> <td>    </td> <td>✓      </td> <td>✓      </td>  <td>✓     </td></tr>
-        <tr><td>±∞</td> <td>*</td> <td>0.0</td> <td>NaN</td>         <td>✓     </td> <td>    </td> <td>        </td> <td>        </td>  <td>       </td></tr>
+        <tr><td>±∞</td> <td>*</td> <td>0.0</td> <td><b>NaN</b></td>         <td>✓     </td> <td>    </td> <td>        </td> <td>        </td>  <td>       </td></tr>
         <tr><td>±∞</td> <td>*</td> <td>any</td> <td>±∞</td>          <td>       </td> <td>    </td> <td>        </td> <td>        </td>  <td>       </td></tr>
         <tr><td>any</td> <td>*</td> <td>any</td> <td>any</td>        <td>       </td> <td>    </td> <td>        </td> <td>        </td>  <td>       </td></tr>
-        <tr><td>±∞</td> <td>/</td> <td>±∞</td> <td>NaN</td>          <td>✓     </td> <td>    </td> <td>        </td> <td>        </td>  <td>       </td></tr>
-        <tr><td>0.0</td> <td>/</td> <td>0.0</td> <td>NaN</td>        <td>✓     </td> <td>    </td> <td>        </td> <td>        </td>  <td>       </td></tr>
+        <tr><td>±∞</td> <td>/</td> <td>±∞</td> <td><b>NaN</b></td>          <td>✓     </td> <td>    </td> <td>        </td> <td>        </td>  <td>       </td></tr>
+        <tr><td>0.0</td> <td>/</td> <td>0.0</td> <td><b>NaN</b></td>        <td>✓     </td> <td>    </td> <td>        </td> <td>        </td>  <td>       </td></tr>
         <tr><td>±∞</td> <td>/</td> <td>any</td> <td>±∞</td>          <td>       </td> <td>    </td> <td>        </td> <td>        </td>  <td>       </td></tr>
         <tr><td>any</td> <td>/</td> <td>0.0</td> <td>±∞</td>         <td>       </td> <td>✓  </td> <td>        </td> <td>        </td>  <td>       </td></tr>
         <tr><td>any</td> <td>/</td> <td>any</td> <td>any</td>        <td>       </td> <td>    </td> <td>✓      </td> <td>✓      </td>  <td>✓     </td></tr>
-        <tr><td>±∞</td> <td>%</td> <td>any</td> <td>NaN</td>         <td>✓     </td> <td>    </td> <td>        </td> <td>        </td>  <td>       </td></tr>
-        <tr><td>any</td> <td>%</td> <td>±∞</td> <td>NaN</td>         <td>✓     </td> <td>    </td> <td>        </td> <td>        </td>  <td>       </td></tr>
-        <tr><td>any</td> <td>%</td> <td>0.0</td> <td>NaN</td>        <td>✓     </td> <td>    </td> <td>        </td> <td>        </td>  <td>       </td></tr>
+        <tr><td>±∞</td> <td>%</td> <td>any</td> <td><b>NaN</b></td>         <td>✓     </td> <td>    </td> <td>        </td> <td>        </td>  <td>       </td></tr>
+        <tr><td>any</td> <td>%</td> <td>±∞</td> <td><b>NaN</b></td>         <td>✓     </td> <td>    </td> <td>        </td> <td>        </td>  <td>       </td></tr>
+        <tr><td>any</td> <td>%</td> <td>0.0</td> <td><b>NaN</b></td>        <td>✓     </td> <td>    </td> <td>        </td> <td>        </td>  <td>       </td></tr>
         <tr><td>any</td> <td>%</td> <td>any</td> <td>any</td>        <td>       </td> <td>    </td> <td>✓      </td> <td>✓      </td>  <td>✓     </td></tr>
     </table><br><br>
 
@@ -662,8 +732,8 @@ This function is not intended for direct use, it's provided as support for assoc
 </dd>
 <dt><em class="big"><span class="def-anchor" id=".ExceptionFlags"></span><div class="quickindex" id="quickindex.ExceptionFlags"></div>enum <span class="def-anchor" id="ExceptionFlags"></span><code class="ddoc_psymbol">ExceptionFlags</code>: uint;
 </em></dt>
-<dd>These flags indicate that an error has occurred. They indicate that a 0, NaN or an infinity value has been generated,
-that a result is inexact, or that a signalling NaN has been encountered.
+<dd>These flags indicate that an error has occurred. They indicate that a 0, <b>NaN</b> or an infinity value has been generated,
+that a result is inexact, or that a signalling <b>NaN</b> has been encountered.
 If the corresponding traps are set using <a href="#.DecimalControl"><em class="tt">DecimalControl</em></a>&nbsp;,
 an exception will be thrown after setting these error flags.
 <br><br>
@@ -923,18 +993,18 @@ decimal32 e = uninitialized + 5.0;
 <br><br>
 <b>Exceptions</b><br><br>
 <table class="book"><caption></caption>    <tr><td><a href="#.InvalidOperationException"><em class="tt">InvalidOperationException</em></a>&nbsp;</td>
-         <td><code class="ddoc_param">x</code> is signaling NaN or |<code class="ddoc_param">x</code>| &gt; 1.0</td></tr>
+         <td><code class="ddoc_param">x</code> is signaling <b>NaN</b> or |<code class="ddoc_param">x</code>| &gt; 1.0</td></tr>
     <tr><td><a href="#.InexactException"><em class="tt">InexactException</em></a>&nbsp;</td>
          <td>the result is inexact</td></tr>
 </table>
 <br><br>
 <b>Special values</b><br><br>
 <table class="book"><caption></caption>    <tr><th scope="col"><code class="ddoc_param">x</code></th> <th scope="col"><span class="def-anchor" id="acos"></span><code class="ddoc_psymbol">acos</code>(<code class="ddoc_param">x</code>)</th></tr>
-    <tr><td>NaN</td> <td>NaN</td></tr>
+    <tr><td><b>NaN</b></td> <td><b>NaN</b></td></tr>
     <tr><td>-1.0</td> <td>π</td></tr>
     <tr><td>+1.0</td> <td>+0.0</td></tr>
-    <tr><td>&lt; -1.0</td> <td>NaN</td></tr>
-    <tr><td>&gt; +1.0</td> <td>NaN</td></tr>
+    <tr><td>&lt; -1.0</td> <td><b>NaN</b></td></tr>
+    <tr><td>&gt; +1.0</td> <td><b>NaN</b></td></tr>
 </table><br><br>
 <b>Examples:</b><br>
         <pre class="d_code">decimal32 <span class="d_param">x</span> = 0;
@@ -948,17 +1018,17 @@ decimal32 e = uninitialized + 5.0;
 <br><br>
 <b>Exceptions</b><br><br>
 <table class="book"><caption></caption>    <tr><td><a href="#.InvalidOperationException"><em class="tt">InvalidOperationException</em></a>&nbsp;</td>
-         <td><code class="ddoc_param">x</code> is signaling NaN or <code class="ddoc_param">x</code> &lt; 1.0</td></tr>
+         <td><code class="ddoc_param">x</code> is signaling <b>NaN</b> or <code class="ddoc_param">x</code> &lt; 1.0</td></tr>
     <tr><td><a href="#.InexactException"><em class="tt">InexactException</em></a>&nbsp;</td>
          <td>the result is inexact</td></tr>
 </table>
 <br><br>
 <b>Special values</b><br><br>
 <table class="book"><caption></caption>    <tr><th scope="col"><code class="ddoc_param">x</code></th> <th scope="col"><span class="def-anchor" id="acosh"></span><code class="ddoc_psymbol">acosh</code>(<code class="ddoc_param">x</code>)</th></tr>
-    <tr><td>NaN</td> <td>NaN</td></tr>
+    <tr><td><b>NaN</b></td> <td><b>NaN</b></td></tr>
     <tr><td>+1.0</td> <td>+0.0</td></tr>
     <tr><td>+∞</td> <td>+∞</td></tr>
-    <tr><td>&lt; 1.0</td> <td>NaN</td></tr>
+    <tr><td>&lt; 1.0</td> <td><b>NaN</b></td></tr>
 </table><br><br>
 <b>Examples:</b><br>
         <pre class="d_code">decimal32 <span class="d_param">x</span> = 1;
@@ -966,24 +1036,47 @@ decimal32 e = uninitialized + 5.0;
 </pre>
 <br><br>
 </dd>
+<dt><em class="big"><span class="def-anchor" id=".approxEqual"></span><div class="quickindex" id="quickindex.approxEqual"></div>bool <span class="def-anchor" id="approxEqual"></span><code class="ddoc_psymbol">approxEqual</code>(D1, D2, D3, D4)(auto ref const D1 <code class="ddoc_param">x</code>, auto ref const D2 <code class="ddoc_param">y</code>, auto ref const D3 <code class="ddoc_param">maxRelDiff</code>, auto ref const D4 <code class="ddoc_param">maxAbsDiff</code>) if (isDecimal!(D1, D2, D3, D4));
+<br>bool <span class="def-anchor" id="approxEqual"></span><code class="ddoc_psymbol">approxEqual</code>(D1, D2, D3)(auto ref const D1 <code class="ddoc_param">x</code>, auto ref const D2 <code class="ddoc_param">y</code>, auto ref const D3 <code class="ddoc_param">maxRelDiff</code>) if (isDecimal!(D1, D2, D3));
+<br>bool <span class="def-anchor" id="approxEqual"></span><code class="ddoc_psymbol">approxEqual</code>(D1, D2)(auto ref const D1 <code class="ddoc_param">x</code>, auto ref const D2 <code class="ddoc_param">y</code>) if (isDecimal!(D1, D2));
+</em></dt>
+<dd>Computes whether two values are approximately equal, admitting a maximum relative difference,
+or a maximum absolute difference.
+<br><br>
+<b>Params:</b><br>
+
+<table cellspacing="0" cellpadding="5"><caption><tr><td>D1 <code class="ddoc_param">x</code></td>
+<td>First item to compare</td></tr>
+<tr><td>D2 <code class="ddoc_param">y</code></td>
+<td>Second item to compare</td></tr>
+<tr><td>D3 <code class="ddoc_param">maxRelDiff</code></td>
+<td>Maximum allowable relative difference (defaults to 1e-5)</td></tr>
+<tr><td>D4 <code class="ddoc_param">maxAbsDiff</code></td>
+<td>Maximum allowable absolute difference (defaults to 1e-2)</td></tr>
+</caption></table><br><b>Returns:</b><br>
+        <code class="ddoc_keyword">true</code> if the two items are approximately equal under either criterium.
+<br><br><b>Notes</b><br><br>
+This operation is silent, does not throw any exceptions and it doesn't set any error flags.<br><br>
+
+</dd>
 <dt><em class="big"><span class="def-anchor" id=".asin"></span><div class="quickindex" id="quickindex.asin"></div>D <span class="def-anchor" id="asin"></span><code class="ddoc_psymbol">asin</code>(D)(auto ref const D <code class="ddoc_param">x</code>) if (isDecimal!D);
 </em></dt>
 <dd>Calculates the arc sine of <code class="ddoc_param">x</code>, returning a value ranging from -π/2 to +π/2.
 <br><br>
 <b>Exceptions</b><br><br>
 <table class="book"><caption></caption>    <tr><td><a href="#.InvalidOperationException"><em class="tt">InvalidOperationException</em></a>&nbsp;</td>
-         <td><code class="ddoc_param">x</code> is signaling NaN or |<code class="ddoc_param">x</code>| &gt; 1.0</td></tr>
+         <td><code class="ddoc_param">x</code> is signaling <b>NaN</b> or |<code class="ddoc_param">x</code>| &gt; 1.0</td></tr>
     <tr><td><a href="#.InexactException"><em class="tt">InexactException</em></a>&nbsp;</td>
          <td>the result is inexact</td></tr>
 </table>
 <br><br>
 <b>Special values</b><br><br>
 <table class="book"><caption></caption>    <tr><th scope="col"><code class="ddoc_param">x</code></th> <th scope="col"><span class="def-anchor" id="asin"></span><code class="ddoc_psymbol">asin</code>(<code class="ddoc_param">x</code>)</th></tr>
-    <tr><td>NaN</td> <td>NaN</td></tr>
+    <tr><td><b>NaN</b></td> <td><b>NaN</b></td></tr>
     <tr><td>-1.0</td> <td>-π/2</td></tr>
     <tr><td>+1.0</td> <td>+π/2</td></tr>
-    <tr><td>&lt; -1.0</td> <td>NaN</td></tr>
-    <tr><td>&gt; +1.0</td> <td>NaN</td></tr>
+    <tr><td>&lt; -1.0</td> <td><b>NaN</b></td></tr>
+    <tr><td>&gt; +1.0</td> <td><b>NaN</b></td></tr>
 </table><br><br>
 <b>Examples:</b><br>
         <pre class="d_code">decimal32 <span class="d_param">x</span> = 1;
@@ -998,7 +1091,7 @@ decimal32 e = uninitialized + 5.0;
 <br><br>
 <b>Exceptions</b><br><br>
 <table class="book"><caption></caption>    <tr><td><a href="#.InvalidOperationException"><em class="tt">InvalidOperationException</em></a>&nbsp;</td>
-         <td><code class="ddoc_param">x</code> is signaling NaN</td></tr>
+         <td><code class="ddoc_param">x</code> is signaling <b>NaN</b></td></tr>
     <tr><td><a href="#.UnderflowException"><em class="tt">UnderflowException</em></a>&nbsp;</td>
          <td>the result is too small to be represented</td></tr>
     <tr><td><a href="#.InexactException"><em class="tt">InexactException</em></a>&nbsp;</td>
@@ -1007,7 +1100,7 @@ decimal32 e = uninitialized + 5.0;
 <br><br>
 <b>Special values</b><br><br>
 <table class="book"><caption></caption>    <tr><th scope="col"><code class="ddoc_param">x</code></th> <th scope="col"><span class="def-anchor" id="asinh"></span><code class="ddoc_psymbol">asinh</code>(<code class="ddoc_param">x</code>)</th></tr>
-    <tr><td>NaN</td> <td>NaN</td></tr>
+    <tr><td><b>NaN</b></td> <td><b>NaN</b></td></tr>
     <tr><td>±0.0</td> <td>±0.0</td></tr>
     <tr><td>±∞</td> <td>±∞</td></tr>
 </table><br><br>
@@ -1023,7 +1116,7 @@ decimal32 e = uninitialized + 5.0;
 <br><br>
 <b>Exceptions</b><br><br>
 <table class="book"><caption></caption>    <tr><td><a href="#.InvalidOperationException"><em class="tt">InvalidOperationException</em></a>&nbsp;</td>
-         <td><code class="ddoc_param">x</code> is signaling NaN</td></tr>
+         <td><code class="ddoc_param">x</code> is signaling <b>NaN</b></td></tr>
     <tr><td><a href="#.InexactException"><em class="tt">InexactException</em></a>&nbsp;</td>
          <td>the result is inexact</td></tr>
     <tr><td><a href="#.UnderflowException"><em class="tt">UnderflowException</em></a>&nbsp;</td>
@@ -1032,7 +1125,7 @@ decimal32 e = uninitialized + 5.0;
 <br><br>
 <b>Special values</b><br><br>
 <table class="book"><caption></caption>    <tr><th scope="col"><code class="ddoc_param">x</code></th> <th scope="col"><span class="def-anchor" id="atan"></span><code class="ddoc_psymbol">atan</code>(<code class="ddoc_param">x</code>)</th></tr>
-    <tr><td>NaN</td> <td>NaN</td></tr>
+    <tr><td><b>NaN</b></td> <td><b>NaN</b></td></tr>
     <tr><td>±0.0</td> <td>±0.0</td></tr>
     <tr><td>±∞</td> <td>±π/2</td></tr>
 </table><br><br>
@@ -1048,7 +1141,7 @@ decimal32 e = uninitialized + 5.0;
 <br><br>
 <b>Exceptions</b><br><br>
 <table class="book"><caption></caption>    <tr><td><a href="#.InvalidOperationException"><em class="tt">InvalidOperationException</em></a>&nbsp;</td>
-         <td><code class="ddoc_param">x</code> or <code class="ddoc_param">y</code> is signaling NaN</td></tr>
+         <td><code class="ddoc_param">x</code> or <code class="ddoc_param">y</code> is signaling <b>NaN</b></td></tr>
     <tr><td><a href="#.InexactException"><em class="tt">InexactException</em></a>&nbsp;</td>
          <td>the result is inexact</td></tr>
     <tr><td><a href="#.UnderflowException"><em class="tt">UnderflowException</em></a>&nbsp;</td>
@@ -1057,8 +1150,8 @@ decimal32 e = uninitialized + 5.0;
 <br><br>
 <b>Special values</b><br><br>
 <table class="book"><caption></caption>    <tr><th scope="col"><code class="ddoc_param">y</code></th> <th scope="col"><code class="ddoc_param">x</code></th> <th scope="col"><span class="def-anchor" id="atan2"></span><code class="ddoc_psymbol">atan2</code>(<code class="ddoc_param">y</code>, <code class="ddoc_param">x</code>)</th></tr>
-    <tr><td>NaN</td> <td>any</td> <td>NaN</td></tr>
-    <tr><td>any</td> <td>NaN</td> <td>NaN</td></tr>
+    <tr><td><b>NaN</b></td> <td>any</td> <td><b>NaN</b></td></tr>
+    <tr><td>any</td> <td><b>NaN</b></td> <td><b>NaN</b></td></tr>
     <tr><td>±0.0</td> <td>-0.0</td> <td>±π</td></tr>
     <tr><td>±0.0</td> <td>+0.0</td> <td>±0.0</td></tr>
     <tr><td>±0.0</td> <td>&lt;0.0</td> <td>±π</td></tr>
@@ -1082,7 +1175,7 @@ decimal32 <span class="d_param">x</span> = 0;
 <br><br>
 <b>Exceptions</b><br><br>
 <table class="book"><caption></caption>    <tr><td><a href="#.InvalidOperationException"><em class="tt">InvalidOperationException</em></a>&nbsp;</td>
-         <td><code class="ddoc_param">x</code> or <code class="ddoc_param">y</code> is signaling NaN</td></tr>
+         <td><code class="ddoc_param">x</code> or <code class="ddoc_param">y</code> is signaling <b>NaN</b></td></tr>
     <tr><td><a href="#.InexactException"><em class="tt">InexactException</em></a>&nbsp;</td>
          <td>the result is inexact</td></tr>
     <tr><td><a href="#.UnderflowException"><em class="tt">UnderflowException</em></a>&nbsp;</td>
@@ -1091,8 +1184,8 @@ decimal32 <span class="d_param">x</span> = 0;
 <br><br>
 <b>Special values</b><br><br>
 <table class="book"><caption></caption>    <tr><th scope="col"><code class="ddoc_param">y</code></th> <th scope="col"><code class="ddoc_param">x</code></th> <th scope="col"><span class="def-anchor" id="atan2pi"></span><code class="ddoc_psymbol">atan2pi</code>(<code class="ddoc_param">y</code>, <code class="ddoc_param">x</code>)</th></tr>
-    <tr><td>NaN</td> <td>any</td> <td>NaN</td></tr>
-    <tr><td>any</td> <td>NaN</td> <td>NaN</td></tr>
+    <tr><td><b>NaN</b></td> <td>any</td> <td><b>NaN</b></td></tr>
+    <tr><td>any</td> <td><b>NaN</b></td> <td><b>NaN</b></td></tr>
     <tr><td>±0.0</td> <td>-0.0</td> <td>±1.0</td></tr>
     <tr><td>±0.0</td> <td>+0.0</td> <td>±0.0</td></tr>
     <tr><td>±0.0</td> <td>&lt;0.0</td> <td>±1.0</td></tr>
@@ -1116,7 +1209,7 @@ decimal32 <span class="d_param">x</span> = 0;
 <br><br>
 <b>Exceptions</b><br><br>
 <table class="book"><caption></caption>    <tr><td><a href="#.InvalidOperationException"><em class="tt">InvalidOperationException</em></a>&nbsp;</td>
-         <td><code class="ddoc_param">x</code> is signaling NaN or |<code class="ddoc_param">x</code>| &gt; 1.0</td></tr>
+         <td><code class="ddoc_param">x</code> is signaling <b>NaN</b> or |<code class="ddoc_param">x</code>| &gt; 1.0</td></tr>
     <tr><td><a href="#.DivisionByZeroException"><em class="tt">DivisionByZeroException</em></a>&nbsp;</td>
          <td>|<code class="ddoc_param">x</code>| = 1.0</td></tr>
     <tr><td><a href="#.UnderflowException"><em class="tt">UnderflowException</em></a>&nbsp;</td>
@@ -1127,11 +1220,11 @@ decimal32 <span class="d_param">x</span> = 0;
 <br><br>
 <b>Special values</b><br><br>
 <table class="book"><caption></caption>    <tr><th scope="col"><code class="ddoc_param">x</code></th> <th scope="col"><span class="def-anchor" id="atanh"></span><code class="ddoc_psymbol">atanh</code>(<code class="ddoc_param">x</code>)</th></tr>
-    <tr><td>NaN</td> <td>NaN</td></tr>
+    <tr><td><b>NaN</b></td> <td><b>NaN</b></td></tr>
     <tr><td>±0.0</td> <td>±0.0</td></tr>
     <tr><td>±1.0</td> <td>±∞</td></tr>
-    <tr><td>&gt;1.0</td> <td>NaN</td></tr>
-    <tr><td>&lt;1.0</td> <td>NaN</td></tr>
+    <tr><td>&gt;1.0</td> <td><b>NaN</b></td></tr>
+    <tr><td>&lt;1.0</td> <td><b>NaN</b></td></tr>
 </table><br><br>
 <b>Examples:</b><br>
         <pre class="d_code">decimal32 <span class="d_param">x</span> = 0;
@@ -1145,7 +1238,7 @@ decimal32 <span class="d_param">x</span> = 0;
 <br><br>
 <b>Exceptions</b><br><br>
 <table class="book"><caption></caption>    <tr><td><a href="#.InvalidOperationException"><em class="tt">InvalidOperationException</em></a>&nbsp;</td>
-         <td><code class="ddoc_param">x</code> is signaling NaN</td></tr>
+         <td><code class="ddoc_param">x</code> is signaling <b>NaN</b></td></tr>
     <tr><td><a href="#.InexactException"><em class="tt">InexactException</em></a>&nbsp;</td>
          <td>the result is inexact</td></tr>
     <tr><td><a href="#.UnderflowException"><em class="tt">UnderflowException</em></a>&nbsp;</td>
@@ -1154,7 +1247,7 @@ decimal32 <span class="d_param">x</span> = 0;
 <br><br>
 <b>Special values</b><br><br>
 <table class="book"><caption></caption>    <tr><th scope="col"><code class="ddoc_param">x</code></th> <th scope="col">atan(<code class="ddoc_param">x</code>)</th></tr>
-    <tr><td>NaN</td> <td>NaN</td></tr>
+    <tr><td><b>NaN</b></td> <td><b>NaN</b></td></tr>
     <tr><td>±0.0</td> <td>±0.0</td></tr>
     <tr><td>±∞</td> <td>±1/2</td></tr>
 </table><br><br>
@@ -1170,7 +1263,7 @@ decimal32 <span class="d_param">x</span> = 0;
 <br><br>
 <b>Throws:</b><br>
         <table class="book"><caption></caption>    <tr><td><a href="#.InvalidOperationException"><em class="tt">InvalidOperationException</em></a>&nbsp;</td>
-         <td><code class="ddoc_param">x</code> is signaling NaN</td></tr>
+         <td><code class="ddoc_param">x</code> is signaling <b>NaN</b></td></tr>
     <tr><td><a href="#.UnderflowException"><em class="tt">UnderflowException</em></a>&nbsp;</td>
          <td>cubic root of <code class="ddoc_param">x</code> is too small to be represented</td></tr>
     <tr><td><a href="#.InexactException"><em class="tt">InexactException</em></a>&nbsp;</td>
@@ -1178,7 +1271,7 @@ decimal32 <span class="d_param">x</span> = 0;
 </table>
 <br><br><b>Special values</b><br><br>
 <table class="book"><caption></caption>    <tr><th scope="col"><code class="ddoc_param">x</code></th> <th scope="col"><span class="def-anchor" id="cbrt"></span><code class="ddoc_psymbol">cbrt</code>(<code class="ddoc_param">x</code>)</th></tr>
-    <tr><td>NaN</td> <td>NaN</td></tr>
+    <tr><td><b>NaN</b></td> <td><b>NaN</b></td></tr>
     <tr><td>±0.0</td> <td>±0.0</td></tr>
     <tr><td>±∞</td> <td>±∞</td></tr>
 </table><br><br>
@@ -1195,7 +1288,7 @@ This operation is silent, doesn't throw any exception.
 <br><br>
 <b>Special values</b><br><br>
 <table class="book"><caption></caption>    <tr><th scope="col"><code class="ddoc_param">x</code></th> <th scope="col"><span class="def-anchor" id="ceil"></span><code class="ddoc_psymbol">ceil</code>(<code class="ddoc_param">x</code>)</th></tr>
-    <tr><td>NaN</td> <td>NaN</td></tr>
+    <tr><td><b>NaN</b></td> <td><b>NaN</b></td></tr>
     <tr><td>±0.0</td> <td>±0.0</td></tr>
     <tr><td>±∞</td> <td>±∞</td></tr>
 </table><br><br>
@@ -1219,8 +1312,8 @@ This operation is silent, doesn't throw any exception.
             -1 if <code class="ddoc_param">x</code> precedes <code class="ddoc_param">y</code>, 0 if <code class="ddoc_param">x</code> is equal to <code class="ddoc_param">y</code>, +1 if <code class="ddoc_param">x</code> follows <code class="ddoc_param">y</code>
 <br><br><b>Notes</b><br><br>
     The total order is defined as:<br/>
-    - -sNaN &lt; -NaN &lt; -infinity &lt; -finite &lt; -0.0 &lt; +0.0 &lt; +finite &lt; +infinity &lt; +NaN &lt; +sNaN<br/>
-    - for two NaN values the total order is defined based on the payload<br><br>
+    - -sNaN &lt; -<b>NaN</b> &lt; -infinity &lt; -finite &lt; -0.0 &lt; +0.0 &lt; +finite &lt; +infinity &lt; +<b>NaN</b> &lt; +sNaN<br/>
+    - for two <b>NaN</b> values the total order is defined based on the payload<br><br>
 <b>Examples:</b><br>
         <pre class="d_code"><span class="d_keyword">assert</span> (<span class="d_psymbol">cmp</span>(-decimal32.nan, decimal64.max) == -1);
 <span class="d_keyword">assert</span> (<span class="d_psymbol">cmp</span>(decimal32.max, decimal128.min_normal) == 1);
@@ -1234,7 +1327,7 @@ This operation is silent, doesn't throw any exception.
 <br><br>
 <b>Throws:</b><br>
         <table class="book"><caption></caption>    <tr><td><a href="#.InvalidOperationException"><em class="tt">InvalidOperationException</em></a>&nbsp;</td>
-         <td><code class="ddoc_param">x</code> is signaling NaN or <code class="ddoc_param">x</code> &lt; -1.0</td></tr>
+         <td><code class="ddoc_param">x</code> is signaling <b>NaN</b> or <code class="ddoc_param">x</code> &lt; -1.0</td></tr>
     <tr><td><a href="#.DivisionByZeroException"><em class="tt">DivisionByZeroException</em></a>&nbsp;</td>
          <td><code class="ddoc_param">x</code> = -1.0 and <code class="ddoc_param">n</code> &lt; 0</td></tr>
     <tr><td><a href="#.OverflowException"><em class="tt">OverflowException</em></a>&nbsp;</td>
@@ -1246,7 +1339,7 @@ This operation is silent, doesn't throw any exception.
 </table>
 <br><br><b>Special values</b><br><br>
 <table class="book"><caption></caption>    <tr><th scope="col"><code class="ddoc_param">x</code></th> <th scope="col"><code class="ddoc_param">n</code></th> <th scope="col"><span class="def-anchor" id="compound"></span><code class="ddoc_psymbol">compound</code>(<code class="ddoc_param">x</code>, <code class="ddoc_param">n</code>)</th></tr>
-    <tr><td>sNaN</td> <td>any</td> <td>NaN</td></tr>
+    <tr><td>sNaN</td> <td>any</td> <td><b>NaN</b></td></tr>
     <tr><td>any</td> <td>0</td> <td>+1.0</td></tr>
     <tr><td>-1.0</td> <td>&lt;0</td> <td>+∞</td></tr>
     <tr><td>-1.0</td> <td>&gt;0</td> <td>+0.0</td></tr>
@@ -1283,7 +1376,7 @@ decimal64 test = decimal64.max;
 <br><br>
 <b>Throws:</b><br>
         <table class="book"><caption></caption>    <tr><td><a href="#.InvalidOperationException"><em class="tt">InvalidOperationException</em></a>&nbsp;</td>
-         <td><code class="ddoc_param">x</code> is signaling NaN or ±∞</td></tr>
+         <td><code class="ddoc_param">x</code> is signaling <b>NaN</b> or ±∞</td></tr>
     <tr><td><a href="#.UnderflowException"><em class="tt">UnderflowException</em></a>&nbsp;</td>
          <td>result is too small to be represented</td></tr>
     <tr><td><a href="#.InexactException"><em class="tt">InexactException</em></a>&nbsp;</td>
@@ -1291,8 +1384,8 @@ decimal64 test = decimal64.max;
 </table>
 <br><br><b>Special values</b><br><br>
 <table class="book"><caption></caption>    <tr><th scope="col"><code class="ddoc_param">x</code></th> <th scope="col"><span class="def-anchor" id="cos"></span><code class="ddoc_psymbol">cos</code>(<code class="ddoc_param">x</code>)</th></tr>
-    <tr><td>NaN</td> <td>NaN</td></tr>
-    <tr><td>±∞</td> <td>NaN</td></tr>
+    <tr><td><b>NaN</b></td> <td><b>NaN</b></td></tr>
+    <tr><td>±∞</td> <td><b>NaN</b></td></tr>
     <tr><td>±0.0</td> <td>+1.0</td></tr>
     <tr><td>π/6</td> <td>+√3/2</td></tr>
     <tr><td>π/4</td> <td>+√2/2</td></tr>
@@ -1311,7 +1404,7 @@ decimal64 test = decimal64.max;
 <br><br>
 <b>Throws:</b><br>
         <table class="book"><caption></caption>    <tr><td><a href="#.InvalidOperationException"><em class="tt">InvalidOperationException</em></a>&nbsp;</td>
-         <td><code class="ddoc_param">x</code> is signaling NaN</td></tr>
+         <td><code class="ddoc_param">x</code> is signaling <b>NaN</b></td></tr>
     <tr><td><a href="#.OverflowException"><em class="tt">OverflowException</em></a>&nbsp;</td>
          <td>result is too big to be represented</td></tr>
     <tr><td><a href="#.InexactException"><em class="tt">InexactException</em></a>&nbsp;</td>
@@ -1319,7 +1412,7 @@ decimal64 test = decimal64.max;
 </table>
 <br><br><b>Special values</b><br><br>
 <table class="book"><caption></caption>    <tr><th scope="col"><code class="ddoc_param">x</code></th> <th scope="col"><span class="def-anchor" id="cosh"></span><code class="ddoc_psymbol">cosh</code>(<code class="ddoc_param">x</code>)</th></tr>
-    <tr><td>NaN</td> <td>NaN</td></tr>
+    <tr><td><b>NaN</b></td> <td><b>NaN</b></td></tr>
     <tr><td>±∞</td> <td>+∞</td></tr>
     <tr><td>±0.0</td> <td>+1.0</td></tr>
 </table><br><br>
@@ -1331,7 +1424,7 @@ decimal64 test = decimal64.max;
 <br><br>
 <b>Throws:</b><br>
         <table class="book"><caption></caption>    <tr><td><a href="#.InvalidOperationException"><em class="tt">InvalidOperationException</em></a>&nbsp;</td>
-         <td><code class="ddoc_param">x</code> is signaling NaN or ±∞</td></tr>
+         <td><code class="ddoc_param">x</code> is signaling <b>NaN</b> or ±∞</td></tr>
     <tr><td><a href="#.UnderflowException"><em class="tt">UnderflowException</em></a>&nbsp;</td>
          <td>result is too small to be represented</td></tr>
     <tr><td><a href="#.InexactException"><em class="tt">InexactException</em></a>&nbsp;</td>
@@ -1339,8 +1432,8 @@ decimal64 test = decimal64.max;
 </table>
 <br><br><b>Special values</b><br><br>
 <table class="book"><caption></caption>    <tr><th scope="col"><code class="ddoc_param">x</code></th> <th scope="col"><span class="def-anchor" id="cospi"></span><code class="ddoc_psymbol">cospi</code>(<code class="ddoc_param">x</code>)</th></tr>
-    <tr><td>NaN</td> <td>NaN</td></tr>
-    <tr><td>±∞</td> <td>NaN</td></tr>
+    <tr><td><b>NaN</b></td> <td><b>NaN</b></td></tr>
+    <tr><td>±∞</td> <td><b>NaN</b></td></tr>
     <tr><td>±0.0</td> <td>+1.0</td></tr>
     <tr><td>1/6</td> <td>+√3/2</td></tr>
     <tr><td>1/4</td> <td>+√2/2</td></tr>
@@ -1358,8 +1451,8 @@ decimal64 test = decimal64.max;
 <dd>IEEE-754-2008 floating point categories<br><br>
 
 <dl><dt><em class="big"><span class="def-anchor" id=".DecimalClass.signalingNaN"></span><div class="quickindex" id="quickindex.DecimalClass.signalingNaN"></div><span class="def-anchor" id="signalingNaN"></span><code class="ddoc_psymbol">signalingNaN</code><br><span class="def-anchor" id=".DecimalClass.quietNaN"></span><div class="quickindex" id="quickindex.DecimalClass.quietNaN"></div><span class="def-anchor" id="quietNaN"></span><code class="ddoc_psymbol">quietNaN</code></em></dt>
-<dd>a signalling NaN represents most of the time an uninitialized variable;
-a quiet NaN represents the result of an invalid operation<br><br>
+<dd>a signalling <b>NaN</b> represents most of the time an uninitialized variable;
+a quiet <b>NaN</b> represents the result of an invalid operation<br><br>
 
 </dd>
 <dt><em class="big"><span class="def-anchor" id=".DecimalClass.negativeInfinity"></span><div class="quickindex" id="quickindex.DecimalClass.negativeInfinity"></div><span class="def-anchor" id="negativeInfinity"></span><code class="ddoc_psymbol">negativeInfinity</code><br><span class="def-anchor" id=".DecimalClass.positiveInfinity"></span><div class="quickindex" id="quickindex.DecimalClass.positiveInfinity"></div><span class="def-anchor" id="positiveInfinity"></span><code class="ddoc_psymbol">positiveInfinity</code></em></dt>
@@ -1410,7 +1503,7 @@ If <code class="ddoc_param">x</code> and <code class="ddoc_param">y</code> array
 <br><br>
 <b>Throws:</b><br>
         <table class="book"><caption></caption>    <tr><td><a href="#.InvalidOperationException"><em class="tt">InvalidOperationException</em></a>&nbsp;</td>
-         <td>any <code class="ddoc_param">x</code> is signaling NaN</td></tr>
+         <td>any <code class="ddoc_param">x</code> is signaling <b>NaN</b></td></tr>
     <tr><td><a href="#.InvalidOperationException"><em class="tt">InvalidOperationException</em></a>&nbsp;</td>
          <td>any combination of elements is (±∞, ±0.0) or (±0.0, ±∞)</td></tr>
     <tr><td><a href="#.InvalidOperationException"><em class="tt">InvalidOperationException</em></a>&nbsp;</td>
@@ -1429,7 +1522,7 @@ If <code class="ddoc_param">x</code> and <code class="ddoc_param">y</code> array
 <br><br>
 <b>Throws:</b><br>
         <table class="book"><caption></caption>    <tr><td><a href="#.InvalidOperationException"><em class="tt">InvalidOperationException</em></a>&nbsp;</td>
-         <td><code class="ddoc_param">x</code> is signaling NaN</td></tr>
+         <td><code class="ddoc_param">x</code> is signaling <b>NaN</b></td></tr>
     <tr><td><a href="#.UnderflowException"><em class="tt">UnderflowException</em></a>&nbsp;</td>
          <td>e<sup><code class="ddoc_param">x</code></sup> is too small to be represented</td></tr>
     <tr><td><a href="#.OverflowException"><em class="tt">OverflowException</em></a>&nbsp;</td>
@@ -1439,7 +1532,7 @@ If <code class="ddoc_param">x</code> and <code class="ddoc_param">y</code> array
 </table>
 <br><br><b>Special values</b><br><br>
 <table class="book"><caption></caption>    <tr><th scope="col"><code class="ddoc_param">x</code></th> <th scope="col"><span class="def-anchor" id="exp"></span><code class="ddoc_psymbol">exp</code>(<code class="ddoc_param">x</code>)</th></tr>
-    <tr><td>NaN</td> <td>NaN</td></tr>
+    <tr><td><b>NaN</b></td> <td><b>NaN</b></td></tr>
     <tr><td>±0.0</td> <td>+1.0</td></tr>
     <tr><td>-∞</td> <td>0</td></tr>
     <tr><td>+∞</td> <td>+∞</td></tr>
@@ -1456,7 +1549,7 @@ If <code class="ddoc_param">x</code> and <code class="ddoc_param">y</code> array
 <br><br>
 <b>Throws:</b><br>
         <table class="book"><caption></caption>    <tr><td><a href="#.InvalidOperationException"><em class="tt">InvalidOperationException</em></a>&nbsp;</td>
-         <td><code class="ddoc_param">x</code> is signaling NaN</td></tr>
+         <td><code class="ddoc_param">x</code> is signaling <b>NaN</b></td></tr>
     <tr><td><a href="#.UnderflowException"><em class="tt">UnderflowException</em></a>&nbsp;</td>
          <td>10<sup><code class="ddoc_param">x</code></sup> is too small to be represented</td></tr>
     <tr><td><a href="#.OverflowException"><em class="tt">OverflowException</em></a>&nbsp;</td>
@@ -1466,7 +1559,7 @@ If <code class="ddoc_param">x</code> and <code class="ddoc_param">y</code> array
 </table>
 <br><br><b>Special values</b><br><br>
 <table class="book"><caption></caption>    <tr><th scope="col"><code class="ddoc_param">x</code></th> <th scope="col"><span class="def-anchor" id="exp10"></span><code class="ddoc_psymbol">exp10</code>(<code class="ddoc_param">x</code>)</th></tr>
-    <tr><td>NaN</td> <td>NaN</td></tr>
+    <tr><td><b>NaN</b></td> <td><b>NaN</b></td></tr>
     <tr><td>±0.0</td> <td>+1.0</td></tr>
     <tr><td>-∞</td> <td>+0.0</td></tr>
     <tr><td>+∞</td> <td>+∞</td></tr>
@@ -1483,7 +1576,7 @@ If <code class="ddoc_param">x</code> and <code class="ddoc_param">y</code> array
 <br><br>
 <b>Throws:</b><br>
         <table class="book"><caption></caption>    <tr><td><a href="#.InvalidOperationException"><em class="tt">InvalidOperationException</em></a>&nbsp;</td>
-         <td><code class="ddoc_param">x</code> is signaling NaN</td></tr>
+         <td><code class="ddoc_param">x</code> is signaling <b>NaN</b></td></tr>
     <tr><td><a href="#.UnderflowException"><em class="tt">UnderflowException</em></a>&nbsp;</td>
          <td>10<sup><code class="ddoc_param">x</code></sup> - 1 is too small to be represented</td></tr>
     <tr><td><a href="#.OverflowException"><em class="tt">OverflowException</em></a>&nbsp;</td>
@@ -1493,7 +1586,7 @@ If <code class="ddoc_param">x</code> and <code class="ddoc_param">y</code> array
 </table>
 <br><br><b>Special values</b><br><br>
 <table class="book"><caption></caption>    <tr><th scope="col"><code class="ddoc_param">x</code></th> <th scope="col"><span class="def-anchor" id="exp10m1"></span><code class="ddoc_psymbol">exp10m1</code>(<code class="ddoc_param">x</code>)</th></tr>
-    <tr><td>NaN</td> <td>NaN</td></tr>
+    <tr><td><b>NaN</b></td> <td><b>NaN</b></td></tr>
     <tr><td>±0.0</td> <td>±0.0</td></tr>
     <tr><td>-∞</td> <td>-1.0</td></tr>
     <tr><td>+∞</td> <td>+∞</td></tr>
@@ -1510,7 +1603,7 @@ If <code class="ddoc_param">x</code> and <code class="ddoc_param">y</code> array
 <br><br>
 <b>Throws:</b><br>
         <table class="book"><caption></caption>    <tr><td><a href="#.InvalidOperationException"><em class="tt">InvalidOperationException</em></a>&nbsp;</td>
-         <td><code class="ddoc_param">x</code> is signaling NaN</td></tr>
+         <td><code class="ddoc_param">x</code> is signaling <b>NaN</b></td></tr>
     <tr><td><a href="#.UnderflowException"><em class="tt">UnderflowException</em></a>&nbsp;</td>
          <td>2<sup><code class="ddoc_param">x</code></sup> is too small to be represented</td></tr>
     <tr><td><a href="#.OverflowException"><em class="tt">OverflowException</em></a>&nbsp;</td>
@@ -1520,7 +1613,7 @@ If <code class="ddoc_param">x</code> and <code class="ddoc_param">y</code> array
 </table>
 <br><br><b>Special values</b><br><br>
 <table class="book"><caption></caption>    <tr><th scope="col"><code class="ddoc_param">x</code></th> <th scope="col"><span class="def-anchor" id="exp2"></span><code class="ddoc_psymbol">exp2</code>(<code class="ddoc_param">x</code>)</th></tr>
-    <tr><td>NaN</td> <td>NaN</td></tr>
+    <tr><td><b>NaN</b></td> <td><b>NaN</b></td></tr>
     <tr><td>±0.0</td> <td>+1.0</td></tr>
     <tr><td>-∞</td> <td>+0.0</td></tr>
     <tr><td>+∞</td> <td>+∞</td></tr>
@@ -1537,7 +1630,7 @@ If <code class="ddoc_param">x</code> and <code class="ddoc_param">y</code> array
 <br><br>
 <b>Throws:</b><br>
         <table class="book"><caption></caption>    <tr><td><a href="#.InvalidOperationException"><em class="tt">InvalidOperationException</em></a>&nbsp;</td>
-         <td><code class="ddoc_param">x</code> is signaling NaN</td></tr>
+         <td><code class="ddoc_param">x</code> is signaling <b>NaN</b></td></tr>
     <tr><td><a href="#.UnderflowException"><em class="tt">UnderflowException</em></a>&nbsp;</td>
          <td>2<sup><code class="ddoc_param">x</code></sup> - 1 is too small to be represented</td></tr>
     <tr><td><a href="#.OverflowException"><em class="tt">OverflowException</em></a>&nbsp;</td>
@@ -1547,7 +1640,7 @@ If <code class="ddoc_param">x</code> and <code class="ddoc_param">y</code> array
 </table>
 <br><br><b>Special values</b><br><br>
 <table class="book"><caption></caption>    <tr><th scope="col"><code class="ddoc_param">x</code></th> <th scope="col"><span class="def-anchor" id="exp2m1"></span><code class="ddoc_psymbol">exp2m1</code>(<code class="ddoc_param">x</code>)</th></tr>
-    <tr><td>NaN</td> <td>NaN</td></tr>
+    <tr><td><b>NaN</b></td> <td><b>NaN</b></td></tr>
     <tr><td>±0.0</td> <td>±0.0</td></tr>
     <tr><td>-∞</td> <td>-1.0</td></tr>
     <tr><td>+∞</td> <td>+∞</td></tr>
@@ -1564,7 +1657,7 @@ If <code class="ddoc_param">x</code> and <code class="ddoc_param">y</code> array
 <br><br>
 <b>Throws:</b><br>
         <table class="book"><caption></caption>    <tr><td><a href="#.InvalidOperationException"><em class="tt">InvalidOperationException</em></a>&nbsp;</td>
-         <td><code class="ddoc_param">x</code> is signaling NaN</td></tr>
+         <td><code class="ddoc_param">x</code> is signaling <b>NaN</b></td></tr>
     <tr><td><a href="#.UnderflowException"><em class="tt">UnderflowException</em></a>&nbsp;</td>
          <td>e<sup><code class="ddoc_param">x</code></sup> - 1 is too small to be represented</td></tr>
     <tr><td><a href="#.OverflowException"><em class="tt">OverflowException</em></a>&nbsp;</td>
@@ -1574,7 +1667,7 @@ If <code class="ddoc_param">x</code> and <code class="ddoc_param">y</code> array
 </table>
 <br><br><b>Special values</b><br><br>
 <table class="book"><caption></caption>    <tr><th scope="col"><code class="ddoc_param">x</code></th> <th scope="col"><span class="def-anchor" id="expm1"></span><code class="ddoc_psymbol">expm1</code>(<code class="ddoc_param">x</code>)</th></tr>
-    <tr><td>NaN</td> <td>NaN</td></tr>
+    <tr><td><b>NaN</b></td> <td><b>NaN</b></td></tr>
     <tr><td>±0.0</td> <td>±0.0</td></tr>
     <tr><td>-∞</td> <td>-1.0</td></tr>
     <tr><td>+∞</td> <td>+∞</td></tr>
@@ -1591,6 +1684,38 @@ This operation is silent, no error flags are set and no exceptions are thrown.<b
 </pre>
 <br><br>
 </dd>
+<dt><em class="big"><span class="def-anchor" id=".fdim"></span><div class="quickindex" id="quickindex.fdim"></div>auto <span class="def-anchor" id="fdim"></span><code class="ddoc_psymbol">fdim</code>(D1, D2)(auto ref const D1 <code class="ddoc_param">x</code>, auto ref const D2 <code class="ddoc_param">y</code>);
+</em></dt>
+<dd>Returns the positive difference between <code class="ddoc_param">x</code> and <code class="ddoc_param">y</code>. If <code class="ddoc_param">x</code> ≤ <code class="ddoc_param">y</code>, retuns 0.0
+<br><br>
+<b>Throws:</b><br>
+        <table class="book"><caption></caption>    <tr><td><a href="#.InvalidOperationException"><em class="tt">InvalidOperationException</em></a>&nbsp;</td>
+         <td>either <code class="ddoc_param">x</code> or <code class="ddoc_param">y</code> is <b>signaling NaN</b></td></tr>
+    <tr><td><a href="#.InvalidOperationException"><em class="tt">InvalidOperationException</em></a>&nbsp;</td>
+         <td><code class="ddoc_param">x</code> and <code class="ddoc_param">y</code> are infinities with same sign</td></tr>
+    <tr><td><a href="#.UnderflowException"><em class="tt">UnderflowException</em></a>&nbsp;</td>
+         <td>result is subnormal</td></tr>
+    <tr><td><a href="#.InexactException"><em class="tt">InexactException</em></a>&nbsp;</td>
+         <td>result is inexact</td></tr>
+</table>
+<br><br><b>Special values</b><br><br>
+<table class="book"><caption></caption>    <tr><th scope="col"><code class="ddoc_param">x</code></th> <th scope="col"><code class="ddoc_param">y</code></th> <th scope="col"><span class="def-anchor" id="fdim"></span><code class="ddoc_psymbol">fdim</code>(<code class="ddoc_param">x</code>, <code class="ddoc_param">y</code>)</th></tr>
+    <tr><td><b>NaN</b></td> <td>any</td> <td><b>NaN</b></td></tr>
+    <tr><td>any</td> <td><b>NaN</b></td> <td><b>NaN</b></td></tr>
+    <tr><td>+∞</td> <td>+∞</td> <td><b>NaN</b></td></tr>
+    <tr><td>-∞</td> <td>-∞</td> <td><b>NaN</b></td></tr>
+    <tr><td><code class="ddoc_param">x</code> &gt; <code class="ddoc_param">y</code></td> <td></td> <td><code class="ddoc_param">x</code> - <code class="ddoc_param">y</code></td></tr>
+    <tr><td><code class="ddoc_param">x</code> ≤ <code class="ddoc_param">y</code></td> <td></td> <td>0.0</td></tr>
+</table><br><br>
+<b>Examples:</b><br>
+        <pre class="d_code">decimal32 <span class="d_param">x</span> = <span class="d_string">"10.4"</span>;
+decimal32 <span class="d_param">y</span> = <span class="d_string">"7.3"</span>;
+
+<span class="d_keyword">assert</span> (<span class="d_psymbol">fdim</span>(<span class="d_param">x</span>, <span class="d_param">y</span>) == decimal32(<span class="d_string">"3.1"</span>));
+<span class="d_keyword">assert</span> (<span class="d_psymbol">fdim</span>(<span class="d_param">y</span>, <span class="d_param">x</span>) == 0);
+</pre>
+<br><br>
+</dd>
 <dt><em class="big"><span class="def-anchor" id=".floor"></span><div class="quickindex" id="quickindex.floor"></div>D <span class="def-anchor" id="floor"></span><code class="ddoc_psymbol">floor</code>(D)(auto ref const D <code class="ddoc_param">x</code>) if (isDecimal!D);
 </em></dt>
 <dd>Returns the value of <code class="ddoc_param">x</code> rounded downward to the previous integer (toward negative infinity).
@@ -1598,7 +1723,7 @@ This operation is silent, doesn't throw any exception.
 <br><br>
 <b>Special values</b><br><br>
 <table class="book"><caption></caption>    <tr><th scope="col"><code class="ddoc_param">x</code></th> <th scope="col"><span class="def-anchor" id="floor"></span><code class="ddoc_psymbol">floor</code>(<code class="ddoc_param">x</code>)</th></tr>
-    <tr><td>NaN</td> <td>NaN</td></tr>
+    <tr><td><b>NaN</b></td> <td><b>NaN</b></td></tr>
     <tr><td>±0.0</td> <td>±0.0</td></tr>
     <tr><td>±∞</td> <td>±∞</td></tr>
 </table><br><br>
@@ -1614,7 +1739,7 @@ This operation is silent, doesn't throw any exception.
 <br><br>
 <b>Throws:</b><br>
         <table class="book"><caption></caption>    <tr><td><a href="#.InvalidOperationException"><em class="tt">InvalidOperationException</em></a>&nbsp;</td>
-         <td><code class="ddoc_param">x</code>, <code class="ddoc_param">y</code> or <code class="ddoc_param">z</code> is signaling NaN</td></tr>
+         <td><code class="ddoc_param">x</code>, <code class="ddoc_param">y</code> or <code class="ddoc_param">z</code> is signaling <b>NaN</b></td></tr>
     <tr><td><a href="#.InvalidOperationException"><em class="tt">InvalidOperationException</em></a>&nbsp;</td>
          <td>(<code class="ddoc_param">x</code>, <code class="ddoc_param">y</code>) = (±∞, ±0.0) or (±0.0, ±∞)</td></tr>
     <tr><td><a href="#.InvalidOperationException"><em class="tt">InvalidOperationException</em></a>&nbsp;</td>
@@ -1628,27 +1753,27 @@ This operation is silent, doesn't throw any exception.
 </table>
 <br><br><b>Special values</b><br><br>
 <table class="book"><caption></caption>    <tr><th scope="col"><code class="ddoc_param">x</code></th> <th scope="col"><code class="ddoc_param">y</code></th> <th scope="col"><code class="ddoc_param">z</code></th> <th scope="col"><span class="def-anchor" id="fma"></span><code class="ddoc_psymbol">fma</code>(<code class="ddoc_param">x</code>, <code class="ddoc_param">y</code>, <code class="ddoc_param">z</code>)</th></tr>
-    <tr><td>NaN</td> <td>any</td> <td>any</td> <td>NaN</td></tr>
-    <tr><td>any</td> <td>NaN</td> <td>any</td> <td>NaN</td></tr>
-    <tr><td>any</td> <td>any</td> <td>NaN</td> <td>NaN</td></tr>
-    <tr><td>±∞</td> <td>±0.0</td> <td>any</td> <td>NaN</td></tr>
-    <tr><td>±0.0</td> <td>±∞</td> <td>any</td> <td>NaN</td></tr>
-    <tr><td>+∞</td> <td>&gt;0.0</td> <td>-∞</td> <td>NaN</td></tr>
-    <tr><td>-∞</td> <td>&lt;0.0</td> <td>-∞</td> <td>NaN</td></tr>
-    <tr><td>-∞</td> <td>&lt;0.0</td> <td>-∞</td> <td>NaN</td></tr>
-    <tr><td>+∞</td> <td>&gt;0.0</td> <td>-∞</td> <td>NaN</td></tr>
-    <tr><td>-∞</td> <td>&gt;0.0</td> <td>+∞</td> <td>NaN</td></tr>
-    <tr><td>+∞</td> <td>&lt;0.0</td> <td>+∞</td> <td>NaN</td></tr>
-    <tr><td>+∞</td> <td>&lt;0.0</td> <td>+∞</td> <td>NaN</td></tr>
-    <tr><td>-∞</td> <td>&gt;0.0</td> <td>+∞</td> <td>NaN</td></tr>
-    <tr><td>&gt;0.0</td> <td>+∞</td> <td>-∞</td> <td>NaN</td></tr>
-    <tr><td>&lt;0.0</td> <td>-∞</td> <td>-∞</td> <td>NaN</td></tr>
-    <tr><td>&lt;0.0</td> <td>-∞</td> <td>-∞</td> <td>NaN</td></tr>
-    <tr><td>&gt;0.0</td> <td>+∞</td> <td>-∞</td> <td>NaN</td></tr>
-    <tr><td>&gt;0.0</td> <td>-∞</td> <td>+∞</td> <td>NaN</td></tr>
-    <tr><td>&lt;0.0</td> <td>+∞</td> <td>+∞</td> <td>NaN</td></tr>
-    <tr><td>&lt;0.0</td> <td>+∞</td> <td>+∞</td> <td>NaN</td></tr>
-    <tr><td>&gt;0.0</td> <td>-∞</td> <td>+∞</td> <td>NaN</td></tr>
+    <tr><td><b>NaN</b></td> <td>any</td> <td>any</td> <td><b>NaN</b></td></tr>
+    <tr><td>any</td> <td><b>NaN</b></td> <td>any</td> <td><b>NaN</b></td></tr>
+    <tr><td>any</td> <td>any</td> <td><b>NaN</b></td> <td><b>NaN</b></td></tr>
+    <tr><td>±∞</td> <td>±0.0</td> <td>any</td> <td><b>NaN</b></td></tr>
+    <tr><td>±0.0</td> <td>±∞</td> <td>any</td> <td><b>NaN</b></td></tr>
+    <tr><td>+∞</td> <td>&gt;0.0</td> <td>-∞</td> <td><b>NaN</b></td></tr>
+    <tr><td>-∞</td> <td>&lt;0.0</td> <td>-∞</td> <td><b>NaN</b></td></tr>
+    <tr><td>-∞</td> <td>&lt;0.0</td> <td>-∞</td> <td><b>NaN</b></td></tr>
+    <tr><td>+∞</td> <td>&gt;0.0</td> <td>-∞</td> <td><b>NaN</b></td></tr>
+    <tr><td>-∞</td> <td>&gt;0.0</td> <td>+∞</td> <td><b>NaN</b></td></tr>
+    <tr><td>+∞</td> <td>&lt;0.0</td> <td>+∞</td> <td><b>NaN</b></td></tr>
+    <tr><td>+∞</td> <td>&lt;0.0</td> <td>+∞</td> <td><b>NaN</b></td></tr>
+    <tr><td>-∞</td> <td>&gt;0.0</td> <td>+∞</td> <td><b>NaN</b></td></tr>
+    <tr><td>&gt;0.0</td> <td>+∞</td> <td>-∞</td> <td><b>NaN</b></td></tr>
+    <tr><td>&lt;0.0</td> <td>-∞</td> <td>-∞</td> <td><b>NaN</b></td></tr>
+    <tr><td>&lt;0.0</td> <td>-∞</td> <td>-∞</td> <td><b>NaN</b></td></tr>
+    <tr><td>&gt;0.0</td> <td>+∞</td> <td>-∞</td> <td><b>NaN</b></td></tr>
+    <tr><td>&gt;0.0</td> <td>-∞</td> <td>+∞</td> <td><b>NaN</b></td></tr>
+    <tr><td>&lt;0.0</td> <td>+∞</td> <td>+∞</td> <td><b>NaN</b></td></tr>
+    <tr><td>&lt;0.0</td> <td>+∞</td> <td>+∞</td> <td><b>NaN</b></td></tr>
+    <tr><td>&gt;0.0</td> <td>-∞</td> <td>+∞</td> <td><b>NaN</b></td></tr>
     <tr><td>+∞</td> <td>&gt;0.0</td> <td>+∞</td> <td>+∞</td></tr>
     <tr><td>-∞</td> <td>&lt;0.0</td> <td>+∞</td> <td>+∞</td></tr>
     <tr><td>+∞</td> <td>&lt;0.0</td> <td>-∞</td> <td>-∞</td></tr>
@@ -1679,11 +1804,11 @@ decimal128 <span class="d_param">z</span> = 5;
 <dd>Returns the larger decimal value between <code class="ddoc_param">x</code> and <code class="ddoc_param">y</code>
 <br><br>
 <b>Throws:</b><br>
-        <a href="#.InvalidOperationException"><em class="tt">InvalidOperationException</em></a>&nbsp; if <code class="ddoc_param">x</code> or <code class="ddoc_param">y</code> is signaling NaN
+        <a href="#.InvalidOperationException"><em class="tt">InvalidOperationException</em></a>&nbsp; if <code class="ddoc_param">x</code> or <code class="ddoc_param">y</code> is signaling <b>NaN</b>
 <br><br><b>Special values</b><br><br>
 <table class="book"><caption></caption>    <tr><th scope="col"><code class="ddoc_param">x</code></th> <th scope="col"><code class="ddoc_param">y</code></th> <th scope="col"><span class="def-anchor" id="fmax"></span><code class="ddoc_psymbol">fmax</code>(<code class="ddoc_param">x</code>, <code class="ddoc_param">y</code>)</th></tr>
-    <tr><td>NaN</td> <td>any</td> <td><code class="ddoc_param">y</code></td></tr>
-    <tr><td>any</td> <td>NaN</td> <td><code class="ddoc_param">x</code></td></tr>
+    <tr><td><b>NaN</b></td> <td>any</td> <td><code class="ddoc_param">y</code></td></tr>
+    <tr><td>any</td> <td><b>NaN</b></td> <td><code class="ddoc_param">x</code></td></tr>
 </table><br><br>
 <b>Examples:</b><br>
         <pre class="d_code">decimal32 <span class="d_param">x</span> = 3;
@@ -1697,11 +1822,11 @@ decimal64 <span class="d_param">y</span> = -4;
 <dd>Returns the larger decimal value between absolutes of <code class="ddoc_param">x</code> and <code class="ddoc_param">y</code>
 <br><br>
 <b>Throws:</b><br>
-        <a href="#.InvalidOperationException"><em class="tt">InvalidOperationException</em></a>&nbsp; if <code class="ddoc_param">x</code> or <code class="ddoc_param">y</code> is signaling NaN
+        <a href="#.InvalidOperationException"><em class="tt">InvalidOperationException</em></a>&nbsp; if <code class="ddoc_param">x</code> or <code class="ddoc_param">y</code> is signaling <b>NaN</b>
 <br><br><b>Special values</b><br><br>
 <table class="book"><caption></caption>    <tr><th scope="col"><code class="ddoc_param">x</code></th> <th scope="col"><code class="ddoc_param">y</code></th> <th scope="col"><span class="def-anchor" id="fmaxAbs"></span><code class="ddoc_psymbol">fmaxAbs</code>(<code class="ddoc_param">x</code>, <code class="ddoc_param">y</code>)</th></tr>
-    <tr><td>NaN</td> <td>any</td> <td><code class="ddoc_param">y</code></td></tr>
-    <tr><td>any</td> <td>NaN</td> <td><code class="ddoc_param">x</code></td></tr>
+    <tr><td><b>NaN</b></td> <td>any</td> <td><code class="ddoc_param">y</code></td></tr>
+    <tr><td>any</td> <td><b>NaN</b></td> <td><code class="ddoc_param">x</code></td></tr>
 </table><br><br>
 <b>Examples:</b><br>
         <pre class="d_code">decimal32 <span class="d_param">x</span> = 3;
@@ -1715,11 +1840,11 @@ decimal64 <span class="d_param">y</span> = -4;
 <dd>Returns the smaller decimal value between <code class="ddoc_param">x</code> and <code class="ddoc_param">y</code>
 <br><br>
 <b>Throws:</b><br>
-        <a href="#.InvalidOperationException"><em class="tt">InvalidOperationException</em></a>&nbsp; if <code class="ddoc_param">x</code> or <code class="ddoc_param">y</code> is signaling NaN
+        <a href="#.InvalidOperationException"><em class="tt">InvalidOperationException</em></a>&nbsp; if <code class="ddoc_param">x</code> or <code class="ddoc_param">y</code> is signaling <b>NaN</b>
 <br><br><b>Special values</b><br><br>
 <table class="book"><caption></caption>    <tr><th scope="col"><code class="ddoc_param">x</code></th> <th scope="col"><code class="ddoc_param">y</code></th> <th scope="col"><span class="def-anchor" id="fmin"></span><code class="ddoc_psymbol">fmin</code>(<code class="ddoc_param">x</code>, <code class="ddoc_param">y</code>)</th></tr>
-    <tr><td>NaN</td> <td>any</td> <td><code class="ddoc_param">y</code></td></tr>
-    <tr><td>any</td> <td>NaN</td> <td><code class="ddoc_param">x</code></td></tr>
+    <tr><td><b>NaN</b></td> <td>any</td> <td><code class="ddoc_param">y</code></td></tr>
+    <tr><td>any</td> <td><b>NaN</b></td> <td><code class="ddoc_param">x</code></td></tr>
 </table><br><br>
 <b>Examples:</b><br>
         <pre class="d_code">decimal32 <span class="d_param">x</span> = 3;
@@ -1733,11 +1858,11 @@ decimal64 <span class="d_param">y</span> = -4;
 <dd>Returns the smaller decimal value between absolutes of <code class="ddoc_param">x</code> and <code class="ddoc_param">y</code>
 <br><br>
 <b>Throws:</b><br>
-        <a href="#.InvalidOperationException"><em class="tt">InvalidOperationException</em></a>&nbsp; if <code class="ddoc_param">x</code> or <code class="ddoc_param">y</code> is signaling NaN
+        <a href="#.InvalidOperationException"><em class="tt">InvalidOperationException</em></a>&nbsp; if <code class="ddoc_param">x</code> or <code class="ddoc_param">y</code> is signaling <b>NaN</b>
 <br><br><b>Special values</b><br><br>
 <table class="book"><caption></caption>    <tr><th scope="col"><code class="ddoc_param">x</code></th> <th scope="col"><code class="ddoc_param">y</code></th> <th scope="col"><span class="def-anchor" id="fminAbs"></span><code class="ddoc_psymbol">fminAbs</code>(<code class="ddoc_param">x</code>, <code class="ddoc_param">y</code>)</th></tr>
-    <tr><td>NaN</td> <td>any</td> <td><code class="ddoc_param">y</code></td></tr>
-    <tr><td>any</td> <td>NaN</td> <td><code class="ddoc_param">x</code></td></tr>
+    <tr><td><b>NaN</b></td> <td>any</td> <td><code class="ddoc_param">y</code></td></tr>
+    <tr><td>any</td> <td><b>NaN</b></td> <td><code class="ddoc_param">x</code></td></tr>
 </table><br><br>
 <b>Examples:</b><br>
         <pre class="d_code">decimal32 <span class="d_param">x</span> = 3;
@@ -1760,7 +1885,7 @@ decimal64 <span class="d_param">y</span> = -4;
         The value of <code class="ddoc_param">x</code> - n * <code class="ddoc_param">y</code>, where n is the quotient rounded toward zero of the division <code class="ddoc_param">x</code> / <code class="ddoc_param">y</code>
 <br><br><b>Throws:</b><br>
         <table class="book"><caption></caption>    <tr><td><a href="#.InvalidOperationException"><em class="tt">InvalidOperationException</em></a>&nbsp;</td>
-         <td><code class="ddoc_param">x</code> or <code class="ddoc_param">y</code> is signaling NaN, <code class="ddoc_param">x</code> = ±∞, <code class="ddoc_param">y</code> = ±0.0</td></tr>
+         <td><code class="ddoc_param">x</code> or <code class="ddoc_param">y</code> is signaling <b>NaN</b>, <code class="ddoc_param">x</code> = ±∞, <code class="ddoc_param">y</code> = ±0.0</td></tr>
     <tr><td><a href="#.UnderflowException"><em class="tt">UnderflowException</em></a>&nbsp;</td>
          <td>result is too small to be represented</td></tr>
     <tr><td><a href="#.DivisionByZeroException"><em class="tt">DivisionByZeroException</em></a>&nbsp;</td>
@@ -1770,11 +1895,11 @@ decimal64 <span class="d_param">y</span> = -4;
 </table>
 <br><br><b>Special values</b><br><br>
 <table class="book"><caption></caption>    <tr><th scope="col"><code class="ddoc_param">x</code></th> <th scope="col"><code class="ddoc_param">y</code></th> <th scope="col"><span class="def-anchor" id="fmod"></span><code class="ddoc_psymbol">fmod</code>(<code class="ddoc_param">x</code>, <code class="ddoc_param">y</code>)</th></tr>
-    <tr><td>NaN</td> <td>any</td> <td>NaN</td></tr>
-    <tr><td>any</td> <td>NaN</td> <td>NaN</td></tr>
-    <tr><td>±∞</td> <td>any</td> <td>NaN</td></tr>
-    <tr><td>any</td> <td>0.0</td> <td>NaN</td></tr>
-    <tr><td>any</td> <td>±∞</td> <td>NaN</td></tr>
+    <tr><td><b>NaN</b></td> <td>any</td> <td><b>NaN</b></td></tr>
+    <tr><td>any</td> <td><b>NaN</b></td> <td><b>NaN</b></td></tr>
+    <tr><td>±∞</td> <td>any</td> <td><b>NaN</b></td></tr>
+    <tr><td>any</td> <td>0.0</td> <td><b>NaN</b></td></tr>
+    <tr><td>any</td> <td>±∞</td> <td><b>NaN</b></td></tr>
 </table><br><br>
 <b>Examples:</b><br>
         <pre class="d_code">decimal32 <span class="d_param">x</span> = <span class="d_string">"18.5"</span>;
@@ -1789,24 +1914,28 @@ decimal32 <span class="d_param">y</span> = <span class="d_string">"4.2"</span>;
 This operation is silent, doesn't throw any exception.
 <br><br>
 <b>Returns:</b><br>
-        a result such as <code class="ddoc_param">x</code> = result * 10<sup><code class="ddoc_param">y</code></sup> and |result| &lt; 10.0
+        a result such as <code class="ddoc_param">x</code> = result * 10<sup><code class="ddoc_param">y</code></sup> and |result| &lt; 1.0
 <br><br><b>Special values</b><br><br>
 <table class="book"><caption></caption>    <tr><th scope="col"><code class="ddoc_param">x</code></th> <th scope="col"><code class="ddoc_param">y</code></th> <th scope="col"><span class="def-anchor" id="frexp"></span><code class="ddoc_psymbol">frexp</code>(<code class="ddoc_param">x</code>, <code class="ddoc_param">y</code>)</th></tr>
-    <tr><td>NaN</td> <td>int.min</td> <td>NaN</td></tr>
-    <tr><td>+∞</td> <td>int.max</td> <td>+∞</td></tr>
-    <tr><td>-∞</td> <td>int.min</td> <td>-∞</td></tr>
+    <tr><td><b>NaN</b></td> <td>0</td> <td><b>NaN</b></td></tr>
+    <tr><td>+∞</td> <td>0</td> <td>+∞</td></tr>
+    <tr><td>-∞</td> <td>0</td> <td>-∞</td></tr>
     <tr><td>±0.0</td> <td>0</td> <td>±0.0</td></tr>
-</table><br><br>
+</table>
+<br><br>
+<b>Notes</b><br><br>
+This operation is silent, doesn't throw any exceptions and doesn't set any error flags.
+    Signaling NaNs are quieted by this operation<br><br>
 
 </dd>
 <dt><em class="big"><span class="def-anchor" id=".getNaNPayload"></span><div class="quickindex" id="quickindex.getNaNPayload"></div>pure nothrow @nogc @safe uint <span class="def-anchor" id="getNaNPayload"></span><code class="ddoc_psymbol">getNaNPayload</code>(const decimal32 <code class="ddoc_param">x</code>);
 <br>pure nothrow @nogc @safe ulong <span class="def-anchor" id="getNaNPayload"></span><code class="ddoc_psymbol">getNaNPayload</code>(const decimal64 <code class="ddoc_param">x</code>);
 <br>pure nothrow @nogc @safe ulong <span class="def-anchor" id="getNaNPayload"></span><code class="ddoc_psymbol">getNaNPayload</code>(const decimal128 <code class="ddoc_param">x</code>, out ulong <code class="ddoc_param">payloadHi</code>);
 </em></dt>
-<dd>Extracts the current payload from a NaN value
+<dd>Extracts the current payload from a <b>NaN</b> value
 <br><br>
 <b>Note</b><br><br>
-These functions do not check if <code class="ddoc_param">x</code> is truly a NaN value
+These functions do not check if <code class="ddoc_param">x</code> is truly a <b>NaN</b> value
     before extracting the payload. Using them on finite values will extract a part of the coefficient<br><br>
 <b>Examples:</b><br>
         <pre class="d_code">decimal32 <span class="d_param">x</span> = decimal32(<span class="d_string">"nan(123)"</span>);
@@ -1828,7 +1957,7 @@ of the squares of <code class="ddoc_param">x</code> and <code class="ddoc_param"
 <br><br>
 <b>Throws:</b><br>
         <table class="book"><caption></caption>    <tr><td><a href="#.InvalidOperationException"><em class="tt">InvalidOperationException</em></a>&nbsp;</td>
-         <td><code class="ddoc_param">x</code>, <code class="ddoc_param">y</code> is signaling NaN</td></tr>
+         <td><code class="ddoc_param">x</code>, <code class="ddoc_param">y</code> is signaling <b>NaN</b></td></tr>
     <tr><td><a href="#.OverflowException"><em class="tt">OverflowException</em></a>&nbsp;</td>
          <td>result is too big to be represented</td></tr>
     <tr><td><a href="#.InexactException"><em class="tt">InexactException</em></a>&nbsp;</td>
@@ -1836,11 +1965,11 @@ of the squares of <code class="ddoc_param">x</code> and <code class="ddoc_param"
 </table>
 <br><br><b>Special values</b><br><br>
 <table class="book"><caption></caption>    <tr><th scope="col"><code class="ddoc_param">x</code></th> <th scope="col"><code class="ddoc_param">y</code></th> <th scope="col"><span class="def-anchor" id="hypot"></span><code class="ddoc_psymbol">hypot</code>(<code class="ddoc_param">x</code>, <code class="ddoc_param">y</code>)</th></tr>
-    <tr><td>NaN</td> <td>NaN</td> <td>nan</td></tr>
+    <tr><td><b>NaN</b></td> <td><b>NaN</b></td> <td>nan</td></tr>
     <tr><td>±∞</td> <td>any</td> <td>+∞</td></tr>
     <tr><td>any</td> <td>±∞</td> <td>+∞</td></tr>
-    <tr><td>NaN</td> <td>any</td> <td>nan</td></tr>
-    <tr><td>any</td> <td>NaN</td> <td>nan</td></tr>
+    <tr><td><b>NaN</b></td> <td>any</td> <td>nan</td></tr>
+    <tr><td>any</td> <td><b>NaN</b></td> <td>nan</td></tr>
     <tr><td>0.0</td> <td>any</td> <td><code class="ddoc_param">y</code></td></tr>
     <tr><td>any</td> <td>0.0</td> <td><code class="ddoc_param">x</code></td></tr>
 </table><br><br>
@@ -1856,10 +1985,10 @@ decimal32 <span class="d_param">y</span> = 4;
 <dd>Returns the 10-exponent of <code class="ddoc_param">x</code> as a signed integral value..
 <br><br>
 <b>Throws:</b><br>
-        <a href="#.InvalidOperationException"><em class="tt">InvalidOperationException</em></a>&nbsp; if <code class="ddoc_param">x</code> is NaN, infinity or 0
+        <a href="#.InvalidOperationException"><em class="tt">InvalidOperationException</em></a>&nbsp; if <code class="ddoc_param">x</code> is <b>NaN</b>, infinity or 0
 <br><br><b>Special values</b><br><br>
 <table class="book"><caption></caption>    <tr><th scope="col"><code class="ddoc_param">x</code></th> <th scope="col"><span class="def-anchor" id="ilogb"></span><code class="ddoc_psymbol">ilogb</code>(<code class="ddoc_param">x</code>)</th></tr>
-    <tr><td>NaN</td> <td>int.min</td></tr>
+    <tr><td><b>NaN</b></td> <td>int.min</td></tr>
     <tr><td>±∞</td> <td>int min + 1</td></tr>
     <tr><td>±0.0</td> <td>int.min + 2</td></tr>
     <tr><td>±1.0</td> <td>0</td></tr>
@@ -1882,7 +2011,7 @@ This operation is silent, no error flags are set and no exceptions are thrown.
         <code class="ddoc_keyword">true</code> if <code class="ddoc_param">x</code> is canonical, <code class="ddoc_keyword">false</code> otherwise
 <br><br><b>Notes</b><br><br>
     A decimal value is considered canonical:<br/>
-    - if the value is NaN, the payload must be less than 10 <sup>precision - 1</sup>;<br/>
+    - if the value is <b>NaN</b>, the payload must be less than 10 <sup>precision - 1</sup>;<br/>
     - if the value is infinity, no trailing bits are accepted;<br/>
     - if the value is finite, the coefficient must be less than 10 <sup>precision</sup>.<br><br>
 <b>Examples:</b><br>
@@ -1902,7 +2031,7 @@ This operation is silent, no error flags are set and no exceptions are thrown.
 <table cellspacing="0" cellpadding="5"><caption><tr><td>D <code class="ddoc_param">x</code></td>
 <td>a decimal value</td></tr>
 </caption></table><br><b>Returns:</b><br>
-        <code class="ddoc_keyword">true</code> if <code class="ddoc_param">x</code> is finite, <code class="ddoc_keyword">false</code> otherwise (NaN or infinity)<br><br><b>Examples:</b><br>
+        <code class="ddoc_keyword">true</code> if <code class="ddoc_param">x</code> is finite, <code class="ddoc_keyword">false</code> otherwise (<b>NaN</b> or infinity)<br><br><b>Examples:</b><br>
         <pre class="d_code"><span class="d_keyword">assert</span>(<span class="d_psymbol">isFinite</span>(decimal32.max));
 <span class="d_keyword">assert</span>(!<span class="d_psymbol">isFinite</span>(decimal64.nan));
 <span class="d_keyword">assert</span>(!<span class="d_psymbol">isFinite</span>(decimal128.infinity));
@@ -1923,8 +2052,8 @@ This operation is silent, no error flags are set and no exceptions are thrown.
         <code class="ddoc_keyword">true</code> if <code class="ddoc_param">x</code> has the same internal representation as <code class="ddoc_param">y</code>
 <br><br><b>Notes</b><br><br>
     Even if two decimal values are equal, their internal representation can be different:<br/>
-    - NaN values must have the same sign and the same payload to be considered identical;
-      NaN(12) is not identical to NaN(13)<br/>
+    - <b>NaN</b> values must have the same sign and the same payload to be considered identical;
+      <b>NaN</b>(12) is not identical to <b>NaN</b>(13)<br/>
     - Zero values must have the same sign and the same exponent to be considered identical;
       0 * 10<sup>3</sup> is not identical to 0 * 10<sup>5</sup><br/>
     - Finite values must be represented based on same exponent to be considered identical;
@@ -1945,7 +2074,7 @@ This operation is silent, no error flags are set and no exceptions are thrown.
 <table cellspacing="0" cellpadding="5"><caption><tr><td>D <code class="ddoc_param">x</code></td>
 <td>a decimal value</td></tr>
 </caption></table><br><b>Returns:</b><br>
-        <code class="ddoc_keyword">true</code> if <code class="ddoc_param">x</code> is infinite, <code class="ddoc_keyword">false</code> otherwise (NaN or any finite value)<br><br><b>Examples:</b><br>
+        <code class="ddoc_keyword">true</code> if <code class="ddoc_param">x</code> is infinite, <code class="ddoc_keyword">false</code> otherwise (<b>NaN</b> or any finite value)<br><br><b>Examples:</b><br>
         <pre class="d_code"><span class="d_keyword">assert</span>(<span class="d_psymbol">isInfinity</span>(decimal32.infinity));
 <span class="d_keyword">assert</span>(<span class="d_psymbol">isInfinity</span>(-decimal64.infinity));
 <span class="d_keyword">assert</span>(!<span class="d_psymbol">isInfinity</span>(decimal128.nan));
@@ -1954,7 +2083,7 @@ This operation is silent, no error flags are set and no exceptions are thrown.
 </dd>
 <dt><em class="big"><span class="def-anchor" id=".isNaN"></span><div class="quickindex" id="quickindex.isNaN"></div>bool <span class="def-anchor" id="isNaN"></span><code class="ddoc_psymbol">isNaN</code>(D)(auto ref const D <code class="ddoc_param">x</code>) if (isDecimal!D);
 </em></dt>
-<dd>Determines if <code class="ddoc_param">x</code> represents a NaN.
+<dd>Determines if <code class="ddoc_param">x</code> represents a <b>NaN</b>.
 This operation is silent, no error flags are set and no exceptions are thrown.
 <br><br>
 <b>Params:</b><br>
@@ -1962,7 +2091,7 @@ This operation is silent, no error flags are set and no exceptions are thrown.
 <table cellspacing="0" cellpadding="5"><caption><tr><td>D <code class="ddoc_param">x</code></td>
 <td>a decimal value</td></tr>
 </caption></table><br><b>Returns:</b><br>
-        <code class="ddoc_keyword">true</code> if <code class="ddoc_param">x</code> is NaN (quiet or signaling), <code class="ddoc_keyword">false</code> otherwise (any other value than NaN)<br><br><b>Examples:</b><br>
+        <code class="ddoc_keyword">true</code> if <code class="ddoc_param">x</code> is <b>NaN</b> (quiet or signaling), <code class="ddoc_keyword">false</code> otherwise (any other value than <b>NaN</b>)<br><br><b>Examples:</b><br>
         <pre class="d_code"><span class="d_keyword">assert</span>(<span class="d_psymbol">isNaN</span>(decimal32()));
 <span class="d_keyword">assert</span>(<span class="d_psymbol">isNaN</span>(decimal64.nan));
 <span class="d_keyword">assert</span>(!<span class="d_psymbol">isNaN</span>(decimal128.max));
@@ -1979,7 +2108,7 @@ This operation is silent, no error flags are set and no exceptions are thrown.
 <table cellspacing="0" cellpadding="5"><caption><tr><td>D <code class="ddoc_param">x</code></td>
 <td>a decimal value</td></tr>
 </caption></table><br><b>Returns:</b><br>
-        <code class="ddoc_keyword">true</code> if <code class="ddoc_param">x</code> is normal, <code class="ddoc_keyword">false</code> otherwise (NaN, infinity, zero, subnormal)<br><br><b>Examples:</b><br>
+        <code class="ddoc_keyword">true</code> if <code class="ddoc_param">x</code> is normal, <code class="ddoc_keyword">false</code> otherwise (<b>NaN</b>, infinity, zero, subnormal)<br><br><b>Examples:</b><br>
         <pre class="d_code"><span class="d_keyword">assert</span>(<span class="d_psymbol">isNormal</span>(decimal32.max));
 <span class="d_keyword">assert</span>(!<span class="d_psymbol">isNormal</span>(decimal64.nan));
 <span class="d_keyword">assert</span>(!<span class="d_psymbol">isNormal</span>(decimal32(<span class="d_string">"0x1p-101"</span>)));
@@ -1996,7 +2125,7 @@ no exception flags are set and no exceptions are thrown.
 <table cellspacing="0" cellpadding="5"><caption><tr><td>D <code class="ddoc_param">x</code></td>
 <td>any decimal value</td></tr>
 </caption></table><br><b>Returns:</b><br>
-        <code class="ddoc_keyword">true</code> if <code class="ddoc_param">x</code> is power of ten, <code class="ddoc_keyword">false</code> otherwise (NaN, infinity, 0, negative)<br><br><b>Examples:</b><br>
+        <code class="ddoc_keyword">true</code> if <code class="ddoc_param">x</code> is power of ten, <code class="ddoc_keyword">false</code> otherwise (<b>NaN</b>, infinity, 0, negative)<br><br><b>Examples:</b><br>
         <pre class="d_code"><span class="d_keyword">assert</span> (<span class="d_psymbol">isPowerOf10</span>(decimal32(<span class="d_string">"1000"</span>)));
 <span class="d_keyword">assert</span> (<span class="d_psymbol">isPowerOf10</span>(decimal32(<span class="d_string">"0.001"</span>)));
 </pre>
@@ -2004,7 +2133,7 @@ no exception flags are set and no exceptions are thrown.
 </dd>
 <dt><em class="big"><span class="def-anchor" id=".isSignaling"></span><div class="quickindex" id="quickindex.isSignaling"></div>bool <span class="def-anchor" id="isSignaling"></span><code class="ddoc_psymbol">isSignaling</code>(D)(auto ref const D <code class="ddoc_param">x</code>) if (isDecimal!D);
 </em></dt>
-<dd>Determines if <code class="ddoc_param">x</code> represents a signaling NaN.
+<dd>Determines if <code class="ddoc_param">x</code> represents a signaling <b>NaN</b>.
 This operation is silent, no error flags are set and no exceptions are thrown.
 <br><br>
 <b>Params:</b><br>
@@ -2012,7 +2141,7 @@ This operation is silent, no error flags are set and no exceptions are thrown.
 <table cellspacing="0" cellpadding="5"><caption><tr><td>D <code class="ddoc_param">x</code></td>
 <td>a decimal value</td></tr>
 </caption></table><br><b>Returns:</b><br>
-        <code class="ddoc_keyword">true</code> if <code class="ddoc_param">x</code> is NaN and is signaling, <code class="ddoc_keyword">false</code> otherwise (quiet NaN, any other value)<br><br><b>Examples:</b><br>
+        <code class="ddoc_keyword">true</code> if <code class="ddoc_param">x</code> is <b>NaN</b> and is signaling, <code class="ddoc_keyword">false</code> otherwise (quiet <b>NaN</b>, any other value)<br><br><b>Examples:</b><br>
         <pre class="d_code"><span class="d_keyword">assert</span>(<span class="d_psymbol">isSignaling</span>(decimal32()));
 <span class="d_keyword">assert</span>(!<span class="d_psymbol">isSignaling</span>(decimal64.nan));
 <span class="d_keyword">assert</span>(!<span class="d_psymbol">isSignaling</span>(decimal128.max));
@@ -2029,7 +2158,7 @@ This operation is silent, no error flags are set and no exceptions are thrown.
 <table cellspacing="0" cellpadding="5"><caption><tr><td>D <code class="ddoc_param">x</code></td>
 <td>a decimal value</td></tr>
 </caption></table><br><b>Returns:</b><br>
-        <code class="ddoc_keyword">true</code> if <code class="ddoc_param">x</code> is subnormal, <code class="ddoc_keyword">false</code> otherwise (NaN, infinity, zero, normal)<br><br><b>Examples:</b><br>
+        <code class="ddoc_keyword">true</code> if <code class="ddoc_param">x</code> is subnormal, <code class="ddoc_keyword">false</code> otherwise (<b>NaN</b>, infinity, zero, normal)<br><br><b>Examples:</b><br>
         <pre class="d_code"><span class="d_keyword">assert</span>(<span class="d_psymbol">isSubnormal</span>(decimal32(<span class="d_string">"0x1p-101"</span>)));
 <span class="d_keyword">assert</span>(!<span class="d_psymbol">isSubnormal</span>(decimal32.max));
 <span class="d_keyword">assert</span>(!<span class="d_psymbol">isSubnormal</span>(decimal64.nan));
@@ -2063,7 +2192,6 @@ This operation is silent, no error flags are set and no exceptions are thrown.
 <br><span class="def-anchor" id=".isLess"></span><div class="quickindex" id="quickindex.isLess"></div>bool <span class="def-anchor" id="isLess"></span><code class="ddoc_psymbol">isLess</code>(D1, D2)(auto ref const D1 <code class="ddoc_param">x</code>, auto ref const D2 <code class="ddoc_param">y</code>) if (isDecimal!(D1, D2));
 <br><span class="def-anchor" id=".isLessOrEqual"></span><div class="quickindex" id="quickindex.isLessOrEqual"></div>bool <span class="def-anchor" id="isLessOrEqual"></span><code class="ddoc_psymbol">isLessOrEqual</code>(D1, D2)(auto ref const D1 <code class="ddoc_param">x</code>, auto ref const D2 <code class="ddoc_param">y</code>) if (isDecimal!(D1, D2));
 <br><span class="def-anchor" id=".isLessOrUnordered"></span><div class="quickindex" id="quickindex.isLessOrUnordered"></div>bool <span class="def-anchor" id="isLessOrUnordered"></span><code class="ddoc_psymbol">isLessOrUnordered</code>(D1, D2)(auto ref const D1 <code class="ddoc_param">x</code>, auto ref const D2 <code class="ddoc_param">y</code>) if (isDecimal!(D1, D2));
-<br><span class="def-anchor" id=".isLessOrGreater"></span><div class="quickindex" id="quickindex.isLessOrGreater"></div>bool <span class="def-anchor" id="isLessOrGreater"></span><code class="ddoc_psymbol">isLessOrGreater</code>(D1, D2)(auto ref const D1 <code class="ddoc_param">x</code>, auto ref const D2 <code class="ddoc_param">y</code>) if (isDecimal!(D1, D2));
 <br><span class="def-anchor" id=".isUnordered"></span><div class="quickindex" id="quickindex.isUnordered"></div>bool <span class="def-anchor" id="isUnordered"></span><code class="ddoc_psymbol">isUnordered</code>(D1, D2)(auto ref const D1 <code class="ddoc_param">x</code>, auto ref const D2 <code class="ddoc_param">y</code>) if (isDecimal!(D1, D2));
 </em></dt>
 <dd>Compares two decimal operands.
@@ -2075,14 +2203,13 @@ This operation is silent, no exception flags are set and no exceptions are throw
 By default, comparison operators will throw <a href="#.InvalidOperationException"><em class="tt">InvalidOperationException</em></a>&nbsp; or will
     set the <a href="#.ExceptionFlags.invalidOperation"><em class="tt">ExceptionFlags.invalidOperation</em></a>&nbsp; context flag if a trap is not set.
     The equivalent functions are silent and will not throw any exception (or will not set any flag)
-    if a NaN value is encountered.<br><br>
+    if a <b>NaN</b> value is encountered.<br><br>
 <b>Examples:</b><br>
         <pre class="d_code"><span class="d_keyword">assert</span>(<span class="d_psymbol">isUnordered</span>(decimal32.nan, decimal64.max));
 <span class="d_keyword">assert</span>(<span class="d_psymbol">isGreater</span>(decimal32.infinity, decimal128.max));
 <span class="d_keyword">assert</span>(<span class="d_psymbol">isGreaterOrEqual</span>(decimal32.infinity, decimal64.infinity));
 <span class="d_keyword">assert</span>(<span class="d_psymbol">isLess</span>(decimal64.max, decimal128.max));
 <span class="d_keyword">assert</span>(<span class="d_psymbol">isLessOrEqual</span>(decimal32.min_normal, decimal32.min_normal));
-<span class="d_keyword">assert</span>(<span class="d_psymbol">isLessOrGreater</span>(decimal128.max, -decimal128.max));
 </pre>
 <br><br>
 </dd>
@@ -2092,9 +2219,9 @@ By default, comparison operators will throw <a href="#.InvalidOperationException
 <dd>Compares two decimal operands for equality
 <br><br>
 <b>Returns:</b><br>
-        <code class="ddoc_keyword">true</code> if the specified condition is satisfied, <code class="ddoc_keyword">false</code> otherwise or if any of the operands is NaN.
+        <code class="ddoc_keyword">true</code> if the specified condition is satisfied, <code class="ddoc_keyword">false</code> otherwise or if any of the operands is <b>NaN</b>.
 <br><br><b>Notes</b><br><br>
-By default, <a href="#.Decimal.opEquals"><em class="tt">Decimal.opEquals</em></a>&nbsp; is silent, returning <code class="ddoc_keyword">false</code> if a NaN value is encountered.
+By default, <a href="#.Decimal.opEquals"><em class="tt">Decimal.opEquals</em></a>&nbsp; is silent, returning <code class="ddoc_keyword">false</code> if a <b>NaN</b> value is encountered.
     <span class="def-anchor" id="isEqual"></span><code class="ddoc_psymbol">isEqual</code> and <span class="def-anchor" id="isNotEqual"></span><code class="ddoc_psymbol">isNotEqual</code> will throw <a href="#.InvalidOperationException"><em class="tt">InvalidOperationException</em></a>&nbsp; or will
     set the <a href="#.ExceptionFlags.invalidOperation"><em class="tt">ExceptionFlags.invalidOperation</em></a>&nbsp; context flag if a trap is not set.<br><br>
 <b>Examples:</b><br>
@@ -2110,7 +2237,7 @@ This operation is silent, doesn't throw any exception.
 <br><br>
 <b>Special values</b><br><br>
 <table class="book"><caption></caption>    <tr><th scope="col"><code class="ddoc_param">x</code></th> <th scope="col"><code class="ddoc_param">n</code></th> <th scope="col"><span class="def-anchor" id="ldexp"></span><code class="ddoc_psymbol">ldexp</code>(<code class="ddoc_param">x</code>, <code class="ddoc_param">n</code>)</th></tr>
-    <tr><td>NaN</td> <td>any</td> <td>NaN</td></tr>
+    <tr><td><b>NaN</b></td> <td>any</td> <td><b>NaN</b></td></tr>
     <tr><td>±∞</td> <td>any</td> <td>±∞</td></tr>
     <tr><td>±0</td> <td>any</td> <td>±0</td></tr>
     <tr><td>any</td> <td>0</td> <td><code class="ddoc_param">x</code></td></tr>
@@ -2123,7 +2250,7 @@ This operation is silent, doesn't throw any exception.
 <br><br>
 <b>Throws:</b><br>
         <table class="book"><caption></caption>    <tr><td><a href="#.InvalidOperationException"><em class="tt">InvalidOperationException</em></a>&nbsp;</td>
-         <td><code class="ddoc_param">x</code> is signaling NaN or <code class="ddoc_param">x</code> &lt; 0</td></tr>
+         <td><code class="ddoc_param">x</code> is signaling <b>NaN</b> or <code class="ddoc_param">x</code> &lt; 0</td></tr>
     <tr><td><a href="#.DivisionByZero"><em class="tt">DivisionByZero</em></a>&nbsp;</td>
          <td><code class="ddoc_param">x</code> is ±0.0</td></tr>
     <tr><td><a href="#.Underflow"><em class="tt">Underflow</em></a>&nbsp;</td>
@@ -2133,12 +2260,12 @@ This operation is silent, doesn't throw any exception.
 </table>
 <br><br><b>Special values</b><br><br>
 <table class="book"><caption></caption>    <tr><th scope="col"><code class="ddoc_param">x</code></th> <th scope="col"><span class="def-anchor" id="log"></span><code class="ddoc_psymbol">log</code>(<code class="ddoc_param">x</code>)</th></tr>
-    <tr><td>NaN</td> <td>NaN</td></tr>
+    <tr><td><b>NaN</b></td> <td><b>NaN</b></td></tr>
     <tr><td>±0.0</td> <td>-∞</td></tr>
-    <tr><td>-∞</td> <td>NaN</td></tr>
+    <tr><td>-∞</td> <td><b>NaN</b></td></tr>
     <tr><td>+∞</td> <td>+∞</td></tr>
     <tr><td>e</td> <td>+1.0</td></tr>
-    <tr><td>&lt; 0.0</td> <td>NaN</td></tr>
+    <tr><td>&lt; 0.0</td> <td><b>NaN</b></td></tr>
 </table><br><br>
 <b>Examples:</b><br>
         <pre class="d_code"><span class="d_keyword">assert</span> (<span class="d_psymbol">log</span>(decimal32.E) == 1);
@@ -2151,7 +2278,7 @@ This operation is silent, doesn't throw any exception.
 <br><br>
 <b>Throws:</b><br>
         <table class="book"><caption></caption>    <tr><td><a href="#.InvalidOperationException"><em class="tt">InvalidOperationException</em></a>&nbsp;</td>
-         <td><code class="ddoc_param">x</code> is signaling NaN or <code class="ddoc_param">x</code> &lt; 0.0</td></tr>
+         <td><code class="ddoc_param">x</code> is signaling <b>NaN</b> or <code class="ddoc_param">x</code> &lt; 0.0</td></tr>
     <tr><td><a href="#.DivisionByZero"><em class="tt">DivisionByZero</em></a>&nbsp;</td>
          <td><code class="ddoc_param">x</code> is ±0.0</td></tr>
     <tr><td><a href="#.Underflow"><em class="tt">Underflow</em></a>&nbsp;</td>
@@ -2161,12 +2288,12 @@ This operation is silent, doesn't throw any exception.
 </table>
 <br><br><b>Special values</b><br><br>
 <table class="book"><caption></caption>    <tr><th scope="col"><code class="ddoc_param">x</code></th> <th scope="col">log(<code class="ddoc_param">x</code>)</th></tr>
-    <tr><td>NaN</td> <td>NaN</td></tr>
+    <tr><td><b>NaN</b></td> <td><b>NaN</b></td></tr>
     <tr><td>±0.0</td> <td>-∞</td></tr>
-    <tr><td>-∞</td> <td>NaN</td></tr>
+    <tr><td>-∞</td> <td><b>NaN</b></td></tr>
     <tr><td>+∞</td> <td>+∞</td></tr>
     <tr><td>+10.0</td> <td>+1.0</td></tr>
-    <tr><td>&lt; 0.0</td> <td>NaN</td></tr>
+    <tr><td>&lt; 0.0</td> <td><b>NaN</b></td></tr>
 </table><br><br>
 
 </dd>
@@ -2176,7 +2303,7 @@ This operation is silent, doesn't throw any exception.
 <br><br>
 <b>Throws:</b><br>
         <table class="book"><caption></caption>    <tr><td><a href="#.InvalidOperationException"><em class="tt">InvalidOperationException</em></a>&nbsp;</td>
-         <td><code class="ddoc_param">x</code> is signaling NaN or <code class="ddoc_param">x</code> &lt; 1.0</td></tr>
+         <td><code class="ddoc_param">x</code> is signaling <b>NaN</b> or <code class="ddoc_param">x</code> &lt; 1.0</td></tr>
     <tr><td><a href="#.DivisionByZero"><em class="tt">DivisionByZero</em></a>&nbsp;</td>
          <td><code class="ddoc_param">x</code> is -1.0</td></tr>
     <tr><td><a href="#.Underflow"><em class="tt">Underflow</em></a>&nbsp;</td>
@@ -2186,12 +2313,12 @@ This operation is silent, doesn't throw any exception.
 </table>
 <br><br><b>Special values</b><br><br>
 <table class="book"><caption></caption>    <tr><th scope="col"><code class="ddoc_param">x</code></th> <th scope="col">log(<code class="ddoc_param">x</code>)</th></tr>
-    <tr><td>NaN</td> <td>NaN</td></tr>
+    <tr><td><b>NaN</b></td> <td><b>NaN</b></td></tr>
     <tr><td>-1.0</td> <td>-∞</td></tr>
-    <tr><td>-∞</td> <td>NaN</td></tr>
+    <tr><td>-∞</td> <td><b>NaN</b></td></tr>
     <tr><td>+∞</td> <td>+∞</td></tr>
     <tr><td>+9.0</td> <td>+1.0</td></tr>
-    <tr><td>&lt; -1.0</td> <td>NaN</td></tr>
+    <tr><td>&lt; -1.0</td> <td><b>NaN</b></td></tr>
 </table><br><br>
 
 </dd>
@@ -2201,7 +2328,7 @@ This operation is silent, doesn't throw any exception.
 <br><br>
 <b>Throws:</b><br>
         <table class="book"><caption></caption>    <tr><td><a href="#.InvalidOperationException"><em class="tt">InvalidOperationException</em></a>&nbsp;</td>
-         <td><code class="ddoc_param">x</code> is signaling NaN or <code class="ddoc_param">x</code> &lt; 0</td></tr>
+         <td><code class="ddoc_param">x</code> is signaling <b>NaN</b> or <code class="ddoc_param">x</code> &lt; 0</td></tr>
     <tr><td><a href="#.DivisionByZero"><em class="tt">DivisionByZero</em></a>&nbsp;</td>
          <td><code class="ddoc_param">x</code> is ±0.0</td></tr>
     <tr><td><a href="#.Underflow"><em class="tt">Underflow</em></a>&nbsp;</td>
@@ -2211,12 +2338,12 @@ This operation is silent, doesn't throw any exception.
 </table>
 <br><br><b>Special values</b><br><br>
 <table class="book"><caption></caption>    <tr><th scope="col"><code class="ddoc_param">x</code></th> <th scope="col">log(<code class="ddoc_param">x</code>)</th></tr>
-    <tr><td>NaN</td> <td>NaN</td></tr>
+    <tr><td><b>NaN</b></td> <td><b>NaN</b></td></tr>
     <tr><td>±0.0</td> <td>-∞</td></tr>
-    <tr><td>-∞</td> <td>NaN</td></tr>
+    <tr><td>-∞</td> <td><b>NaN</b></td></tr>
     <tr><td>+∞</td> <td>+∞</td></tr>
     <tr><td>+2.0</td> <td>+1.0</td></tr>
-    <tr><td>&lt; 0.0</td> <td>NaN</td></tr>
+    <tr><td>&lt; 0.0</td> <td><b>NaN</b></td></tr>
 </table><br><br>
 
 </dd>
@@ -2226,7 +2353,7 @@ This operation is silent, doesn't throw any exception.
 <br><br>
 <b>Throws:</b><br>
         <table class="book"><caption></caption>    <tr><td><a href="#.InvalidOperationException"><em class="tt">InvalidOperationException</em></a>&nbsp;</td>
-         <td><code class="ddoc_param">x</code> is signaling NaN or <code class="ddoc_param">x</code> &lt; 0</td></tr>
+         <td><code class="ddoc_param">x</code> is signaling <b>NaN</b> or <code class="ddoc_param">x</code> &lt; 0</td></tr>
     <tr><td><a href="#.DivisionByZero"><em class="tt">DivisionByZero</em></a>&nbsp;</td>
          <td><code class="ddoc_param">x</code> is -1.0</td></tr>
     <tr><td><a href="#.Underflow"><em class="tt">Underflow</em></a>&nbsp;</td>
@@ -2236,12 +2363,12 @@ This operation is silent, doesn't throw any exception.
 </table>
 <br><br><b>Special values</b><br><br>
 <table class="book"><caption></caption>    <tr><th scope="col"><code class="ddoc_param">x</code></th> <th scope="col">log(<code class="ddoc_param">x</code>)</th></tr>
-    <tr><td>NaN</td> <td>NaN</td></tr>
+    <tr><td><b>NaN</b></td> <td><b>NaN</b></td></tr>
     <tr><td>±0.0</td> <td>-∞</td></tr>
-    <tr><td>-∞</td> <td>NaN</td></tr>
+    <tr><td>-∞</td> <td><b>NaN</b></td></tr>
     <tr><td>+∞</td> <td>+∞</td></tr>
     <tr><td>+1.0</td> <td>+1.0</td></tr>
-    <tr><td>&lt; -1.0</td> <td>NaN</td></tr>
+    <tr><td>&lt; -1.0</td> <td><b>NaN</b></td></tr>
 </table><br><br>
 
 </dd>
@@ -2251,7 +2378,7 @@ This operation is silent, doesn't throw any exception.
 <br><br>
 <b>Throws:</b><br>
         <table class="book"><caption></caption>    <tr><td><a href="#.InvalidOperationException"><em class="tt">InvalidOperationException</em></a>&nbsp;</td>
-         <td><code class="ddoc_param">x</code> is signaling NaN or <code class="ddoc_param">x</code> &lt; 0</td></tr>
+         <td><code class="ddoc_param">x</code> is signaling <b>NaN</b> or <code class="ddoc_param">x</code> &lt; 0</td></tr>
     <tr><td><a href="#.DivisionByZero"><em class="tt">DivisionByZero</em></a>&nbsp;</td>
          <td><code class="ddoc_param">x</code> is -1.0</td></tr>
     <tr><td><a href="#.Underflow"><em class="tt">Underflow</em></a>&nbsp;</td>
@@ -2261,12 +2388,12 @@ This operation is silent, doesn't throw any exception.
 </table>
 <br><br><b>Special values</b><br><br>
 <table class="book"><caption></caption>    <tr><th scope="col"><code class="ddoc_param">x</code></th> <th scope="col">log(<code class="ddoc_param">x</code>)</th></tr>
-    <tr><td>NaN</td> <td>NaN</td></tr>
+    <tr><td><b>NaN</b></td> <td><b>NaN</b></td></tr>
     <tr><td>±0.0</td> <td>-∞</td></tr>
-    <tr><td>-∞</td> <td>NaN</td></tr>
+    <tr><td>-∞</td> <td><b>NaN</b></td></tr>
     <tr><td>+∞</td> <td>+∞</td></tr>
     <tr><td>e - 1</td> <td>+1.0</td></tr>
-    <tr><td>&lt; -1.0</td> <td>NaN</td></tr>
+    <tr><td>&lt; -1.0</td> <td><b>NaN</b></td></tr>
 </table><br><br>
 
 </dd>
@@ -2278,7 +2405,7 @@ If no rounding mode is specified the default context rounding mode is used inste
 <br><br>
 <b>Throws:</b><br>
         <table class="book"><caption></caption>    <tr><td><a href="#.InvalidOperationException"><em class="tt">InvalidOperationException</em></a>&nbsp;</td>
-         <td><code class="ddoc_param">x</code> is NaN or ±∞</td></tr>
+         <td><code class="ddoc_param">x</code> is <b>NaN</b> or ±∞</td></tr>
    <tr><td><a href="#.OverflowException"><em class="tt">OverflowException</em></a>&nbsp;</td>
          <td>result is too big to be represented</td></tr>
     <tr><td><a href="#.InexactException"><em class="tt">InexactException</em></a>&nbsp;</td>
@@ -2286,7 +2413,7 @@ If no rounding mode is specified the default context rounding mode is used inste
 </table>
 <br><br><b>Special values</b><br><br>
 <table class="book"><caption></caption>    <tr><th scope="col"><code class="ddoc_param">x</code></th> <th scope="col"><span class="def-anchor" id="lrint"></span><code class="ddoc_psymbol">lrint</code>(<code class="ddoc_param">x</code>)</th></tr>
-    <tr><td>NaN</td> <td>0</td></tr>
+    <tr><td><b>NaN</b></td> <td>0</td></tr>
     <tr><td>-∞</td> <td>long.min</td></tr>
     <tr><td>+∞</td> <td>long.max</td></tr>
 </table><br><br>
@@ -2298,13 +2425,13 @@ If no rounding mode is specified the default context rounding mode is used inste
 <br><br>
 <b>Throws:</b><br>
         <table class="book"><caption></caption>    <tr><td><a href="#.InvalidOperationException"><em class="tt">InvalidOperationException</em></a>&nbsp;</td>
-         <td><code class="ddoc_param">x</code> is NaN or ±∞</td></tr>
-   <tr><td><a href="#.OverflowException"><em class="tt">OverflowException</em></a>&nbsp;</td>
+         <td><code class="ddoc_param">x</code> is <b>NaN</b> or ±∞</td></tr>
+    <tr><td><a href="#.OverflowException"><em class="tt">OverflowException</em></a>&nbsp;</td>
          <td>result is too big to be represented</td></tr>
 </table>
 <br><br><b>Special values</b><br><br>
 <table class="book"><caption></caption>    <tr><th scope="col"><code class="ddoc_param">x</code></th> <th scope="col"><span class="def-anchor" id="lround"></span><code class="ddoc_psymbol">lround</code>(<code class="ddoc_param">x</code>)</th></tr>
-    <tr><td>NaN</td> <td>0</td></tr>
+    <tr><td><b>NaN</b></td> <td>0</td></tr>
     <tr><td>-∞</td> <td>long.min</td></tr>
     <tr><td>+∞</td> <td>long.max</td></tr>
 </table><br><br>
@@ -2324,23 +2451,22 @@ If no rounding mode is specified the default context rounding mode is used inste
         The value of <code class="ddoc_param">x</code> truncated toward zero.
 <br><br><b>Special values</b><br><br>
 <table class="book"><caption></caption>    <tr><th scope="col"><code class="ddoc_param">x</code></th> <th scope="col"><span class="def-anchor" id="modf"></span><code class="ddoc_psymbol">modf</code>(<code class="ddoc_param">x</code>)</th> <th scope="col"><code class="ddoc_param">y</code></th></tr>
-    <tr><td>NaN</td> <td>NaN</td> <td>NaN</td></tr>
+    <tr><td><b>NaN</b></td> <td><b>NaN</b></td> <td><b>NaN</b></td></tr>
     <tr><td>0.0</td> <td>0.0</td> <td>0.0</td></tr>
     <tr><td>±∞</td> <td>0.0</td> <td>±∞</td></tr>
 </table><br><br>
 
 </dd>
-<dt><em class="big"><span class="def-anchor" id=".NaN"></span><div class="quickindex" id="quickindex.NaN"></div>pure nothrow @nogc @safe decimal32 <span class="def-anchor" id="NaN"></span><code class="ddoc_psymbol">NaN</code>(const uint <code class="ddoc_param">payload</code>);
-<br>pure nothrow @nogc @safe decimal64 <span class="def-anchor" id="NaN"></span><code class="ddoc_psymbol">NaN</code>(const ulong <code class="ddoc_param">payload</code>);
-<br>pure nothrow @nogc @safe decimal128 <span class="def-anchor" id="NaN"></span><code class="ddoc_psymbol">NaN</code>(const ulong <code class="ddoc_param">payloadHi</code>, const ulong <code class="ddoc_param">payloadLo</code>);
+<dt><em class="big"><span class="def-anchor" id=".NaN"></span><div class="quickindex" id="quickindex.NaN"></div>D <span class="def-anchor" id="NaN"></span><code class="ddoc_psymbol">NaN</code>(D, T)(const T <code class="ddoc_param">payload</code>) if (isDecimal!D &amp;&amp; isUnsigned!T);
+<br>decimal128 <span class="def-anchor" id="NaN"></span><code class="ddoc_psymbol">NaN</code>(T)(const T <code class="ddoc_param">payloadHi</code>, const T <code class="ddoc_param">payloadLo</code>) if (isUnsigned!T);
 </em></dt>
-<dd>Creates a quiet <span class="def-anchor" id="NaN"></span><code class="ddoc_psymbol">NaN</code> value using the specified <code class="ddoc_param">payload</code>
+<dd>Creates a quiet <b><span class="def-anchor" id="NaN"></span><code class="ddoc_psymbol">NaN</code></b> value using the specified <code class="ddoc_param">payload</code>
 <br><br>
 <b>Notes</b><br><br>
-Payloads are masked to fit the current representation, being limited to mant_dig - 2;<br><br>
+Payloads are masked to fit the current representation, having a limited bit width of to <b>mant_dig</b> - 2;<br><br>
 <b>Examples:</b><br>
-        <pre class="d_code">decimal32 a = <span class="d_psymbol">NaN</span>(12345U);
-decimal64 b = <span class="d_psymbol">NaN</span>(12345UL);
+        <pre class="d_code"><span class="d_keyword">auto</span> a = <span class="d_psymbol">NaN</span>!decimal32(12345U);
+<span class="d_keyword">auto</span> b = <span class="d_psymbol">NaN</span>!decimal64(12345UL);
 decimal128 c = <span class="d_psymbol">NaN</span>(123U, 456U);
 </pre>
 <br><br>
@@ -2352,10 +2478,10 @@ decimal128 c = <span class="d_psymbol">NaN</span>(123U, 456U);
 If no rounding mode is specified the default context rounding mode is used instead.
 <br><br>
 <b>Throws:</b><br>
-        <a href="#.InvalidOperationException"><em class="tt">InvalidOperationException</em></a>&nbsp; if <code class="ddoc_param">x</code> is signaling NaN
+        <a href="#.InvalidOperationException"><em class="tt">InvalidOperationException</em></a>&nbsp; if <code class="ddoc_param">x</code> is signaling <b>NaN</b>
 <br><br><b>Special values</b><br><br>
 <table class="book"><caption></caption>    <tr><th scope="col"><code class="ddoc_param">x</code></th> <th scope="col"><span class="def-anchor" id="nearbyint"></span><code class="ddoc_psymbol">nearbyint</code>(<code class="ddoc_param">x</code>)</th></tr>
-    <tr><td>NaN</td> <td>NaN</td></tr>
+    <tr><td><b>NaN</b></td> <td><b>NaN</b></td></tr>
     <tr><td>±∞</td> <td>±∞</td></tr>
     <tr><td>±0.0</td> <td>±0.0</td></tr>
 </table><br><br>
@@ -2372,10 +2498,10 @@ If no rounding mode is specified the default context rounding mode is used inste
 <dd>Returns the previous decimal value before <code class="ddoc_param">x</code>.
 <br><br>
 <b>Throws:</b><br>
-        <a href="#.InvalidOperationException"><em class="tt">InvalidOperationException</em></a>&nbsp; if <code class="ddoc_param">x</code> is signaling NaN
+        <a href="#.InvalidOperationException"><em class="tt">InvalidOperationException</em></a>&nbsp; if <code class="ddoc_param">x</code> is signaling <b>NaN</b>
 <br><br><b>Special values</b><br><br>
 <table class="book"><caption></caption>    <tr><th scope="col"><code class="ddoc_param">x</code></th> <th scope="col"><span class="def-anchor" id="nextDown"></span><code class="ddoc_psymbol">nextDown</code>(<code class="ddoc_param">x</code>)</th></tr>
-    <tr><td>NaN</td> <td>NaN</td></tr>
+    <tr><td><b>NaN</b></td> <td><b>NaN</b></td></tr>
     <tr><td>-∞</td> <td>-∞</td></tr>
     <tr><td>-max</td> <td>-∞</td></tr>
     <tr><td>±0.0</td> <td>-min_normal * epsilon</td></tr>
@@ -2389,15 +2515,40 @@ If no rounding mode is specified the default context rounding mode is used inste
 <br><br>
 <b>Throws:</b><br>
         <table class="book"><caption></caption>    <tr><td><a href="#.InvalidOperationException"><em class="tt">InvalidOperationException</em></a>&nbsp;</td>
-         <td><code class="ddoc_param">x</code> is signaling NaN</td></tr>
+         <td><code class="ddoc_param">x</code> is signaling <b>NaN</b></td></tr>
     <tr><td><a href="#.OverflowException"><em class="tt">OverflowException</em></a>&nbsp;</td>
          <td>result is too big to be represented</td></tr>
 </table>
 <br><br><b>Special values</b><br><br>
 <table class="book"><caption></caption>    <tr><th scope="col"><code class="ddoc_param">x</code></th> <th scope="col"><span class="def-anchor" id="nextPow10"></span><code class="ddoc_psymbol">nextPow10</code>(<code class="ddoc_param">x</code>)</th></tr>
-    <tr><td>NaN</td> <td>NaN</td></tr>
+    <tr><td><b>NaN</b></td> <td><b>NaN</b></td></tr>
     <tr><td>±∞</td> <td>±∞</td></tr>
     <tr><td>±0.0</td> <td>+1.0</td></tr>
+</table><br><br>
+
+</dd>
+<dt><em class="big"><span class="def-anchor" id=".nextAfter"></span><div class="quickindex" id="quickindex.nextAfter"></div>D1 <span class="def-anchor" id="nextAfter"></span><code class="ddoc_psymbol">nextAfter</code>(D1, D2)(auto ref const D1 <code class="ddoc_param">x</code>, auto ref const D2 <code class="ddoc_param">y</code>) if (isDecimal!(D1, D2));
+<br><span class="def-anchor" id=".nextToward"></span><div class="quickindex" id="quickindex.nextToward"></div>alias <span class="def-anchor" id="nextToward"></span><code class="ddoc_psymbol">nextToward</code> = nextAfter(D1, D2)(auto ref const D1 x, auto ref const D2 y) if (isDecimal!(D1, D2));
+</em></dt>
+<dd>Returns the next value after or before <code class="ddoc_param">x</code>, toward <code class="ddoc_param">y</code>.
+<br><br>
+<b>Throws:</b><br>
+        <table class="book"><caption></caption>    <tr><td><a href="#.InvalidOperationException"><em class="tt">InvalidOperationException</em></a>&nbsp;</td>
+         <td>either <code class="ddoc_param">x</code> or <code class="ddoc_param">y</code> is <b>signaling NaN</b></td></tr>
+    <tr><td><a href="#.OverflowException"><em class="tt">OverflowException</em></a>&nbsp;</td>
+         <td>result is ±∞</td></tr>
+    <tr><td><a href="#.UnderflowException"><em class="tt">UnderflowException</em></a>&nbsp;</td>
+         <td>result is subnormal or ±0.0</td></tr>
+    <tr><td><a href="#.InexactException"><em class="tt">InexactException</em></a>&nbsp;</td>
+         <td>result is ±∞, subnormal or ±0.0</td></tr>
+</table>
+<br><br><b>Special values</b><br><br>
+<table class="book"><caption></caption>    <tr><th scope="col"><code class="ddoc_param">x</code></th> <th scope="col"><code class="ddoc_param">y</code></th> <th scope="col"><span class="def-anchor" id="nextAfter"></span><code class="ddoc_psymbol">nextAfter</code>(<code class="ddoc_param">x</code>, <code class="ddoc_param">y</code>)</th></tr>
+    <tr><td><b>NaN</b></td> <td>any</td> <td><b>NaN</b></td> </tr>
+    <tr><td>any</td> <td><b>NaN</b></td> <td><b>NaN</b></td> </tr>
+    <tr><td><code class="ddoc_param">x</code> = <code class="ddoc_param">y</code></td>  <td></td> <td><code class="ddoc_param">x</code></td> </tr>
+    <tr><td><code class="ddoc_param">x</code> &lt; <code class="ddoc_param">y</code></td>  <td></td> <td><a href="#.nextUp"><em class="tt">nextUp</em></a>&nbsp;(<code class="ddoc_param">x</code>)</td> </tr>
+    <tr><td><code class="ddoc_param">x</code> &gt; <code class="ddoc_param">y</code></td>  <td></td> <td><a href="#.nextDown"><em class="tt">nextDown</em></a>&nbsp;(<code class="ddoc_param">x</code>)</td> </tr>
 </table><br><br>
 
 </dd>
@@ -2406,10 +2557,10 @@ If no rounding mode is specified the default context rounding mode is used inste
 <dd>Returns the next representable decimal value after <code class="ddoc_param">x</code>.
 <br><br>
 <b>Throws:</b><br>
-        <a href="#.InvalidOperationException"><em class="tt">InvalidOperationException</em></a>&nbsp; if <code class="ddoc_param">x</code> is signaling NaN
+        <a href="#.InvalidOperationException"><em class="tt">InvalidOperationException</em></a>&nbsp; if <code class="ddoc_param">x</code> is signaling <b>NaN</b>
 <br><br><b>Special values</b><br><br>
 <table class="book"><caption></caption>    <tr><th scope="col"><code class="ddoc_param">x</code></th> <th scope="col"><span class="def-anchor" id="nextUp"></span><code class="ddoc_psymbol">nextUp</code>(<code class="ddoc_param">x</code>)</th></tr>
-    <tr><td>NaN</td> <td>NaN</td></tr>
+    <tr><td><b>NaN</b></td> <td><b>NaN</b></td></tr>
     <tr><td>-∞</td> <td>-D.max</td></tr>
     <tr><td>±0.0</td> <td>D.min_normal * epsilon</td></tr>
     <tr><td>D.max</td> <td>+∞</td></tr>
@@ -2423,7 +2574,7 @@ If no rounding mode is specified the default context rounding mode is used inste
 <br><br>
 <b>Throws:</b><br>
         <table class="book"><caption></caption>    <tr><td><a href="#.InvalidOperationException"><em class="tt">InvalidOperationException</em></a>&nbsp;</td>
-         <td><code class="ddoc_param">x</code> is signaling NaN or any <code class="ddoc_param">a</code><sub>i</sub> is signaling NaN</td></tr>
+         <td><code class="ddoc_param">x</code> is signaling <b>NaN</b> or any <code class="ddoc_param">a</code><sub>i</sub> is signaling <b>NaN</b></td></tr>
     <tr><td><a href="#.InvalidOperationException"><em class="tt">InvalidOperationException</em></a>&nbsp;</td>
          <td><code class="ddoc_param">x</code> is ±∞ and any <code class="ddoc_param">a</code><sub>i</sub> is ±0.0</td></tr>
     <tr><td><a href="#.InvalidOperationException"><em class="tt">InvalidOperationException</em></a>&nbsp;</td>
@@ -2442,7 +2593,7 @@ If no rounding mode is specified the default context rounding mode is used inste
 <br><br>
 <b>Throws:</b><br>
         <table class="book"><caption></caption>    <tr><td><a href="#.InvalidOperationException"><em class="tt">InvalidOperationException</em></a>&nbsp;</td>
-         <td><code class="ddoc_param">x</code> is signaling NaN</td></tr>
+         <td><code class="ddoc_param">x</code> is signaling <b>NaN</b></td></tr>
     <tr><td><a href="#.DivisionByZeroException"><em class="tt">DivisionByZeroException</em></a>&nbsp;</td>
          <td><code class="ddoc_param">x</code> = ±0.0 and <code class="ddoc_param">n</code> &lt; 0</td></tr>
     <tr><td><a href="#.OverflowException"><em class="tt">OverflowException</em></a>&nbsp;</td>
@@ -2454,9 +2605,9 @@ If no rounding mode is specified the default context rounding mode is used inste
 </table>
 <br><br><b>Special values</b><br><br>
 <table class="book"><caption></caption>    <tr><th scope="col"><code class="ddoc_param">x</code></th> <th scope="col"><code class="ddoc_param">n</code></th> <th scope="col"><span class="def-anchor" id="pow"></span><code class="ddoc_psymbol">pow</code>(<code class="ddoc_param">x</code>, <code class="ddoc_param">n</code>)</th> </tr>
-    <tr><td>sNaN</td> <td>any</td> <td>NaN</td> </tr>
+    <tr><td>sNaN</td> <td>any</td> <td><b>NaN</b></td> </tr>
     <tr><td>any</td> <td>0</td> <td>+1.0</td> </tr>
-    <tr><td>NaN</td> <td>any</td> <td>NaN</td></tr>
+    <tr><td><b>NaN</b></td> <td>any</td> <td><b>NaN</b></td></tr>
     <tr><td>±∞</td> <td>any</td> <td>±∞</td> </tr>
     <tr><td>±0.0</td> <td>odd <code class="ddoc_param">n</code> &lt; 0</td> <td>±∞</td></tr>
     <tr><td>±0.0</td> <td>even <code class="ddoc_param">n</code> &lt; 0</td> <td>+∞</td> </tr>
@@ -2471,7 +2622,7 @@ If no rounding mode is specified the default context rounding mode is used inste
 <br><br>
 <b>Throws:</b><br>
         <table class="book"><caption></caption>    <tr><td><a href="#.InvalidOperationException"><em class="tt">InvalidOperationException</em></a>&nbsp;</td>
-         <td><code class="ddoc_param">x</code> is signaling NaN</td></tr>
+         <td><code class="ddoc_param">x</code> is signaling <b>NaN</b></td></tr>
     <tr><td><a href="#.DivisionByZeroException"><em class="tt">DivisionByZeroException</em></a>&nbsp;</td>
          <td><code class="ddoc_param">x</code> = ±0.0 and y &lt; 0.0</td></tr>
     <tr><td><a href="#.OverflowException"><em class="tt">OverflowException</em></a>&nbsp;</td>
@@ -2483,9 +2634,9 @@ If no rounding mode is specified the default context rounding mode is used inste
 </table>
 <br><br><b>Special values</b><br><br>
 <table class="book"><caption></caption>    <tr><th scope="col"><code class="ddoc_param">x</code></th> <th scope="col">y</th> <th scope="col"><span class="def-anchor" id="pow"></span><code class="ddoc_psymbol">pow</code>(<code class="ddoc_param">x</code>, y)</th> </tr>
-    <tr><td>sNaN</td> <td>any</td> <td>NaN</td> </tr>
+    <tr><td>sNaN</td> <td>any</td> <td><b>NaN</b></td> </tr>
     <tr><td>any</td> <td>0</td> <td>+1.0</td> </tr>
-    <tr><td>NaN</td> <td>any</td> <td>NaN</td></tr>
+    <tr><td><b>NaN</b></td> <td>any</td> <td><b>NaN</b></td></tr>
     <tr><td>±∞</td> <td>any</td> <td>±∞</td> </tr>
     <tr><td>±0.0</td> <td>odd n &lt; 0</td> <td>±∞</td></tr>
     <tr><td>±0.0</td> <td>even n &lt; 0</td> <td>+∞</td> </tr>
@@ -2507,9 +2658,8 @@ If no rounding mode is specified the default context rounding mode is used inste
 </caption></table><br><b>Returns:</b><br>
         a value with the same numerical value as <code class="ddoc_param">x</code> but with the exponent of <code class="ddoc_param">y</code>
 <br><br><b>Throws:</b><br>
-        <br><br><b>Throws:</b><br>
         <table class="book"><caption></caption>    <tr><td><a href="#.InvalidOperationException"><em class="tt">InvalidOperationException</em></a>&nbsp;</td>
-         <td><code class="ddoc_param">x</code> is signaling NaN</td></tr>
+         <td><code class="ddoc_param">x</code> is signaling <b>NaN</b></td></tr>
     <tr><td><a href="#.InvalidOperationException"><em class="tt">InvalidOperationException</em></a>&nbsp;</td>
          <td>only one of <code class="ddoc_param">x</code> or <code class="ddoc_param">y</code> is ±∞</td></tr>
     <tr><td><a href="#.InexactException"><em class="tt">InexactException</em></a>&nbsp;</td>
@@ -2517,13 +2667,48 @@ If no rounding mode is specified the default context rounding mode is used inste
 </table>
 <br><br><b>Special values</b><br><br>
 <table class="book"><caption></caption>    <tr><th scope="col"><code class="ddoc_param">x</code></th> <th scope="col"><code class="ddoc_param">y</code></th> <th scope="col"><span class="def-anchor" id="quantize"></span><code class="ddoc_psymbol">quantize</code>(<code class="ddoc_param">x</code>, <code class="ddoc_param">y</code>)</th></tr>
-    <tr><td>NaN</td> <td>any</td> <td>NaN</td></tr>
-    <tr><td>any</td> <td>NaN</td> <td>NaN</td></tr>
+    <tr><td><b>NaN</b></td> <td>any</td> <td><b>NaN</b></td></tr>
+    <tr><td>any</td> <td><b>NaN</b></td> <td><b>NaN</b></td></tr>
     <tr><td>±∞</td> <td>±∞</td> <td>±∞</td></tr>
-    <tr><td>±∞</td> <td>any</td> <td>NaN</td></tr>
-    <tr><td>any</td> <td>±∞</td> <td>NaN</td></tr>
+    <tr><td>±∞</td> <td>any</td> <td><b>NaN</b></td></tr>
+    <tr><td>any</td> <td>±∞</td> <td><b>NaN</b></td></tr>
 </table><br><br>
 
+</dd>
+<dt><em class="big"><span class="def-anchor" id=".quantexp"></span><div class="quickindex" id="quickindex.quantexp"></div>int <span class="def-anchor" id="quantexp"></span><code class="ddoc_psymbol">quantexp</code>(D)(auto ref const D <code class="ddoc_param">x</code>) if (isDecimal!D);
+</em></dt>
+<dd>Returns the exponent encoded into the specified decimal value;
+<br><br>
+<b>Throws:</b><br>
+        <table class="book"><caption></caption>    <tr><td><a href="#.InvalidOperationException"><em class="tt">InvalidOperationException</em></a>&nbsp;</td>
+         <td><code class="ddoc_param">x</code> is <b>NaN</b> or ±∞</td></tr>
+</table>
+<br><br><b>Special values</b><br><br>
+<table class="book"><caption></caption>    <tr><th scope="col"><code class="ddoc_param">x</code></th> <th scope="col"><span class="def-anchor" id="quantexp"></span><code class="ddoc_psymbol">quantexp</code>(<code class="ddoc_param">x</code>)</th></tr>
+    <tr><td><b>NaN</b></td> <td>int.min</td> </tr>
+    <tr><td>±∞</td> <td>int.min</td> </tr>
+</table>
+<br><br>
+<b>Notes</b><br><br>
+Unlike <a href="#.frexp"><em class="tt">frexp</em></a>&nbsp; where the exponent is calculated for a |coefficient| &lt; 1.0, this
+functions returns the raw encoded exponent.<br><br>
+<b>Examples:</b><br>
+        <pre class="d_code"><span class="d_keyword">auto</span> d = decimal32(<span class="d_string">"0x0001p+12"</span>); <span class="d_comment">//1 * 10^^12
+</span><span class="d_keyword">auto</span> z = decimal64(<span class="d_string">"0x0000p-3"</span>);  <span class="d_comment">//0 * 10^^-3
+</span>
+<span class="d_keyword">int</span> calculatedExponent, rawExponent;
+
+<span class="d_comment">//d is 0.1 * 10^^13
+</span>frexp(d, calculatedExponent);
+rawExponent = <span class="d_psymbol">quantexp</span>(d);
+<span class="d_keyword">assert</span> (calculatedExponent == 13  &amp;&amp; rawExponent == 12);
+
+<span class="d_comment">//z is 0.0
+</span>frexp(z, calculatedExponent);
+rawExponent = <span class="d_psymbol">quantexp</span>(z);
+<span class="d_keyword">assert</span> (calculatedExponent == 0  &amp;&amp; rawExponent == -3);
+</pre>
+<br><br>
 </dd>
 <dt><em class="big"><span class="def-anchor" id=".remainder"></span><div class="quickindex" id="quickindex.remainder"></div>auto <span class="def-anchor" id="remainder"></span><code class="ddoc_psymbol">remainder</code>(D1, D2)(auto ref const D1 <code class="ddoc_param">x</code>, auto ref const D2 <code class="ddoc_param">y</code>);
 </em></dt>
@@ -2539,7 +2724,7 @@ If no rounding mode is specified the default context rounding mode is used inste
         The value of <code class="ddoc_param">x</code> - n * <code class="ddoc_param">y</code>, where n is the quotient rounded to nearest even of the division <code class="ddoc_param">x</code> / <code class="ddoc_param">y</code>
 <br><br><b>Throws:</b><br>
         <table class="book"><caption></caption>    <tr><td><a href="#.InvalidOperationException"><em class="tt">InvalidOperationException</em></a>&nbsp;</td>
-         <td><code class="ddoc_param">x</code> or <code class="ddoc_param">y</code> is signaling NaN, <code class="ddoc_param">x</code> = ±∞, <code class="ddoc_param">y</code> = ±0.0</td></tr>
+         <td><code class="ddoc_param">x</code> or <code class="ddoc_param">y</code> is signaling <b>NaN</b>, <code class="ddoc_param">x</code> = ±∞, <code class="ddoc_param">y</code> = ±0.0</td></tr>
     <tr><td><a href="#.UnderflowException"><em class="tt">UnderflowException</em></a>&nbsp;</td>
          <td>result is too small to be represented</td></tr>
     <tr><td><a href="#.DivisionByZeroException"><em class="tt">DivisionByZeroException</em></a>&nbsp;</td>
@@ -2549,11 +2734,11 @@ If no rounding mode is specified the default context rounding mode is used inste
 </table>
 <br><br><b>Special values</b><br><br>
 <table class="book"><caption></caption>    <tr><th scope="col"><code class="ddoc_param">x</code></th> <th scope="col"><code class="ddoc_param">y</code></th> <th scope="col"><span class="def-anchor" id="remainder"></span><code class="ddoc_psymbol">remainder</code>(<code class="ddoc_param">x</code>, <code class="ddoc_param">y</code>)</th></tr>
-    <tr><td>NaN</td> <td>any</td> <td>NaN</td></tr>
-    <tr><td>any</td> <td>NaN</td> <td>NaN</td></tr>
-    <tr><td>±∞</td> <td>any</td> <td>NaN</td></tr>
-    <tr><td>any</td> <td>0.0</td> <td>NaN</td></tr>
-    <tr><td>any</td> <td>±∞</td> <td>NaN</td></tr>
+    <tr><td><b>NaN</b></td> <td>any</td> <td><b>NaN</b></td></tr>
+    <tr><td>any</td> <td><b>NaN</b></td> <td><b>NaN</b></td></tr>
+    <tr><td>±∞</td> <td>any</td> <td><b>NaN</b></td></tr>
+    <tr><td>any</td> <td>0.0</td> <td><b>NaN</b></td></tr>
+    <tr><td>any</td> <td>±∞</td> <td><b>NaN</b></td></tr>
 </table><br><br>
 
 </dd>
@@ -2567,13 +2752,13 @@ This function is similar to <a href="#.nearbyint"><em class="tt">nearbyint</em><
 <br><br>
 <b>Throws:</b><br>
         <table class="book"><caption></caption>    <tr><td><a href="#.InvalidOperationException"><em class="tt">InvalidOperationException</em></a>&nbsp;</td>
-         <td><code class="ddoc_param">x</code> is signaling NaN</td></tr>
+         <td><code class="ddoc_param">x</code> is signaling <b>NaN</b></td></tr>
     <tr><td><a href="#.InexactException"><em class="tt">InexactException</em></a>&nbsp;</td>
          <td>the result is inexact</td></tr>
 </table>
 <br><br><b>Special values</b><br><br>
 <table class="book"><caption></caption>    <tr><th scope="col"><code class="ddoc_param">x</code></th> <th scope="col"><span class="def-anchor" id="rint"></span><code class="ddoc_psymbol">rint</code>(<code class="ddoc_param">x</code>)</th></tr>
-    <tr><td>NaN</td> <td>NaN</td></tr>
+    <tr><td><b>NaN</b></td> <td><b>NaN</b></td></tr>
     <tr><td>±∞</td> <td>±∞</td></tr>
     <tr><td>±0.0</td> <td>±0.0</td></tr>
 </table><br><br>
@@ -2597,7 +2782,7 @@ If the value doesn't fit in a long data type <a href="#.OverflowException"><em c
 <br><br>
 <b>Throws:</b><br>
         <table class="book"><caption></caption>    <tr><td><a href="#.InvalidOperationException"><em class="tt">InvalidOperationException</em></a>&nbsp;</td>
-         <td><code class="ddoc_param">x</code> is NaN</td></tr>
+         <td><code class="ddoc_param">x</code> is <b>NaN</b></td></tr>
     <tr><td><a href="#.OverflowException"><em class="tt">OverflowException</em></a>&nbsp;</td>
          <td>result does not fit in a long data type</td></tr>
     <tr><td><a href="#.InexactException"><em class="tt">InexactException</em></a>&nbsp;</td>
@@ -2605,7 +2790,7 @@ If the value doesn't fit in a long data type <a href="#.OverflowException"><em c
 </table>
 <br><br><b>Special values</b><br><br>
 <table class="book"><caption></caption>    <tr><th scope="col"><code class="ddoc_param">x</code></th> <th scope="col"><span class="def-anchor" id="rndtonl"></span><code class="ddoc_psymbol">rndtonl</code>(<code class="ddoc_param">x</code>)</th></tr>
-    <tr><td>NaN</td> <td>NaN</td></tr>
+    <tr><td><b>NaN</b></td> <td><b>NaN</b></td></tr>
     <tr><td>±∞</td> <td>±∞</td></tr>
     <tr><td>±0.0</td> <td>±0.0</td></tr>
 </table><br><br>
@@ -2617,7 +2802,7 @@ If the value doesn't fit in a long data type <a href="#.OverflowException"><em c
 <br><br>
 <b>Throws:</b><br>
         <table class="book"><caption></caption>    <tr><td><a href="#.InvalidOperationException"><em class="tt">InvalidOperationException</em></a>&nbsp;</td>
-         <td><code class="ddoc_param">x</code> is signaling NaN</td></tr>
+         <td><code class="ddoc_param">x</code> is signaling <b>NaN</b></td></tr>
     <tr><td><a href="#.DivisionByZeroException"><em class="tt">DivisionByZeroException</em></a>&nbsp;</td>
          <td><code class="ddoc_param">x</code> = ±0.0 and <code class="ddoc_param">n</code> &lt; 0.0</td></tr>
     <tr><td><a href="#.OverflowException"><em class="tt">OverflowException</em></a>&nbsp;</td>
@@ -2629,10 +2814,10 @@ If the value doesn't fit in a long data type <a href="#.OverflowException"><em c
 </table>
 <br><br><b>Special values</b><br><br>
 <table class="book"><caption></caption>    <tr><th scope="col"><code class="ddoc_param">x</code></th> <th scope="col">y</th> <th scope="col"><span class="def-anchor" id="root"></span><code class="ddoc_psymbol">root</code>(<code class="ddoc_param">x</code>, <code class="ddoc_param">n</code>)</th> </tr>
-    <tr><td>sNaN</td> <td>any</td> <td>NaN</td> </tr>
-    <tr><td>any</td> <td>0</td> <td>NaN</td> </tr>
-    <tr><td>any</td> <td>-1</td> <td>NaN</td> </tr>
-    <tr><td>NaN</td> <td>any</td> <td>NaN</td></tr>
+    <tr><td>sNaN</td> <td>any</td> <td><b>NaN</b></td> </tr>
+    <tr><td>any</td> <td>0</td> <td><b>NaN</b></td> </tr>
+    <tr><td>any</td> <td>-1</td> <td><b>NaN</b></td> </tr>
+    <tr><td><b>NaN</b></td> <td>any</td> <td><b>NaN</b></td></tr>
     <tr><td>±∞</td> <td>any</td> <td>±∞</td> </tr>
     <tr><td>±0.0</td> <td>odd <code class="ddoc_param">n</code> &lt; 0</td> <td>±∞</td></tr>
     <tr><td>±0.0</td> <td>even <code class="ddoc_param">n</code> &lt; 0</td> <td>+∞</td> </tr>
@@ -2648,7 +2833,7 @@ This operation is silent, doesn't throw any exception.
 <br><br>
 <b>Special values</b><br><br>
 <table class="book"><caption></caption>    <tr><th scope="col"><code class="ddoc_param">x</code></th> <th scope="col"><span class="def-anchor" id="round"></span><code class="ddoc_psymbol">round</code>(<code class="ddoc_param">x</code>)</th></tr>
-    <tr><td>NaN</td> <td>NaN</td></tr>
+    <tr><td><b>NaN</b></td> <td><b>NaN</b></td></tr>
     <tr><td>±0.0</td> <td>±0.0</td></tr>
     <tr><td>±∞</td> <td>±∞</td></tr>
 </table><br><br>
@@ -2659,14 +2844,14 @@ This operation is silent, doesn't throw any exception.
 <dd>Computes the inverse square root of <code class="ddoc_param">x</code>
 <br><br>
 <b>Throws:</b><br>
-        <a href="#.InvalidOperationException"><em class="tt">InvalidOperationException</em></a>&nbsp; if <code class="ddoc_param">x</code> is signaling NaN or negative,
+        <a href="#.InvalidOperationException"><em class="tt">InvalidOperationException</em></a>&nbsp; if <code class="ddoc_param">x</code> is signaling <b>NaN</b> or negative,
     <a href="#.InexactException"><em class="tt">InexactException</em></a>&nbsp;, <a href="#.UnderflowException"><em class="tt">UnderflowException</em></a>&nbsp;,
     <a href="#.DivisionByZeroException"><em class="tt">DivisionByZeroException</em></a>&nbsp;
 <br><br><b>Special values</b><br><br>
 <table class="book"><caption></caption>    <tr><th scope="col"><code class="ddoc_param">x</code></th> <th scope="col"><span class="def-anchor" id="rsqrt"></span><code class="ddoc_psymbol">rsqrt</code>(<code class="ddoc_param">x</code>)</th></tr>
-    <tr><td>NaN</td> <td>NaN</td></tr>
-    <tr><td>&lt; 0.0</td> <td>NaN</td></tr>
-    <tr><td>±0.0</td> <td>NaN</td></tr>
+    <tr><td><b>NaN</b></td> <td><b>NaN</b></td></tr>
+    <tr><td>&lt; 0.0</td> <td><b>NaN</b></td></tr>
+    <tr><td>±0.0</td> <td><b>NaN</b></td></tr>
     <tr><td>+∞</td> <td>+∞</td></tr>
 </table><br><br>
 
@@ -2684,7 +2869,7 @@ This operation is silent, doesn't throw any exception.
 </caption></table><br><b>Returns:</b><br>
         <code class="ddoc_keyword">true</code> if the internal representation of <code class="ddoc_param">x</code> and <code class="ddoc_param">y</code> use the same exponent, <code class="ddoc_keyword">false</code> otherwise
 <br><br><b>Notes</b><br><br>
-Returns also <code class="ddoc_keyword">true</code> if both operands are NaN or both operands are infinite.<br><br>
+Returns also <code class="ddoc_keyword">true</code> if both operands are <b>NaN</b> or both operands are infinite.<br><br>
 <b>Examples:</b><br>
         <pre class="d_code"><span class="d_keyword">assert</span>(<span class="d_psymbol">sameQuantum</span>(decimal32.infinity, -decimal64.infinity));
 
@@ -2699,11 +2884,11 @@ Returns also <code class="ddoc_keyword">true</code> if both operands are NaN or 
 <dd><b>Returns:</b><br>
         <code class="ddoc_param">x</code> efficiently multiplied by 10<sup><code class="ddoc_param">n</code></sup>
 <br><br><b>Throws:</b><br>
-        <a href="#.InvalidOperationException"><em class="tt">InvalidOperationException</em></a>&nbsp; if <code class="ddoc_param">x</code> is signaling NaN, <a href="#.OverflowException"><em class="tt">OverflowException</em></a>&nbsp;,
+        <a href="#.InvalidOperationException"><em class="tt">InvalidOperationException</em></a>&nbsp; if <code class="ddoc_param">x</code> is signaling <b>NaN</b>, <a href="#.OverflowException"><em class="tt">OverflowException</em></a>&nbsp;,
     <a href="#.UnderflowException"><em class="tt">UnderflowException</em></a>&nbsp;, <a href="#.InexactException"><em class="tt">InexactException</em></a>&nbsp;
 <br><br><b>Special values</b><br><br>
 <table class="book"><caption></caption>    <tr><th scope="col"><code class="ddoc_param">x</code></th> <th scope="col"><code class="ddoc_param">n</code></th> <th scope="col"><span class="def-anchor" id="scalbn"></span><code class="ddoc_psymbol">scalbn</code>(<code class="ddoc_param">x</code>, <code class="ddoc_param">n</code>)</th></tr>
-    <tr><td>NaN</td> <td>any</td> <td>NaN</td></tr>
+    <tr><td><b>NaN</b></td> <td>any</td> <td><b>NaN</b></td></tr>
     <tr><td>±∞</td> <td>any</td> <td>±∞</td></tr>
     <tr><td>±0</td> <td>any</td> <td>±0</td></tr>
     <tr><td>any</td> <td>0</td> <td><code class="ddoc_param">x</code></td></tr>
@@ -2721,7 +2906,7 @@ To avoid overflow, an additional <code class="ddoc_param">scale</code> is provid
 <br><br>
 <b>Throws:</b><br>
         <table class="book"><caption></caption>    <tr><td><a href="#.InvalidOperationException"><em class="tt">InvalidOperationException</em></a>&nbsp;</td>
-         <td>any <code class="ddoc_param">x</code> is signaling NaN</td></tr>
+         <td>any <code class="ddoc_param">x</code> is signaling <b>NaN</b></td></tr>
     <tr><td><a href="#.InvalidOperationException"><em class="tt">InvalidOperationException</em></a>&nbsp;</td>
          <td>there is one infinite element and one 0.0 element</td></tr>
     <tr><td><a href="#.OverflowException"><em class="tt">OverflowException</em></a>&nbsp;</td>
@@ -2744,7 +2929,7 @@ To avoid overflow, an additional <code class="ddoc_param">scale</code> is provid
 <br><br>
 <b>Throws:</b><br>
         <table class="book"><caption></caption>    <tr><td><a href="#.InvalidOperationException"><em class="tt">InvalidOperationException</em></a>&nbsp;</td>
-         <td>any <code class="ddoc_param">x</code> is signaling NaN</td></tr>
+         <td>any <code class="ddoc_param">x</code> is signaling <b>NaN</b></td></tr>
     <tr><td><a href="#.InvalidOperationException"><em class="tt">InvalidOperationException</em></a>&nbsp;</td>
          <td>any <code class="ddoc_param">x</code>[i] and <code class="ddoc_param">y</code>[i] are infinite and with different sign</td></tr>
     <tr><td><a href="#.InvalidOperationException"><em class="tt">InvalidOperationException</em></a>&nbsp;</td>
@@ -2769,7 +2954,7 @@ To avoid overflow, an additional <code class="ddoc_param">scale</code> is provid
 <br><br>
 <b>Throws:</b><br>
         <table class="book"><caption></caption>    <tr><td><a href="#.InvalidOperationException"><em class="tt">InvalidOperationException</em></a>&nbsp;</td>
-         <td>any <code class="ddoc_param">x</code> is signaling NaN</td></tr>
+         <td>any <code class="ddoc_param">x</code> is signaling <b>NaN</b></td></tr>
     <tr><td><a href="#.InvalidOperationException"><em class="tt">InvalidOperationException</em></a>&nbsp;</td>
          <td>any <code class="ddoc_param">x</code><sub>i</sub> and <code class="ddoc_param">y</code><sub>i</sub> are infinite and with different sign</td></tr>
     <tr><td><a href="#.InvalidOperationException"><em class="tt">InvalidOperationException</em></a>&nbsp;</td>
@@ -2822,7 +3007,7 @@ This operation is silent, no error flags are set and no exceptions are thrown.
 <br><br>
 <b>Throws:</b><br>
         <table class="book"><caption></caption>    <tr><td><a href="#.InvalidOperationException"><em class="tt">InvalidOperationException</em></a>&nbsp;</td>
-         <td><code class="ddoc_param">x</code> is signaling NaN or ±∞</td></tr>
+         <td><code class="ddoc_param">x</code> is signaling <b>NaN</b> or ±∞</td></tr>
     <tr><td><a href="#.UnderflowException"><em class="tt">UnderflowException</em></a>&nbsp;</td>
          <td>result is too small to be represented</td></tr>
     <tr><td><a href="#.InexactException"><em class="tt">InexactException</em></a>&nbsp;</td>
@@ -2830,8 +3015,8 @@ This operation is silent, no error flags are set and no exceptions are thrown.
 </table>
 <br><br><b>Special values</b><br><br>
 <table class="book"><caption></caption>    <tr><th scope="col"><code class="ddoc_param">x</code></th> <th scope="col"><span class="def-anchor" id="sin"></span><code class="ddoc_psymbol">sin</code>(<code class="ddoc_param">x</code>)</th></tr>
-    <tr><td>NaN</td> <td>NaN</td></tr>
-    <tr><td>±∞</td> <td>NaN</td></tr>
+    <tr><td><b>NaN</b></td> <td><b>NaN</b></td></tr>
+    <tr><td>±∞</td> <td><b>NaN</b></td></tr>
     <tr><td>-π/2</td> <td>-1.0</td></tr>
     <tr><td>-π/3</td> <td>-√3/2</td></tr>
     <tr><td>-π/4</td> <td>-√2/2</td></tr>
@@ -2850,7 +3035,7 @@ This operation is silent, no error flags are set and no exceptions are thrown.
 <br><br>
 <b>Throws:</b><br>
         <table class="book"><caption></caption>    <tr><td><a href="#.InvalidOperationException"><em class="tt">InvalidOperationException</em></a>&nbsp;</td>
-         <td><code class="ddoc_param">x</code> is signaling NaN</td></tr>
+         <td><code class="ddoc_param">x</code> is signaling <b>NaN</b></td></tr>
     <tr><td><a href="#.OverflowException"><em class="tt">OverflowException</em></a>&nbsp;</td>
          <td>result is too big to be represented</td></tr>
     <tr><td><a href="#.InexactException"><em class="tt">InexactException</em></a>&nbsp;</td>
@@ -2858,7 +3043,7 @@ This operation is silent, no error flags are set and no exceptions are thrown.
 </table>
 <br><br><b>Special values</b><br><br>
 <table class="book"><caption></caption>    <tr><th scope="col"><code class="ddoc_param">x</code></th> <th scope="col"><span class="def-anchor" id="sinh"></span><code class="ddoc_psymbol">sinh</code>(<code class="ddoc_param">x</code>)</th></tr>
-    <tr><td>NaN</td> <td>NaN</td></tr>
+    <tr><td><b>NaN</b></td> <td><b>NaN</b></td></tr>
     <tr><td>±∞</td> <td>+∞</td></tr>
     <tr><td>±0.0</td> <td>+0.0</td></tr>
 </table><br><br>
@@ -2870,7 +3055,7 @@ This operation is silent, no error flags are set and no exceptions are thrown.
 <br><br>
 <b>Throws:</b><br>
         <table class="book"><caption></caption>    <tr><td><a href="#.InvalidOperationException"><em class="tt">InvalidOperationException</em></a>&nbsp;</td>
-         <td><code class="ddoc_param">x</code> is signaling NaN or ±∞</td></tr>
+         <td><code class="ddoc_param">x</code> is signaling <b>NaN</b> or ±∞</td></tr>
     <tr><td><a href="#.UnderflowException"><em class="tt">UnderflowException</em></a>&nbsp;</td>
          <td>result is too small to be represented</td></tr>
     <tr><td><a href="#.InexactException"><em class="tt">InexactException</em></a>&nbsp;</td>
@@ -2878,8 +3063,8 @@ This operation is silent, no error flags are set and no exceptions are thrown.
 </table>
 <br><br><b>Special values</b><br><br>
 <table class="book"><caption></caption>    <tr><th scope="col"><code class="ddoc_param">x</code></th> <th scope="col">sin(<code class="ddoc_param">x</code>)</th></tr>
-    <tr><td>NaN</td> <td>NaN</td></tr>
-    <tr><td>±∞</td> <td>NaN</td></tr>
+    <tr><td><b>NaN</b></td> <td><b>NaN</b></td></tr>
+    <tr><td>±∞</td> <td><b>NaN</b></td></tr>
     <tr><td>-1/2</td> <td>-1.0</td></tr>
     <tr><td>-1/3</td> <td>-√3/2</td></tr>
     <tr><td>-1/4</td> <td>-√2/2</td></tr>
@@ -2897,12 +3082,12 @@ This operation is silent, no error flags are set and no exceptions are thrown.
 <dd>Computes the square root of <code class="ddoc_param">x</code>
 <br><br>
 <b>Throws:</b><br>
-        <a href="#.InvalidOperationException"><em class="tt">InvalidOperationException</em></a>&nbsp; if <code class="ddoc_param">x</code> is signaling NaN or negative,
+        <a href="#.InvalidOperationException"><em class="tt">InvalidOperationException</em></a>&nbsp; if <code class="ddoc_param">x</code> is signaling <b>NaN</b> or negative,
     <a href="#.InexactException"><em class="tt">InexactException</em></a>&nbsp;, <a href="#.UnderflowException"><em class="tt">UnderflowException</em></a>&nbsp;
 <br><br><b>Special values</b><br><br>
 <table class="book"><caption></caption>    <tr><th scope="col"><code class="ddoc_param">x</code></th> <th scope="col"><span class="def-anchor" id="sqrt"></span><code class="ddoc_psymbol">sqrt</code>(<code class="ddoc_param">x</code>)</th></tr>
-    <tr><td>NaN</td> <td>NaN</td></tr>
-    <tr><td>&lt; 0.0</td> <td>NaN</td></tr>
+    <tr><td><b>NaN</b></td> <td><b>NaN</b></td></tr>
+    <tr><td>&lt; 0.0</td> <td><b>NaN</b></td></tr>
     <tr><td>±0.0</td> <td>±0.0</td></tr>
     <tr><td>+∞</td> <td>+∞</td></tr>
 </table><br><br>
@@ -2916,7 +3101,7 @@ This operation is silent, no error flags are set and no exceptions are thrown.
         <code class="ddoc_param">x</code><sub>0</sub> + <code class="ddoc_param">x</code><sub>1</sub> + ... + <code class="ddoc_param">x</code><sub>n</sub>
 <br><br><b>Throws:</b><br>
         <table class="book"><caption></caption>    <tr><td><a href="#.InvalidOperationException"><em class="tt">InvalidOperationException</em></a>&nbsp;</td>
-         <td>any <code class="ddoc_param">x</code> is signaling NaN</td></tr>
+         <td>any <code class="ddoc_param">x</code> is signaling <b>NaN</b></td></tr>
     <tr><td><a href="#.InvalidOperationException"><em class="tt">InvalidOperationException</em></a>&nbsp;</td>
          <td>there are two infinite elements with different sign</td></tr>
     <tr><td><a href="#.OverflowException"><em class="tt">OverflowException</em></a>&nbsp;</td>
@@ -2935,7 +3120,7 @@ This operation is silent, no error flags are set and no exceptions are thrown.
         |<code class="ddoc_param">x</code><sub>0</sub>| + |<code class="ddoc_param">x</code><sub>1</sub>| + ... + |<code class="ddoc_param">x</code><sub>n</sub>|
 <br><br><b>Throws:</b><br>
         <table class="book"><caption></caption>    <tr><td><a href="#.InvalidOperationException"><em class="tt">InvalidOperationException</em></a>&nbsp;</td>
-         <td>any <code class="ddoc_param">x</code> is signaling NaN</td></tr>
+         <td>any <code class="ddoc_param">x</code> is signaling <b>NaN</b></td></tr>
     <tr><td><a href="#.OverflowException"><em class="tt">OverflowException</em></a>&nbsp;</td>
          <td>result is too big to be represented</td></tr>
     <tr><td><a href="#.UnderflowException"><em class="tt">UnderflowException</em></a>&nbsp;</td>
@@ -2952,7 +3137,7 @@ This operation is silent, no error flags are set and no exceptions are thrown.
         <code class="ddoc_param">x</code><sub>0</sub><sup>2</sup> + <code class="ddoc_param">x</code><sub>1</sub><sup>2</sup> + ... + <code class="ddoc_param">x</code><sub>n</sub><sup>2</sup>
 <br><br><b>Throws:</b><br>
         <table class="book"><caption></caption>    <tr><td><a href="#.InvalidOperationException"><em class="tt">InvalidOperationException</em></a>&nbsp;</td>
-         <td>any <code class="ddoc_param">x</code> is signaling NaN</td></tr>
+         <td>any <code class="ddoc_param">x</code> is signaling <b>NaN</b></td></tr>
     <tr><td><a href="#.OverflowException"><em class="tt">OverflowException</em></a>&nbsp;</td>
          <td>result is too big to be represented</td></tr>
     <tr><td><a href="#.UnderflowException"><em class="tt">UnderflowException</em></a>&nbsp;</td>
@@ -2967,7 +3152,7 @@ This operation is silent, no error flags are set and no exceptions are thrown.
 <br><br>
 <b>Throws:</b><br>
         <table class="book"><caption></caption>    <tr><td><a href="#.InvalidOperationException"><em class="tt">InvalidOperationException</em></a>&nbsp;</td>
-         <td><code class="ddoc_param">x</code> is signaling NaN or ±∞</td></tr>
+         <td><code class="ddoc_param">x</code> is signaling <b>NaN</b> or ±∞</td></tr>
     <tr><td><a href="#.UnderflowException"><em class="tt">UnderflowException</em></a>&nbsp;</td>
          <td>result is too small to be represented</td></tr>
     <tr><td><a href="#.OverflowException"><em class="tt">OverflowException</em></a>&nbsp;</td>
@@ -2977,8 +3162,8 @@ This operation is silent, no error flags are set and no exceptions are thrown.
 </table>
 <br><br><b>Special values</b><br><br>
 <table class="book"><caption></caption>    <tr><th scope="col"><code class="ddoc_param">x</code></th> <th scope="col"><span class="def-anchor" id="tan"></span><code class="ddoc_psymbol">tan</code>(<code class="ddoc_param">x</code>)</th></tr>
-    <tr><td>NaN</td> <td>NaN</td></tr>
-    <tr><td>±∞</td> <td>NaN</td></tr>
+    <tr><td><b>NaN</b></td> <td><b>NaN</b></td></tr>
+    <tr><td>±∞</td> <td><b>NaN</b></td></tr>
     <tr><td>-π/2</td> <td>-∞</td></tr>
     <tr><td>-π/3</td> <td>-√3</td></tr>
     <tr><td>-π/4</td> <td>-1.0</td></tr>
@@ -2997,7 +3182,7 @@ This operation is silent, no error flags are set and no exceptions are thrown.
 <br><br>
 <b>Throws:</b><br>
         <table class="book"><caption></caption>    <tr><td><a href="#.InvalidOperationException"><em class="tt">InvalidOperationException</em></a>&nbsp;</td>
-         <td><code class="ddoc_param">x</code> is signaling NaN </td></tr>
+         <td><code class="ddoc_param">x</code> is signaling <b>NaN</b> </td></tr>
     <tr><td><a href="#.UnderflowException"><em class="tt">UnderflowException</em></a>&nbsp;</td>
          <td>result is too small to be represented</td></tr>
     <tr><td><a href="#.OverflowException"><em class="tt">OverflowException</em></a>&nbsp;</td>
@@ -3007,7 +3192,7 @@ This operation is silent, no error flags are set and no exceptions are thrown.
 </table>
 <br><br><b>Special values</b><br><br>
 <table class="book"><caption></caption>    <tr><th scope="col"><code class="ddoc_param">x</code></th> <th scope="col"><span class="def-anchor" id="tanh"></span><code class="ddoc_psymbol">tanh</code>(<code class="ddoc_param">x</code>)</th></tr>
-    <tr><td>NaN</td> <td>NaN</td></tr>
+    <tr><td><b>NaN</b></td> <td><b>NaN</b></td></tr>
     <tr><td>±∞</td> <td>±1.0</td></tr>
     <tr><td>±0.0</td> <td>±0.0</td></tr>
 </table><br><br>
@@ -3018,11 +3203,11 @@ This operation is silent, no error flags are set and no exceptions are thrown.
 <dd>Converts <code class="ddoc_param">x</code> <span class="def-anchor" id="to"></span><code class="ddoc_psymbol">to</code> the specified integral type rounded if necessary by <code class="ddoc_param">mode</code>
 <br><br>
 <b>Throws:</b><br>
-        <a href="#.InvalidOperationException"><em class="tt">InvalidOperationException</em></a>&nbsp; if <code class="ddoc_param">x</code> is NaN,
+        <a href="#.InvalidOperationException"><em class="tt">InvalidOperationException</em></a>&nbsp; if <code class="ddoc_param">x</code> is <b>NaN</b>,
     <a href="#.UnderflowException"><em class="tt">UnderflowException</em></a>&nbsp;, <a href="#.OverflowException"><em class="tt">OverflowException</em></a>&nbsp;
 <br><br><b>Special values</b><br><br>
 <table class="book"><caption></caption>    <tr><th scope="col"><code class="ddoc_param">x</code></th> <th scope="col"><span class="def-anchor" id="to"></span><code class="ddoc_psymbol">to</code>!T(<code class="ddoc_param">x</code>)</th></tr>
-    <tr><td>NaN</td> <td>0</td></tr>
+    <tr><td><b>NaN</b></td> <td>0</td></tr>
     <tr><td>+∞</td> <td>T.max</td></tr>
     <tr><td>-∞</td> <td>T.min</td></tr>
     <tr><td>±0.0</td> <td>0</td></tr>
@@ -3061,12 +3246,12 @@ Decimal values are represented internaly using
 <dd>Converts <code class="ddoc_param">x</code> to the specified integral type rounded if necessary by <code class="ddoc_param">mode</code>
 <br><br>
 <b>Throws:</b><br>
-        <a href="#.InvalidOperationException"><em class="tt">InvalidOperationException</em></a>&nbsp; if <code class="ddoc_param">x</code> is NaN,
+        <a href="#.InvalidOperationException"><em class="tt">InvalidOperationException</em></a>&nbsp; if <code class="ddoc_param">x</code> is <b>NaN</b>,
 <a href="#.InexactException"><em class="tt">InexactException</em></a>&nbsp;
 <a href="#.UnderflowException"><em class="tt">UnderflowException</em></a>&nbsp;, <a href="#.OverflowException"><em class="tt">OverflowException</em></a>&nbsp;
 <br><br><b>Special values</b><br><br>
 <table class="book"><caption></caption><tr><th scope="col"><code class="ddoc_param">x</code></th> <th scope="col"><span class="def-anchor" id="toExact"></span><code class="ddoc_psymbol">toExact</code>!T(<code class="ddoc_param">x</code>)</th></tr>
-<tr><td>NaN</td> <td>0</td></tr>
+<tr><td><b>NaN</b></td> <td>0</td></tr>
 <tr><td>+∞</td> <td>T.max</td></tr>
 <tr><td>-∞</td> <td>T.min</td></tr>
 <tr><td>±0.0</td> <td>0</td></tr>
@@ -3088,7 +3273,7 @@ Decimal values are represented internaly using
 <br><br>
 <b>Throws:</b><br>
         <table class="book"><caption></caption>    <tr><td><a href="#.InvalidOperationException"><em class="tt">InvalidOperationException</em></a>&nbsp;</td>
-        <td><code class="ddoc_param">x</code> is NaN</td></tr>
+        <td><code class="ddoc_param">x</code> is <b>NaN</b></td></tr>
     <tr><td><a href="#.OverflowException"><em class="tt">OverflowException</em></a>&nbsp;</td>
         <td><code class="ddoc_param">x</code> is infinite or outside the Currency limits</td></tr>
     <tr><td><a href="#.UnderflowException"><em class="tt">UnderflowException</em></a>&nbsp;</td>
@@ -3108,7 +3293,7 @@ The Microsoft currency data type is stored as long
 <br><br>
 <b>Throws:</b><br>
         <table class="book"><caption></caption>    <tr><td><a href="#.InvalidOperationException"><em class="tt">InvalidOperationException</em></a>&nbsp;</td>
-        <td><code class="ddoc_param">x</code> is NaN</td></tr>
+        <td><code class="ddoc_param">x</code> is <b>NaN</b></td></tr>
     <tr><td><a href="#.OverflowException"><em class="tt">OverflowException</em></a>&nbsp;</td>
         <td><code class="ddoc_param">x</code> is infinite or outside the DECIMAL limits</td></tr>
     <tr><td><a href="#.UnderflowException"><em class="tt">UnderflowException</em></a>&nbsp;</td>
@@ -3142,7 +3327,7 @@ The Microsoft decimal data type is stored as a 96 bit integral
         <pre class="d_code"><span class="d_keyword">assert</span> (<span class="d_psymbol">totalOrder</span>(decimal32.min_normal, decimal64.max));
 <span class="d_keyword">assert</span> (!<span class="d_psymbol">totalOrder</span>(decimal32.max, decimal128.min_normal));
 <span class="d_keyword">assert</span> (<span class="d_psymbol">totalOrder</span>(-decimal64(0), decimal64(0)));
-<span class="d_keyword">assert</span> (!<span class="d_psymbol">totalOrderAbs</span>(-decimal64(0), decimal64(0)));
+<span class="d_keyword">assert</span> (<span class="d_psymbol">totalOrderAbs</span>(decimal64(0), -decimal64(0)));
 </pre>
 <br><br>
 </dd>
@@ -3153,7 +3338,7 @@ This operation is silent, doesn't throw any exception.
 <br><br>
 <b>Special values</b><br><br>
 <table class="book"><caption></caption><tr><th scope="col"><code class="ddoc_param">x</code></th> <th scope="col"><span class="def-anchor" id="trunc"></span><code class="ddoc_psymbol">trunc</code>(<code class="ddoc_param">x</code>)</th></tr>
-<tr><td>NaN</td> <td>NaN</td></tr>
+<tr><td><b>NaN</b></td> <td><b>NaN</b></td></tr>
 <tr><td>±0.0</td> <td>±0.0</td></tr>
 <tr><td>±∞</td> <td>±∞</td></tr>
 </table><br><br>
@@ -3170,7 +3355,7 @@ This operation is silent, doesn't throw any exception.
     <a href="#.InexactException"><em class="tt">InexactException</em></a>&nbsp;
 <br><br><b>Special values</b><br><br>
 <table class="book"><caption></caption>    <tr><th scope="col"><code class="ddoc_param">x</code></th> <th scope="col"><span class="def-anchor" id="truncPow10"></span><code class="ddoc_psymbol">truncPow10</code>(<code class="ddoc_param">x</code>)</th></tr>
-    <tr><td>NaN</td> <td>NaN</td></tr>
+    <tr><td><b>NaN</b></td> <td><b>NaN</b></td></tr>
     <tr><td>±∞</td> <td>±∞</td></tr>
     <tr><td>±0.0</td> <td>±0.0</td></tr>
 </table><br><br>
@@ -3179,7 +3364,7 @@ This operation is silent, doesn't throw any exception.
 </dl>
 
         <div class="smallprint" id="copyright">Copyright &copy; 1999-2018 by the <a href="https://dlang.org/foundation.html">D Language Foundation</a> | Page generated by
-<a href="https://dlang.org/spec/ddoc.html">Ddoc</a> on Wed Jan 17 12:05:04 2018
+<a href="https://dlang.org/spec/ddoc.html">Ddoc</a> on Wed Jan 31 20:26:38 2018
 </div>
     </div>
 </div>

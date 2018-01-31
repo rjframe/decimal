@@ -236,11 +236,11 @@ bool runpack(const real r, out int exp, out ulong mantissa, out bool inf, out bo
     {
         inf = false; nan = false;
         if (mantissa)
-            exp -= 16446;
+            exp -= 16445;
     }
     else if (exp == 0x7FFF)
     {
-        inf = mantissa == 0;
+        inf = (mantissa & 0x7FFF_FFFF_FFFF_FFFF) == 0;
         nan = !inf;
     }
     else
@@ -252,6 +252,14 @@ bool runpack(const real r, out int exp, out ulong mantissa, out bool inf, out bo
     return (ru.e & 0x8000) != 0;
 }
 
+
+
+
+void floatExtract(float f, out uint coefficient, out int exponent)
+{
+    // x * 2^n = y * 10^m -> 2^n = n * log2(10)
+}
+
 @nogc @safe pure nothrow
 bool exp2to10(ref uint coefficient, ref int exponent)
 {
@@ -260,6 +268,8 @@ bool exp2to10(ref uint coefficient, ref int exponent)
     bool inexact;
 
     auto e5 = -exponent;
+
+    
 
     while (e5 > 0)
     {
