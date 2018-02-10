@@ -387,7 +387,7 @@ else
 
 private import std.traits: Unqual, isUnsigned, Unsigned, isSigned;
 private import core.checkedint: adds, subs;
-private import std.math: isNaN, isInfinity, signbit, ieeeFlags, FloatingPointControl, resetIeeeFlags, ldexp, getNaNPayload;
+private import std.math: isNaN, isInfinity, signbit, ieeeFlags, FloatingPointControl, resetIeeeFlags, ldexp, getNaNPayload, fabs;
 private import std.format: singleSpec;
 
 
@@ -575,6 +575,16 @@ private:
         return ExceptionFlags.overflow;
     }
 
+    @nogc nothrow pure @safe
+    ExceptionFlags infinityPack(const bool isNegative)
+    {      
+        
+        data = MASK_INF;
+        if (isNegative)
+            data |= D.MASK_SGN;
+        return ExceptionFlags.none;
+    }
+
     //packs zero or min, depending on the rounding mode
     @nogc nothrow pure @safe
     ExceptionFlags underflowPack(const bool isNegative, const RoundingMode mode)
@@ -626,7 +636,7 @@ private:
     {
         if (!errorPack(isNegative, previousFlags, precision, mode, cvt!U(coefficient)))
         {
-            bool stickyUnderflow = exponent < int.max - EXP_BIAS && exponent + EXP_BIAS < PRECISION - 1 && prec(coefficient) < PRECISION - (exponent + EXP_BIAS);
+            bool stickyUnderflow = coefficient && (exponent < int.max - EXP_BIAS && exponent + EXP_BIAS < PRECISION - 1 && prec(coefficient) < PRECISION - (exponent + EXP_BIAS));
             static if (T.sizeof <= U.sizeof)
                 U cx = coefficient;
             else
@@ -710,18 +720,6 @@ private:
     ExceptionFlags packFloatingPoint(T)(const T value, const int precision, const RoundingMode mode) 
     if (isFloatingPoint!T)
     {
-        //float / decimal32  -> min(9, 7) = 7       
-        //float / decimal64  -> min(9, 16) = 9      
-        //float / decimal128 -> min(9, 34) = 9      
-
-        //double / decimal32  -> min(16, 7) = 7      
-        //double / decimal64  -> min(16, 16) = 16    
-        //double / decimal128 -> min(16, 34) = 16    
-
-        //real / decimal32   -> min(21, 7) = 7      
-        //real / decimal64   -> min(21, 16) = 16    
-        //real / decimal128  -> min(21, 34) = 21  
-
         ExceptionFlags flags;
         DataType!D cx; int ex; bool sx;
         switch (fastDecode(value, cx, ex, sx, mode, flags))
@@ -743,6 +741,7 @@ private:
                     data |= MASK_SGN;
                 return ExceptionFlags.none;
             case FastClass.finite:
+
                 auto targetPrecision = realPrecision(precision);
                 static if (is(T == float))
                 {
@@ -864,6 +863,17 @@ private:
     enum half           = D(U(5U), -1, false);
     enum threequarters  = D(U(75U), -2, false);
     enum quarter        = D(U(25U), -2, false);
+
+    static if (bits == 128)
+    {
+        enum maxFloat       = D(s_max_float);
+        enum maxDouble      = D(s_max_double);
+        enum maxReal        = D(s_max_real);
+        enum minFloat       = D(s_min_float);
+        enum minDouble      = D(s_min_double);
+        enum minReal        = D(s_min_real);
+    }
+
 
 
     enum SQRT3          = fromString!D(s_sqrt3);
@@ -1564,7 +1574,7 @@ unittest
     alias StringTypes = TypeTuple!(string, wstring, dstring);
     alias RangeTypes = TypeTuple!(DumbRange!char, DumbRange!wchar, DumbRange!dchar);
 
-    auto x = decimal128(real.nan);
+    auto x = decimal32(double.nan);
 
     //constructors
     foreach (D; DecimalTypes)
@@ -3222,9 +3232,10 @@ D1 copysign(D1, D2)(auto const ref D1 to, auto const ref D2 from)
 if (isDecimal!(D1, D2))
 {
     Unqual!D1 result = to;
-    static if (is(D2: decimal32) || is(D2: decimal64))
+    bool sx = cast(bool)((from.data & D2.MASK_SGN) == D2.MASK_SGN);
+
+    static if (is(D1: decimal32) || is(D1: decimal64))
     {
-        bool sx = cast(bool)((from.data & D2.MASK_SGN) == D2.MASK_SGN);
         if (sx)
             result.data |= D1.MASK_SGN;
         else
@@ -3232,7 +3243,6 @@ if (isDecimal!(D1, D2))
     }
     else
     {
-        bool sx = cast(bool)((from.data.hi & D2.MASK_SGN.hi) == D2.MASK_SGN.hi);
         if (sx)
             result.data.hi |= D1.MASK_SGN.hi;
         else
@@ -4245,9 +4255,9 @@ $(BOOKTABLE,
 Special_values:
 $(BOOKTABLE,
     $(TR $(TH x) $(TH y) $(TH hypot(x, y)))
-    $(TR $(TD $(B NaN)) $(TD $(B NaN)) $(TD nan))
     $(TR $(TD ±∞) $(TD any) $(TD +∞))
     $(TR $(TD any) $(TD ±∞) $(TD +∞))
+    $(TR $(TD $(B NaN)) $(TD $(B NaN)) $(TD nan))
     $(TR $(TD $(B NaN)) $(TD any) $(TD nan))
     $(TR $(TD any) $(TD $(B NaN)) $(TD nan))
     $(TR $(TD 0.0) $(TD any) $(TD y))
@@ -5562,11 +5572,20 @@ if (isDecimal!(D1, D2))
     if (isNaN(y))
         return copysign(D1.nan, y);
 
-    Unqual!D result = x;
+    Unqual!D1 result = x;
     ExceptionFlags flags;
     int c = decimalCmp(x, y);
-    if (c != 0)
-       flags = c < 0 ? decimalNextUp(result) : decimalNextDown(result);
+    if (c == 0)
+    {
+        decimalToDecimal(y, result, 0, __ctfe ? RoundingMode.implicit : DecimalControl.rounding);
+        DecimalControl.raiseFlags(flags);
+        return result;
+    }
+    else
+    {
+        flags = c < 0 ? decimalNextUp(result) : decimalNextDown(result);
+        flags &= ~ExceptionFlags.inexact;
+    }
     if (isInfinity(result))
         flags |= ExceptionFlags.overflow | ExceptionFlags.inexact;
     else if (isZero(result) || isSubnormal(result))
@@ -6335,6 +6354,10 @@ if (isDecimal!D)
                              __ctfe ? RoundingMode.implicit : DecimalControl.rounding);
 
     DecimalControl.raiseFlags(flags);
+
+
+
+
     return result;
 }
 
@@ -7189,7 +7212,7 @@ if (isDecimal!D)
 }
 
 
-private:
+package:
 
 template DataType(D)
 {
@@ -8249,6 +8272,62 @@ if (isDecimal!D && isFloatingPoint!T)
     final switch (fastDecode(source, cx, ex, sx))
     {
         case FastClass.finite:
+
+
+//s_max_float     = "3.402823466385288598117041834845169e+0038",
+//    s_min_float     = "1.401298464324817070923729583289916e-0045",
+//    s_max_double    = "1.797693134862315708145274237317043e+0308",
+//    s_min_double    = "4.940656458412465441765687928682213e-0324",
+//    s_max_real      = "1.189731495357231765021263853030970e+4932",
+//    s_min_real      = "3.645199531882474602528405933619419e-4951",
+
+
+            static if (is(Unqual!T == float) ||
+                       (is(Unqual!T == double) && D.sizeof > 4) ||
+                       (is(Unqual!T == real) && real.mant_dig == 64 && D.sizeof > 8) ||
+                       (is(Unqual!T == real) && real.mant_dig != 64 && D.sizeof > 4))
+            {
+                static if (is(T == float))
+                {
+                    auto c1 = decimalCmp(fabs(source), decimal128.maxFloat);
+                    auto c2 = decimalCmp(fabs(source), decimal128.minFloat);
+                }
+                else static if (is(T == real) && (real.mant_dig == 64))
+                {
+                    auto c1 = decimalCmp(fabs(source), decimal128.maxReal);
+                    auto c2 = decimalCmp(fabs(source), decimal128.minReal);
+                }
+                else
+                {
+                    auto c1 = decimalCmp(fabs(source), decimal128.maxDouble);
+                    auto c2 = decimalCmp(fabs(source), decimal128.minDouble);
+                }
+
+                if (c1 > 0)
+                {
+                    target = sx ? -T.infinity: T.infinity;
+                    return ExceptionFlags.overflow;
+                }
+
+                if (c2 < 0)
+                {
+                    target = sx ? -0.0 : +0.0;
+                    return ExceptionFlags.underflow | ExceptionFlags.inexact;
+                }
+
+                if (c1 == 0)
+                {
+                    target = sx ? -T.max: T.max;
+                    return ExceptionFlags.inexact;
+                }
+
+                if (c2 == 0)
+                {
+                    target = (sx ? -T.min_normal : T.min_normal) * T.epsilon;
+                    return ExceptionFlags.inexact;
+                }
+            }
+
             ExceptionFlags flags;
             static if (is(D: decimal128))
                 flags = coefficientAdjust(cx, ex, uint128(ulong.max), sx, mode);
@@ -8298,9 +8377,10 @@ if (isDecimal!D && isFloatingPoint!T)
                 resetIeeeFlags();
                 
                 real r = m;
-                target = ldexp(r, ex);
                 if (sx)
-                    target = -target;
+                    r = -r;
+                target = ldexp(r, ex);
+                
 
                 if (ieeeFlags.inexact)
                     flags |= ExceptionFlags.inexact;
@@ -10440,23 +10520,23 @@ if (isDecimal!(D1, D2) && is(D: CommonDecimal!(D1, D2)))
         return ExceptionFlags.invalidOperation;
     }
 
-    if (fx == FastClass.quietNaN || fy == FastClass.quietNaN)
-    {
-        z = D.nan;
-        return ExceptionFlags.none;
-    }
-
     if (fx == FastClass.infinite || fy == FastClass.infinite)
     {
         z = D.infinity;
         return ExceptionFlags.none;
     }
 
+    if (fx == FastClass.quietNaN || fy == FastClass.quietNaN)
+    {
+        z = D.nan;
+        return ExceptionFlags.none;
+    }
+
     if (fx == FastClass.zero)
-        return z.adjustedPack(cy, ey, false, precision, mode, ExceptionFlags.none);
+        return z.adjustedPack(cy, cy ? ey : 0, false, precision, mode, ExceptionFlags.none);
 
     if (fy == FastClass.zero)
-        return z.adjustedPack(cx, ex, false, precision, mode, ExceptionFlags.none);
+        return z.adjustedPack(cx, cx ? ex : 0, false, precision, mode, ExceptionFlags.none);
 
     auto flags = coefficientHypot(cx, ex, cy, ey);
     return z.adjustedPack(cx, ex, false, precision, mode, flags);
@@ -10529,8 +10609,21 @@ if (isDecimal!(D1, D2, D3) && is(D : CommonDecimal!(D1, D2, D3)))
         return ExceptionFlags.none;
     }
 
+    if (fz == FastClass.infinite)
+    {
+        auto flags = coefficientMul(cx, ex, sx, cy, ey, sy, mode);
+        if (flags & ExceptionFlags.overflow)
+        {
+            if (sy != sx)
+                return result.invalidPack(sz, U(0U));
+            else
+                return result.infinityPack(sz);
+        }
+        return result.infinityPack(sz);
+    }
+
     if (fx == FastClass.zero || fy == FastClass.zero)
-        return result.adjustedPack(cx, ex, sx, precision, mode, ExceptionFlags.none);
+        return result.adjustedPack(cz, ez, sz, precision, mode, ExceptionFlags.none);
 
     if (fz == FastClass.zero)
     {
@@ -14294,14 +14387,11 @@ ExceptionFlags coefficientCapAngle(T)(ref T cx, ref int ex, ref bool sx)
 {
     if (coefficientCmp(cx, ex, Constants!T.c2π, Constants!T.e2π) > 0)
     {
-        Unqual!T cy = cx;
-        int ey = ex;
-        bool sy = sx;
-        coefficientMul(cy, ey, sy, Constants!T.c1_2π, Constants!T.e1_2π, false, RoundingMode.towardZero);
-        coefficientRound(cy, ey, sy, RoundingMode.towardZero);
-        coefficientMul(cy, ey, sy, Constants!T.c2π, Constants!T.e2π, false, RoundingMode.towardZero);
-        coefficientAdd(cx, ex, sx, cy, ey, !sy, RoundingMode.towardZero);
-        return ExceptionFlags.inexact;
+        alias U = MakeUnsigned!(T.sizeof* 16);
+        U cxx = cx;
+        auto flags = coefficientMod2PI(cxx, ex);
+        flags |= coefficientAdjust(cxx, ex, cvt!U(T.max), sx, RoundingMode.implicit);
+        cx = cvt!T(cxx);
     }
     return ExceptionFlags.none;
 }
@@ -14311,20 +14401,30 @@ ExceptionFlags coefficientCapAngle(T)(ref T cx, ref int ex, ref bool sx)
 ExceptionFlags coefficientCapAngle(T)(ref T cx, ref int ex, ref bool sx, out int quadrant)
 {
     quadrant = 1;
-    auto flags = coefficientCapAngle(cx, ex, sx);
-    if (coefficientCmp(cx, ex, Constants!T.c2π, Constants!T.e2π) > 0)
+    if (coefficientCmp(cx, ex, Constants!T.cπ_2, Constants!T.eπ_2) > 0)
     {
+        ExceptionFlags flags;
+        if (coefficientCmp(cx, ex, Constants!T.c2π, Constants!T.e2π) > 0)
+        {
+            alias U = MakeUnsigned!(T.sizeof* 16);
+            U cxx = cx;
+            flags = coefficientMod2PI(cxx, ex);
+            flags |= coefficientAdjust(cxx, ex, cvt!U(T.max), sx, RoundingMode.implicit);
+            cx = cvt!T(cxx);
+            if (coefficientCmp(cx, ex, Constants!T.cπ_2, Constants!T.eπ_2) <= 0)
+                return flags;
+        }
         Unqual!T cy = cx;
         int ey = ex;
         bool sy = sx;
-        coefficientMul(cy, ey, sy, Constants!T.c2_π, Constants!T.e2_π, false, RoundingMode.towardZero);
-        coefficientRound(cy, ey, sy, RoundingMode.towardZero);
+        flags |= coefficientMul(cy, ey, sy, Constants!T.c2_π, Constants!T.e2_π, false, RoundingMode.towardZero);
+        flags |= coefficientRound(cy, ey, sy, RoundingMode.towardZero);
         quadrant = cast(uint)(cy % 4U) + 1;
-        coefficientMul(cy, ey, sy, Constants!T.cπ_2, Constants!T.eπ_2, false, RoundingMode.towardZero);
-        coefficientAdd(cx, ex, sx, cy, ey, !sy, RoundingMode.towardZero);
-        flags |= ExceptionFlags.inexact;
+        flags |= coefficientMul(cy, ey, sy, Constants!T.cπ_2, Constants!T.eπ_2, false, RoundingMode.implicit);
+        flags |= coefficientAdd(cx, ex, sx, cy, ey, !sy, RoundingMode.implicit);
+        return flags;
     }
-    return flags;
+    return ExceptionFlags.none;
 }
 
 @safe pure nothrow @nogc
@@ -14487,9 +14587,42 @@ ExceptionFlags coefficientAtan(T)(ref T cx, ref int ex, bool sx)
     return ExceptionFlags.inexact;
 }
 
+ExceptionFlags coefficientFrac(T)(ref T cx, ref int ex)
+{
+    if (ex >= 0)
+    {
+        cx = 0U;
+        ex = 0;
+        return ExceptionFlags.none;
+    }
+    auto p = prec(cx);
+    if (ex < -p)
+       return ExceptionFlags.none;
+    cx %= pow10!T[-ex];    
+    return ExceptionFlags.none;
+}
+
+ExceptionFlags coefficientMod2PI(T)(ref T cx, ref int ex)
+{
+    ExceptionFlags flags;
+    if (coefficientCmp(cx, ex, Constants!T.c2π, Constants!T.e2π) > 0)
+    {
+        bool sx = false;
+        Unqual!T cy = cx;
+        cx = get_mod2pi!T(ex);
+        flags |= coefficientMul(cx, ex, sx, cy, 0, false, RoundingMode.implicit);
+        flags |= coefficientFrac(cx, ex);
+        flags |= coefficientMul(cx, ex, sx, Constants!T.c2π, Constants!T.e2π, false, RoundingMode.implicit);
+    }
+    return flags;
+}
+
+
 
 struct Constants(T)
 {
+    
+    
     static if (is(T:uint))
     {
         enum uint       c1_2π       = 1591549431U;
@@ -14547,6 +14680,25 @@ struct Constants(T)
         enum uint128    cln10       = uint128("230258509299404568401799145468436420760");
         enum int        eln10       = -38;
     }
+    else static if (is(T:uint256))
+    {
+        enum uint256    c1_2π       = uint256("15915494309189533576888376337251436203445964574045644874766734405889679763423");
+        enum int        e1_2π       = -77;
+        enum uint256    c2π         = uint256("62831853071795864769252867665590057683943387987502116419498891846156328125724");
+        enum int        e2π         = -76;
+        enum uint256    c2_π        = uint256("63661977236758134307553505349005744813783858296182579499066937623558719053691");
+        enum int        e2_π        = -77;
+        enum uint256    cπ_2        = uint256("15707963267948966192313216916397514420985846996875529104874722961539082031431");
+        enum int        eπ_2        = -76;
+        enum uint256    chalf       = 5U;
+        enum int        ehalf       = -1;
+        enum uint256    cthird      = uint256("33333333333333333333333333333333333333333333333333333333333333333333333333333");
+        enum int        ethird      = -77;
+        enum uint256    ce          = uint256("27182818284590452353602874713526624977572470936999595749669676277240766303536");
+        enum int        ee          = -76;
+        enum uint256    cln10       = uint256("23025850929940456840179914546843642076011014886287729760333279009675726096774");
+        enum int        eln10       = -76;
+    }
     else
         static assert(0);
 }
@@ -14585,7 +14737,152 @@ enum
     s_1_6           = "0.1666666666666666666666666666666667",
     s_m_1_2pi       = "0.1591549430918953357688837633725144",
     s_pi2           = "6.2831853071795864769252867665590058",
+
+    s_max_float     = "3.402823466385288598117041834845169e+0038",
+    s_min_float     = "1.401298464324817070923729583289916e-0045",
+    s_max_double    = "1.797693134862315708145274237317043e+0308",
+    s_min_double    = "4.940656458412465441765687928682213e-0324",
+    s_max_real      = "1.189731495357231765021263853030970e+4932",
+    s_min_real      = "3.645199531882474602528405933619419e-4951",
+    
 }
+    //to find mod(10^n/2pi; 1): take digits[n .. n + precision], exponent -n 
+    //example mod(10^3/2pi; 1): 1549430918953357688e-19, precision = 19
+    //example mod(10^9/2pi; 1): 0918953357688837633e-19, precision = 19 = 918953357688837633[7]e-20
+    //example mode(10^-8/2pi;1):0000000015915494309e-19, precision = 19 = 15915494309[18953357]e-27 
+    //limit: 9866, that means nmax = 9866 - precision;
+    //mod(c * 10^n mod 2pi) = frac(c * mod(10^n/2pi; 1)) * 2pi;
+    //example for decimal32 -> mod(10^n/2pi; 1) => 19 digits
+    //   c * mod(10^n/2pi; 1) => 19 + 7 = 26 digits => 
+
+    immutable s_mod_1_2pi =  
+        "15915494309189533576888376337251436203445964574045644874766734405889679763422653509011380276625308595607284" ~
+        "27267579580368929118461145786528779674107316998392292399669374090775730777463969253076887173928962173976616" ~
+        "93362390241723629011832380114222699755715940461890086902673956120489410936937844085528723099946443400248672" ~
+        "34773945961089832309678307490616698646280469944865218788157478656696424103899587413934860998386809919996244" ~
+        "28755851711788584311175187671605465475369880097394603647593337680593024944966353053271567755032203247778163" ~
+        "97166022946748119598165840606016803035998133911987498832786654435279755070016240677564388849571310880122199" ~
+        "37614768137776473789063306804645797848176131242731406996077502450029775985708905690279678513152521001631774" ~
+        "60209248116062405614562031464840892484591914352115754075562008715266068022171591407574745827225977462853998" ~
+        "75155329390813981772409358254797073328719040699975907657707849347039358982808717342564036689511662545705943" ~
+        "32763126865002612271797115321125995043866794503762556083631711695259758128224941623334314510612353687856311" ~
+        "36366921671420697469601292505783360531196085945098395567187099547465104316238155175808394429799709995052543" ~
+        "87566129445883306846050785291515141040489298850638816077619699307341038999578691890598093737772061875432227" ~
+        "18930136625526123878038753888110681406765434082827852693342679955607079038606035273899624512599574927629702" ~
+        "35940955843011648296411855777124057544494570217897697924094903272947702166496035653181535440038406898747176" ~
+        "91588763190966506964404776970687683656778104779795450353395758301881838687937766124814953059965580219083598" ~
+        "75103512712904323158049871968687775946566346221034204440855497850379273869429353661937782928735937843470323" ~
+        "02371458379235571186363419294601831822919641650087830793313534977909974586492902674506098936890945883050337" ~
+        "03053805473123215809431976760322831314189809749822438335174356989847501039500683880039786723599608024002739" ~
+        "01087495485478792356826113994890326899742708349611492082890377678474303550456845608367147930845672332703548" ~
+        "53925562020868393240995622117533183940209707935707749654988086860663609686619670374745421028312192518462248" ~
+        "34991161149566556037969676139931282996077608277990100783036002338272987908540238761557445430926011910054337" ~
+        "99838904654921248295160707285300522721023601752331317317975931105032815510937391363964530579260718008361795" ~
+        "48767246459804739772924481092009371257869183328958862839904358686666397567344514095036373271917431138806638" ~
+        "30725923027597345060548212778037065337783032170987734966568490800326988506741791464683508281616853314336160" ~
+        "73099514985311981973375844420984165595415225064339431286444038388356150879771645017064706751877456059160871" ~
+        "68578579392262347563317111329986559415968907198506887442300575191977056900382183925622033874235362568083541" ~
+        "56517297108811721795936832564885187499748708553116598306101392144544601614884527702511411070248521739745103" ~
+        "86673640387286009967489317356181207117404788993688865569230784850230570571440636386320236852010741005748592" ~
+        "28111572196800397824759530016695852212303464187736504354676464565659719011230847670993097085912836466691917" ~
+        "76938791433315566506698132164152100895711728623842607067845176011134508006994768422356989624880515775980953" ~
+        "39708085475059753626564903439445420581788643568304200031509559474343925254485067491429086475144230332133245" ~
+        "69511634945677539394240360905438335528292434220349484366151466322860247766666049531406573435755301409082798" ~
+        "80914786693434922737602634997829957018161964321233140475762897484082891174097478263789918169993948749771519" ~
+        "89818726662946018305395832752092363506853889228468247259972528300766856937583659722919824429747406163818311" ~
+        "39583067443485169285973832373926624024345019978099404021896134834273613676449913827154166063424829363741850" ~
+        "61226108613211998633462847099418399427429559156283339904803821175011612116672051912579303552929241134403116" ~
+        "13411249531838592695849044384680784909739828088552970451530539914009886988408836548366522246686240872540140" ~
+        "40091178742122045230753347397253814940388419058684231159463227443390661251623931062831953238833921315345563" ~
+        "81511752035108745955820112375435976815534018740739434036339780388172100453169182951948795917673954177879243" ~
+        "52761740724605939160273228287946819364912894971495343255272359165929807247998580612690073321884452679433504" ~
+        "55801952492566306204876616134365339920287545208555344144099051298272745465911813222328405116661565070983755" ~
+        "74337295486312041121716380915606161165732000083306114606181280326258695951602463216613857661480471993270777" ~
+        "13164412015949601106328305207595834850305079095584982982186740289838551383239570208076397550429225984764707" ~
+        "10164269743845043091658645283603249336043546572375579161366324120457809969715663402215880545794313282780055" ~
+        "24613208890187421210924489104100521549680971137207540057109634066431357454399159769435788920793425617783022" ~
+        "23701148642492523924872871313202176673607566455982726095741566023437874362913210974858971507130739104072643" ~
+        "54141797057222654798038151275957912400253446804822026173422990010204830624630337964746781905018118303751538" ~
+        "02879523433419550213568977091290561431787879208620574499925789756901849210324206471385191138814756402097605" ~
+        "54895793785141404145305151583964282326540602060331189158657027208625026991639375152788736060811455694842103" ~
+        "22407772727421651364234366992716340309405307480652685093016589213692141431293713410615715371406203978476184" ~
+        "26502978078606266969960809184223476335047746719017450451446166382846208240867359510237130290444377940853503" ~
+        "44544263341306263074595138303102293146934466832851766328241515210179422644395718121717021756492196444939653" ~
+        "22221876584882445119094013405044321398586286210831793939608443898019147873897723310286310131486955212620518" ~
+        "27806349457118662778256598831005351552316659843940902218063144545212129789734471488741258268223860236027109" ~
+        "98119152056882347239835801336606837863288679286197323672536066852168563201194897807339584191906659583867852" ~
+        "94124187182172798750610394606481958574562006089212284163943738465495899320284812364334661197073243095458590" ~
+        "73361878629063185016510626757685121635758869630745199922001077667683094698149756226824347936713108412102195" ~
+        "20899481912444048751171059184413990788945577518462161904153093454380280893862807323757861526779711433232419" ~
+        "69857805637630180884386640607175368321362629671224260942854011096321826276512011702255292928965559460820493" ~
+        "84090690760692003954646191640021567336017909631872891998634341086903200579663710312861235698881764036425254" ~
+        "08370981081483519031213186247228181050845123690190646632235938872454630737272808789830041018948591367374258" ~
+        "94181240567291912380033063449982196315803863810542457893450084553280313511884341007373060595654437362488771" ~
+        "29262898074235390740617869057844431052742626417678300582214864622893619296692992033046693328438158053564864" ~
+        "07318444059954968935377318367266131301086235880212880432893445621404797894542337360585063270439981932635916" ~
+        "68734194365678390128191220281622950033301223609185875592019590812241536794990954488810997589198908115811635" ~
+        "38891633940292372204984837522423620910083409756679171008416795702233178971071029288848970130995339954244153" ~
+        "35060625843921452433864640343244065731747755340540448100617761256908474646143297654390000838265211452101623" ~
+        "66431119798731902751191441213616962045693602633610235596214046702901215679641873574683587317233100474596333" ~
+        "97732477044918885134415363760091537564267438450166221393719306748706288159546481977519220771023674328906269" ~
+        "07091179194127762122451172354677115640433357720616661564674474627305622913332030953340551384171819460532150" ~
+        "14263280008795518132967549728467018836574253425016994231069156343106626043412205213831587971115075454063290" ~
+        "65702484886486974028720372598692811493606274038423328749423321785787750735571857043787379693402336902911446" ~
+        "96144864976971943452746744296030894371925405266588907106620625755099303799766583679361128137451104971506153" ~
+        "78374357955586797212935876446309375720322132024605656611299713102758691128460432518434326915529284585734959" ~
+        "71504256539930211218494723213238051654980290991967681511802248319251273721997921343310676421874844262159851" ~
+        "21676396779352982985195854539210695788058685312327754543322916198905318905372539158222292325972781334278182" ~
+        "56064882333760719681014481453198336237910767125501752882635183649210357258741035657389469487544469401817592" ~
+        "30609370828146501857425324969212764624247832210765473750568198834564103545802726125228550315432503959184891" ~
+        "89826304987591154063210354263890012837426155187877318375862355175378506956599570028011584125887015003017025" ~
+        "91674630208424124491283923805257725147371412310230172563968305553583262840383638157686828464330456805994018" ~
+        "70010719520929701779905832164175798681165865471477489647165479488312140431836079844314055731179349677763739" ~
+        "89893022776560705853040837477526409474350703952145247016838840709087061471944372256502823145872995869738316" ~
+        "89712685193904229711072135075697803726254581410950382703889873645162848201804682882058291353390138356491443" ~
+        "00401570650988792671541745070668688878343805558350119674586234080595327247278438292593957715840368859409899" ~
+        "39255241688378793572796795165407667392703125641876096219024304699348598919906001297774692145329704216778172" ~
+        "61517850653008552559997940209969455431545274585670440368668042864840451288118230979349696272183649293551620" ~
+        "29872469583299481932978335803459023227052612542114437084359584944338363838831775184116088171125127923337457" ~
+        "72193398208190054063292937775306906607415304997682647124407768817248673421685881509913342207593094717385515" ~
+        "93408089571244106347208931949128807835763115829400549708918023366596077070927599010527028150868897828549434" ~
+        "03726427292621034870139928688535500620615143430786653960859950058714939141652065302070085265624074703660736" ~
+        "60533380526376675720188394972770472221536338511354834636246198554259938719333674820422097449956672702505446" ~
+        "42324395750686959133019374691914298099934242305501726652120924145596259605544275909519968243130842796937113" ~
+        "2070210498232381957459";
+
+U get_mod2pi(U)(ref int power)
+{
+    static if (is(U: uint))
+        enum int digits = 9;
+    else static if (is(U: ulong))
+        enum int digits = 19;
+    else static if (is(U: uint128))
+        enum int digits = 38;
+    else static if (is(U: uint256))
+        enum digits = 77;
+    else
+        static assert (0, "Unsupported" ~ U.stringof);
+
+    if (power >= 0)
+    {
+        auto p = power;
+        while (s_mod_1_2pi[p] == '0')
+            ++p;
+        string s =  s_mod_1_2pi[p .. p + digits];
+        
+        U result = uparse!U(s);
+        power = -digits - (p - power);
+        return result;
+    }
+    else
+    {
+        string s = s_mod_1_2pi[0 .. digits];
+        U result = uparse!U(s);
+        power -= digits;
+        return result;
+    }   
+}
+
 
 struct IEEECompliant
 {

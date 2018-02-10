@@ -1,6 +1,8 @@
 module decimal.floats;
 
 
+
+
 /* ****************************************************************************************************************** */
 /* FLOAT UTILITY FUNCTIONS                                                                                            */
 /* ****************************************************************************************************************** */
@@ -8,6 +10,26 @@ module decimal.floats;
 private import decimal.integrals: uint128, clz, divrem;
 
 package:
+
+enum MAX_FLOAT_COEFFICIENT_34   = uint128("3402823466385288598117041834845169");
+enum MAX_FLOAT_EXPONENT_34      = 5;
+enum MIN_FLOAT_COEFFICIENT_34   = uint128("1401298464324817070923729583289916");
+enum MIN_FLOAT_EXPONENT_34      = -78;
+
+enum MAX_DOUBLE_COEFFICIENT_34  = uint128("1797693134862315708145274237317043");
+enum MAX_DOUBLE_EXPONENT_34     = 275;
+enum MIN_DOUBLE_COEFFICIENT_34  = uint128("4940656458412465441765687928682213");
+enum MIN_DOUBLE_EXPONENT_34     = -357;
+
+enum MAX_REAL_COEFFICIENT_34    = uint128("1189731495357231765021263853030970");
+enum MAX_REAL_EXPONENT_34       = 4899;
+enum MIN_REAL_COEFFICIENT_34    = uint128("3645199531882474602528405933619419");
+enum MIN_REAL_EXPONENT_34       = -4984;
+
+
+
+
+
 
 union FU
 {

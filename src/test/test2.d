@@ -292,7 +292,7 @@ bool test0(string func, O, E)(E element, out string errorMessage, const bool che
 
 bool test1(string func, I, O, E)(E element, out string errorMessage, const bool checkZeroSign = true)
 {
-    if (element.lineNo == 57173)
+    if (element.lineNo == 16501)
     {
         bool x = true;
     }
@@ -301,7 +301,7 @@ bool test1(string func, I, O, E)(E element, out string errorMessage, const bool 
     auto expected = parseOperand!O(element.res);
     DecimalControl.resetFlags();
     DecimalControl.rounding = translateRounding(element.rounding);
-    mixin("auto result = " ~ func ~ "(input);");
+    mixin("O result = " ~ func ~ "(input);");
     auto flags = DecimalControl.saveFlags();
     bool t1 = equ(result, expected, checkZeroSign);
 
@@ -334,6 +334,13 @@ bool test1(string func, I, O, E)(E element, out string errorMessage, const bool 
             {
                 expectedFlags &= ~ExceptionFlags.invalidOperation;
             }
+        }
+
+        if (element.func.startsWith("sin") >= 0)
+        {
+            //intel sets underflow unexpectedly
+            flags &= ~ExceptionFlags.underflow;
+            expectedFlags &= ~ExceptionFlags.underflow;
         }
     }
 
@@ -403,7 +410,7 @@ bool testop(string op, I1, I2, O, E)(E element, out string errorMessage, const b
     auto expected = parseOperand!O(element.res);
     DecimalControl.resetFlags();
     DecimalControl.rounding = translateRounding(element.rounding);
-    mixin("auto result = input1 " ~ op ~ " input2;");
+    mixin("O result = input1 " ~ op ~ " input2;");
     auto flags = DecimalControl.saveFlags();
     bool t1 = equ(result, expected, checkZeroSign);
 
@@ -442,7 +449,7 @@ bool testop(string op, I1, I2, O, E)(E element, out string errorMessage, const b
 
 bool test2(string func, I1, I2, O, E)(E element, out string errorMessage, const bool checkZeroSign = true)
 {
-    if (element.lineNo == 46405)
+    if (element.lineNo == 125397)
     {
         bool x = true;
     }
@@ -455,7 +462,18 @@ bool test2(string func, I1, I2, O, E)(E element, out string errorMessage, const 
     mixin("auto result = " ~ func ~ "(input1, input2);");
     auto flags = DecimalControl.saveFlags();
     bool t1 = equ(result, expected, checkZeroSign);
-    bool t2 = flags == translateFlags(element.expected);
+    auto expectedFlags = translateFlags(element.expected);
+
+    static if (func.endsWith("remainder"))
+    {
+        //intel does not set underflow on subnormals remainder
+        flags &= ~ExceptionFlags.inexact;
+        flags &= ~ExceptionFlags.underflow;
+        expectedFlags &= ~ExceptionFlags.inexact;
+        expectedFlags &= ~ExceptionFlags.underflow;
+    }
+
+    bool t2 = flags == expectedFlags;
     errorMessage = "";
     if (!t1)
         errorMessage = format("%6d (%s): [%s] %s(" ~ defaultFormat!I1 ~ ", " ~ defaultFormat!I2 ~ ") => " ~ defaultFormat!O ~ ", expected was " ~ defaultFormat!O, 
@@ -466,6 +484,53 @@ bool test2(string func, I1, I2, O, E)(E element, out string errorMessage, const 
             errorMessage ~= "\r\n";
         errorMessage ~= format("%6d (%s): [%s] %s(" ~ defaultFormat!I1 ~ ", " ~ defaultFormat!I2 ~ ") => " ~ defaultFormat!O ~ ", flags mismatch: result [%s], expected [%s]", 
                                element.lineNo, element.func, translateRounding(element.rounding), func, input1, input2, result, prettyFlags(flags), prettyFlags(translateFlags(element.expected)));
+    }
+
+    return t1 && t2;
+}
+
+bool test3(string func, I1, I2, I3, O, E)(E element, out string errorMessage, const bool checkZeroSign = true)
+{
+    if (element.lineNo == 45352)
+    {
+        bool x = true;
+    }
+    DecimalControl.rounding = RoundingMode.implicit;
+    auto input1 = parseOperand!I1(element.op1);
+    auto input2 = parseOperand!I2(element.op2);
+    auto input3 = parseOperand!I3(element.op3);
+    auto expected = parseOperand!O(element.res);
+    DecimalControl.resetFlags();
+    DecimalControl.rounding = translateRounding(element.rounding);
+    mixin("O result = " ~ func ~ "(input1, input2, input3);");
+    auto flags = DecimalControl.saveFlags();
+    bool t1 = equ(result, expected, checkZeroSign);
+    auto expectedFlags = translateFlags(element.expected);
+
+    static if (func.endsWith("fma"))
+    {
+        //intel does not set underflow on subnormals on fma
+        flags &= ~ExceptionFlags.inexact;
+        flags &= ~ExceptionFlags.underflow;
+        expectedFlags &= ~ExceptionFlags.inexact;
+        expectedFlags &= ~ExceptionFlags.underflow;
+    }
+
+    bool t2 = flags == expectedFlags;
+
+    
+
+
+    errorMessage = "";
+    if (!t1)
+        errorMessage = format("%6d (%s): [%s] %s(" ~ defaultFormat!I1 ~ ", " ~ defaultFormat!I2 ~ ", " ~ defaultFormat!I3 ~ ") => " ~ defaultFormat!O ~ ", expected was " ~ defaultFormat!O, 
+                              element.lineNo, element.func, translateRounding(element.rounding), func, input1, input2, input3, result, expected);
+    if (!t2)
+    {
+        if (!t1)
+            errorMessage ~= "\r\n";
+        errorMessage ~= format("%6d (%s): [%s] %s(" ~ defaultFormat!I1 ~ ", " ~ defaultFormat!I2 ~ ", " ~ defaultFormat!I3 ~ ") => " ~ defaultFormat!O ~ ", flags mismatch: result [%s], expected [%s]", 
+                               element.lineNo, element.func, translateRounding(element.rounding), func, input1, input2, input3, result, prettyFlags(flags), prettyFlags(translateFlags(element.expected)));
     }
 
     return t1 && t2;
@@ -703,6 +768,7 @@ struct Stat
 int main(string[] argv)
 {
 
+  
     auto file = File(inputFileName);
 
     auto range = file.byLine()
@@ -1200,6 +1266,15 @@ int main(string[] argv)
             case "bid64_add":
                 outcome = testop!("+", decimal64, decimal64, decimal64)(element, msg);
                 break;
+            case "bid64dq_add":
+                outcome = testop!("+", decimal64, decimal128, decimal64)(element, msg);
+                break;
+            case "bid64qd_add":
+                outcome = testop!("+", decimal128, decimal64, decimal64)(element, msg);
+                break;
+            case "bid64qq_add":
+                outcome = testop!("+", decimal128, decimal128, decimal64)(element, msg);
+                break;
             case "bid128_add":
                 outcome = testop!("+", decimal128, decimal128, decimal128)(element, msg);
                 break;
@@ -1208,6 +1283,15 @@ int main(string[] argv)
                 break;
             case "bid64_sub":
                 outcome = testop!("-", decimal64, decimal64, decimal64)(element, msg);
+                break;
+            case "bid64dq_sub":
+                outcome = testop!("-", decimal64, decimal128, decimal64)(element, msg);
+                break;
+            case "bid64qd_sub":
+                outcome = testop!("-", decimal128, decimal64, decimal64)(element, msg);
+                break;
+            case "bid64qq_sub":
+                outcome = testop!("-", decimal128, decimal128, decimal64)(element, msg, false);
                 break;
             case "bid128_sub":
                 outcome = testop!("-", decimal128, decimal128, decimal128)(element, msg);
@@ -1218,6 +1302,15 @@ int main(string[] argv)
             case "bid64_mul":
                 outcome = testop!("*", decimal64, decimal64, decimal64)(element, msg);
                 break;
+            case "bid64dq_mul":
+                outcome = testop!("*", decimal64, decimal128, decimal64)(element, msg);
+                break;
+            case "bid64qd_mul":
+                outcome = testop!("*", decimal128, decimal64, decimal64)(element, msg);
+                break;
+            case "bid64qq_mul":
+                outcome = testop!("*", decimal128, decimal128, decimal64)(element, msg);
+                break;
             case "bid128_mul":
                 outcome = testop!("*", decimal128, decimal128, decimal128)(element, msg);
                 break;
@@ -1226,6 +1319,15 @@ int main(string[] argv)
                 break;
             case "bid64_div":
                 outcome = testop!("/", decimal64, decimal64, decimal64)(element, msg);
+                break;
+            case "bid64dq_div":
+                outcome = testop!("/", decimal64, decimal128, decimal64)(element, msg);
+                break;
+            case "bid64qd_div":
+                outcome = testop!("/", decimal128, decimal64, decimal64)(element, msg);
+                break;
+            case "bid64qq_div":
+                outcome = testop!("/", decimal128, decimal128, decimal64)(element, msg);
                 break;
             case "bid128_div":
                 outcome = testop!("/", decimal128, decimal128, decimal128)(element, msg);
@@ -1238,6 +1340,15 @@ int main(string[] argv)
                 break;
             case "bid128_rem":
                 outcome = test2!("remainder", decimal128, decimal128, decimal128)(element, msg);
+                break;
+            case "bid32_hypot":
+                outcome = test2!("hypot", decimal32, decimal32, decimal32)(element, msg);
+                break;
+            case "bid64_hypot":
+                outcome = test2!("hypot", decimal64, decimal64, decimal64)(element, msg);
+                break;
+            case "bid128_hypot":
+                outcome = test2!("hypot", decimal128, decimal128, decimal128)(element, msg);
                 break;
             case "bid32_totalOrder":
                 outcome = test2!("totalOrder", decimal32, decimal32, bool)(element, msg);
@@ -1292,6 +1403,54 @@ int main(string[] argv)
                 break;
             case "bid128_fdim":
                 outcome = test2!("fdim", decimal128, decimal128, decimal128)(element, msg);
+                break;
+            case "bid32_nextafter":
+                outcome = test2!("nextAfter", decimal32, decimal32, decimal32)(element, msg);
+                break;
+            case "bid64_nextafter":
+                outcome = test2!("nextAfter", decimal64, decimal64, decimal64)(element, msg);
+                break;
+            case "bid128_nextafter":
+                outcome = test2!("nextAfter", decimal128, decimal128, decimal128)(element, msg);
+                break;
+            case "bid32_nexttoward":
+                outcome = test2!("nextToward", decimal32, decimal128, decimal32)(element, msg);
+                break;
+            case "bid64_nexttoward":
+                outcome = test2!("nextToward", decimal64, decimal128, decimal64)(element, msg);
+                break;
+            case "bid32_fma":
+                outcome = test3!("fma", decimal32, decimal32, decimal32, decimal32)(element, msg, false);
+                break;
+            case "bid64_fma":
+                outcome = test3!("fma", decimal64, decimal64, decimal64, decimal64)(element, msg, false);
+                break;
+            case "bid128_fma":
+                outcome = test3!("fma", decimal128, decimal128, decimal128, decimal128)(element, msg, false);
+                break;
+            case "bid64ddq_fma":
+                outcome = test3!("fma", decimal64, decimal64, decimal128, decimal64)(element, msg, false);
+                break;
+            case "bid64dqd_fma":
+                outcome = test3!("fma", decimal64, decimal128, decimal64, decimal64)(element, msg, false);
+                break;
+            case "bid64dqq_fma":
+                outcome = test3!("fma", decimal64, decimal128, decimal128, decimal64)(element, msg, false);
+                break;
+            case "bid64qdd_fma":
+                outcome = test3!("fma", decimal128, decimal64, decimal64, decimal64)(element, msg, false);
+                break;
+            case "bid64qdq_fma":
+                outcome = test3!("fma", decimal128, decimal64, decimal128, decimal64)(element, msg, false);
+                break;
+            case "bid64qqq_fma":
+                outcome = test3!("fma", decimal128, decimal128, decimal128, decimal64)(element, msg, false);
+                break;
+            case "bid64qqd_fma":
+                outcome = test3!("fma", decimal128, decimal128, decimal64, decimal64)(element, msg, false);
+                break;
+            case "bid128_nexttoward":
+                outcome = test2!("nextToward", decimal128, decimal128, decimal128)(element, msg);
                 break;
             //case "bid32_rem":
             //    outcome = test2!("remainder", decimal32, decimal32, decimal32)(element, msg);
@@ -1391,6 +1550,15 @@ int main(string[] argv)
                 break;
             case "bid128_round_integral_zero":
                 outcome = test_rounding!("nearbyint", decimal128, decimal128)(element, msg, RoundingMode.towardZero);
+                break;
+            case "bid32_nearbyint":
+                outcome = test1!("nearbyint", decimal32, decimal32)(element, msg);
+                break;
+            case "bid64_nearbyint":
+                outcome = test1!("nearbyint", decimal64, decimal64)(element, msg);
+                break;
+            case "bid128_nearbyint":
+                outcome = test1!("nearbyint", decimal128, decimal128)(element, msg);
                 break;
             case "bid128_round_integral_exact":
                 outcome = test1!("rint", decimal128, decimal128)(element, msg);
@@ -2139,6 +2307,9 @@ int main(string[] argv)
             case "bid64_sqrt":
                 outcome = test1!("sqrt", decimal64, decimal64)(element, msg);
                 break;
+            case "bid64q_sqrt":
+                outcome = test1!("sqrt", decimal128, decimal64)(element, msg);
+                break;
             case "bid128_sqrt":
                 outcome = test1!("sqrt", decimal128, decimal128)(element, msg);
                 break;
@@ -2171,6 +2342,15 @@ int main(string[] argv)
                 break;
             case "bid128_ldexp":
                 outcome = test2!("scalbn", decimal128, int, decimal128)(element, msg);
+                break;
+            case "bid32_sin":
+                outcome = test1!("sin", decimal32, decimal32)(element, msg);
+                break;
+            case "bid64_sin":
+                outcome = test1!("sin", decimal64, decimal64)(element, msg);
+                break;
+            case "bid128_sin":
+                outcome = test1!("sin", decimal128, decimal128)(element, msg);
                 break;
             case "bid_is754":
             case "bid_is754R":
