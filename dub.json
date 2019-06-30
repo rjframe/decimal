@@ -11,27 +11,27 @@
         {
             "name": "library",
 			"targetType": "library",
-			"excludedSourceFiles": [ "src/benchmark/benchmark.d", "src/test/test.d", "src/betterc/betterc.d"]
+			"excludedSourceFiles": [ "src/benchmark/*", "src/test/*", "src/betterc/*"]
         },
         {
             "name": "unittest",
             "targetType": "executable",
-			"excludedSourceFiles": [ "src/benchmark/benchmark.d", "src/betterc/betterc.d"]
+			"excludedSourceFiles": [ "src/benchmark/*", "src/betterc/*"]
         },
         {
             "name": "benchmark",
             "targetType": "executable",
-			"excludedSourceFiles": [ "src/test/test.d", "src/betterc/betterc.d"]
+			"excludedSourceFiles": [ "src/test/*", "src/betterc/*"]
         },
         {
             "name": "betterc",
             "targetType": "executable",
-			"excludedSourceFiles": [ "src/benchmark/benchmark.d", "src/test/test.d"]
+			"excludedSourceFiles": [ "src/benchmark/*", "src/test/*"]
         },
         {
             "name": "doc",
             "targetType": "library",
-			"excludedSourceFiles": [ "src/benchmark/benchmark.d", "src/test/test.d", "src/betterc/betterc.d"]
+			"excludedSourceFiles": [ "src/benchmark/*", "src/test/*", "src/betterc/*"]
         }
     ]
 }
